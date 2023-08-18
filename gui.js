@@ -81,33 +81,69 @@ function execute(commands) {
 		}
 		// plot data
 		else if (id === 3) {
-			let data = [];
+			console.log('res', results);
 			let players = [...new Set(results[0].values.map((el) => { return el[0] }))];
-			for (let i = 0; i < players.length; i++) {
-				let curX = 0, curY = 0;
-				let arrX = [], arrY = [];
-				results[0].values.forEach((el) => {
-					if (el[0] === players[i]) {
-						// fill gaps
-						while (el[1] > curX + 1) {
-							// increment turn while value stays the same
-							curX++;
-							arrX.push(curX);
-							arrY.push(curY);
-						}
-						arrX.push(el[1]);
-						arrY.push(el[2]);
-						curY = el[2];
+			let playerQuitTurn = new Array(players.length);
+			let endTurn = results[0].values.at(-1)[1];  // ordered by turns, last row shows final recorded turn
+			let curX = new Array(players.length).fill(0), curY = new Array(players.length).fill(0);
+			let arrX = Array.from({length: players.length}, e => Array()), arrY = Array.from({length: players.length}, e => Array());
+			results[0].values.forEach((el) => {
+				let i = players.indexOf(el[0]);
+				let quitTurn = el[3] || endTurn;
+				playerQuitTurn[i] = playerQuitTurn[i] || quitTurn;
+				if ((el[1] < quitTurn) && (i !== -1)) {
+					// fill gaps
+					while (el[1] > (curX[i] + 1)) {
+						// increment turn while value stays the same
+						curX[i]++;
+						arrX[i].push(curX[i]);
+						arrY[i].push(curY[i]);
 					}
-				});
-				data[i] = {
-					x: arrX,
-					y: arrY,
+					arrX[i].push(el[1]);
+					arrY[i].push(el[2]);
+					curX[i] = el[1];
+					curY[i] = el[2];
+				}
+			});
+			// fill data for yet alive players
+			for (let i = 0; i < players.length; i++) {
+				let curX = arrX[i].at(-1), curY = arrY[i].at(-1);
+				while (arrX[i].length < playerQuitTurn[i]) {
+					// increment turn while value stays the same
+					curX++;
+					arrX[i].push(curX);
+					arrY[i].push(curY);
+				}
+			}
+			console.log('arrX', arrX);
+			console.log('arrY', arrY);
+			let data = [];
+			for (let i = 0; i < players.length; i++) {
+				data.push({
+					x: arrX[i],
+					y: arrY[i],
 					mode: 'lines',
 					type: 'scatter',
 					line: {shape: 'spline'},
-					//connectgaps: true,
+					legendgroup: `group${i}`,
 					name: players[i]
+				});
+				// add X marker when player "dies"
+				if (playerQuitTurn[i] < endTurn) {
+					data.push({
+						x: [arrX[i].at(-1)],
+						y: [arrY[i].at(-1)],
+						mode: 'markers',
+						type: 'scatter',
+						marker: {
+							size: 12,
+							color: Plotly.PlotSchema.get().layout.layoutAttributes.colorway.dflt[data.length - 1],
+							symbol: 'x-dot'
+						},
+						legendgroup: `group${i}`,
+						showlegend: false,
+						hoverinfo: 'skip'
+					})
 				}
 			}
 			let layout = {
@@ -117,9 +153,17 @@ function execute(commands) {
 				},
 				yaxis: {
 					title: `${datasetSel.options[datasetSel.selectedIndex].text}`
+				},
+				legend: {
+					orientation: "h",
+					bgcolor: '#E2E2E2',
+					bordercolor: '#FFFFFF',
+					borderwidth: 2,
+					y: 1.05
 				}
 			};
 			let config = {
+				responsive: true,
 				toImageButtonOptions: {
 					format: 'png', // one of png, svg, jpeg, webp
 					filename: `Game${gameSel.selectedIndex}${datasetSel.options[datasetSel.selectedIndex].text}`,
@@ -128,7 +172,6 @@ function execute(commands) {
 					scale: 1 // Multiply title/legend/axis/canvas sizes by this factor
 				}
 			};
-			console.log(data);
 			Plotly.newPlot('plotOut', data, layout, config);
 		}
 		else {
@@ -210,7 +253,7 @@ function fetchdb() {
 			${("KMGTPEZY"[~~(Math.log2(b)/10)-1]||"") + "B"}`;
 		worker.onmessage = function () {
 			toc("Loading database from file");
-			editor.setValue(`\tSELECT \`name\`, \`sql\`\n\t\tFROM \`sqlite_master\`\n\t\tWHERE type='table';`);
+			editor.setValue(`\tANALYZE main;\n\tSELECT tbl AS Name, stat AS Rows FROM sqlite_stat1 ORDER BY Name;`);
 			execEditorContents();
 			fillSelects();
 			doPlot(null, 1, 1);
@@ -255,8 +298,8 @@ function doPlot(e, gameID, datasetID) {
 	gameID = gameID || gameSel.value;
 	datasetID = datasetID || datasetSel.value;
 	worker.postMessage({ action: 'exec', id: 3, sql: `
-		SELECT Player, Turn, 
-    	sum(value) over (partition by Games.GameID, Player order by Turn) Rsum
+		SELECT Games.Player, Turn, 
+    	sum(ReplayDataSetsChanges.Value) OVER (PARTITION by Games.GameID, Games.Player ORDER BY Turn) Value, PlayerQuitTurn.Value AS QuitTurn
 		
 		FROM DataSets
 		JOIN ReplayDataSetsChanges ON ReplayDataSetsChanges.DataSetID = DataSets.DataSetID
@@ -264,8 +307,9 @@ function doPlot(e, gameID, datasetID) {
 		JOIN CivKeys ON CivKeys.CivID = ReplayDataSetsChanges.CivID
 		JOIN GameSeeds ON GameSeeds.GameSeed = ReplayDataSetsChanges.GameSeed
 		JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
+    	LEFT JOIN PlayerQuitTurn ON Games.Player = PlayerQuitTurn.Player AND Games.PlayerGameNumber = PlayerQuitTurn.PlayerGameNumber
 		WHERE Games.GameID = ${gameID} AND ReplayDataSetKeys.ReplayDataSetID = ${datasetID} 
-		ORDER by Turn
+		ORDER BY Turn
 		;
 	` });
 }
