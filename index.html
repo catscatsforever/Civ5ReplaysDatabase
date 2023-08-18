@@ -12,7 +12,11 @@
     p,h1 {
       font-size: 4rem;
       font-weight: normal;
-    }</style>
+    }
+    .js-plotly-plot, .plot-container {
+       height: 80vh
+    }
+  </style>
 </head>
 
 <body>
@@ -25,7 +29,6 @@
       dataset: <select id="dataset-select"></select>
 
       <div id="error" class="error"></div>
-
       <div id='plotOut'><!-- Plotly chart will be drawn inside this DIV --></div>
       <br>
       <button id="BuildingClasses" class="button">Request BuildingClasses</button>
