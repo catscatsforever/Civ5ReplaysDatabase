@@ -20,11 +20,22 @@ let beliefsTimeBtn = document.getElementById("beliefs-time");
 let policiesTimeBtn = document.getElementById("policies-time");
 let techsTimeBtn = document.getElementById("techs-time");
 
-let BuildingClassesBtn = document.getElementById('BuildingClasses');
-let PoliciesBtn = document.getElementById('Policies');
-let ReplayDataSetsBtn = document.getElementById('ReplayDataSets');
-let TechnologiesBtn = document.getElementById('Technologies');
-let QuitTurnBtn = document.getElementById('QuitTurn');
+// let BuildingClassesBtn = document.getElementById('BuildingClasses');
+// let PoliciesBtn = document.getElementById('Policies');
+// let ReplayDataSetsBtn = document.getElementById('ReplayDataSets');
+// let TechnologiesBtn = document.getElementById('Technologies');
+// let QuitTurnBtn = document.getElementById('QuitTurn');
+let BeliefAverageBtn = document.getElementById('Average Turn of Belief Adoption');
+let BeliefMedianBtn = document.getElementById('Median Turn of Belief Adoption');
+let BeliefMinimumBtn = document.getElementById('Minimum Turn of Belief Adoption');
+let BeliefCountBtn = document.getElementById('Number Times of Belief Adoption');
+let PolicyAverageBtn = document.getElementById('Average Turn of Policy Adoption');
+let PolicyMedianBtn = document.getElementById('Median Turn of Policy Adoption');
+let PolicyMinumumBtn = document.getElementById('Minimum Turn of Policy Adoption');
+let PolicyCountBtn = document.getElementById('Number Times of Belief Adoption');
+let TechnologyAverageBtn = document.getElementById('Average Turn of Technology Research');
+let TechnologyMedianBtn = document.getElementById('Median Turn of Technology Research');
+let TechnologyMinimumBtn = document.getElementById('Minimum Turn of Technology Research');
 
 let gameSel = document.getElementById('gameID-select');
 let datasetSel = document.getElementById('dataset-select');
@@ -476,7 +487,7 @@ techsTimeBtn.addEventListener("click", () => worker.postMessage({ action: 'exec'
 	ORDER BY Turn
 `}), true);
 
-BuildingClassesBtn.addEventListener("click", () => { noerror(); let r = `
+/*BuildingClassesBtn.addEventListener("click", () => { noerror(); let r = `
 	SELECT Player, Civilization, Standing, Games.GameID, BuildingClassKey AS BuildingClass, Turn
 	--SELECT *
 
@@ -526,7 +537,7 @@ ReplayDataSetsBtn.addEventListener("click", () => { noerror(); let r = `
 	--WHERE ReplayDataSetKeys.ReplayDataSetID = 6
 	GROUP BY Games.GameID, Civilization
 	HAVING SUM_Value > 0
-	ORDER BY Games.GameID, Player/*, sum(Value) DESC*/
+	ORDER BY Games.GameID, Player/*, sum(Value) DESC
 	;
 	`; execute(r); editor.setValue(r); }, true);
 TechnologiesBtn.addEventListener("click", () => { noerror(); let r = `
@@ -563,5 +574,258 @@ QuitTurnBtn.addEventListener("click", () => { noerror(); let r = `
 		WHERE ReplayDataSetID = 6 AND Value < 0
 	;
 	SELECT * FROM PlayerQuitTurn
+	;
+	`; execute(r); editor.setValue(r); }, true);*/
+BeliefAverageBtn.addEventListener("click", () => { noerror(); let r = `
+	with RankedTable as (
+	SELECT *
+	, row_number() OVER (PARTITION by BeliefID order by Turn) as rnk
+	, count(*) over (PARTITION by BeliefID) as cnt
+	
+	FROM BeliefsChanges
+	WHERE Value = 1
+	)
+
+	SELECT BeliefType, BeliefKey AS Belief, round(avg(Turn), 1) as "Average Turn"
+
+	FROM DataSets
+	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
+	JOIN BeliefKeys ON BeliefKeys.BeliefID = RankedTable.BeliefID
+	JOIN CivKeys ON CivKeys.CivID = RankedTable.CivID
+	JOIN GameSeeds ON GameSeeds.GameSeed = RankedTable.GameSeed
+	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
+	JOIN BeliefTypes ON BeliefTypes.TypeID = BeliefKeys.TypeID
+	GROUP BY RankedTable.BeliefID
+	ORDER BY BeliefKeys.TypeID, "Average Turn"
+	;
+	`; execute(r); editor.setValue(r); }, true);
+BeliefMedianBtn.addEventListener("click", () => { noerror(); let r = `
+	with RankedTable as (
+	SELECT *
+	, row_number() OVER (PARTITION by BeliefID order by Turn) as rnk
+	, count(*) over (PARTITION by BeliefID) as cnt
+	
+	FROM BeliefsChanges
+	WHERE Value = 1
+	)
+	
+	SELECT BeliefType, BeliefKey AS Belief, avg(Turn) OVER (PARTITION by BeliefKeys.BeliefID) as "Median Turn"
+	
+	FROM DataSets
+	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
+	JOIN BeliefKeys ON BeliefKeys.BeliefID = RankedTable.BeliefID
+	JOIN CivKeys ON CivKeys.CivID = RankedTable.CivID
+	JOIN GameSeeds ON GameSeeds.GameSeed = RankedTable.GameSeed
+	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
+	JOIN BeliefTypes ON BeliefTypes.TypeID = BeliefKeys.TypeID
+	WHERE Value = 1 and 2*rnk - 1 = cnt or 2*rnk = cnt or 2*rnk - 2 = cnt
+	GROUP BY RankedTable.BeliefID
+	ORDER BY BeliefKeys.TypeID, "Median Turn"
+	;
+	`; execute(r); editor.setValue(r); }, true);
+BeliefMinimumBtn.addEventListener("click", () => { noerror(); let r = `
+	with RankedTable as (
+	SELECT *
+	, row_number() OVER (PARTITION by BeliefID order by Turn) as rnk
+	, count(*) over (PARTITION by BeliefID) as cnt
+	
+	FROM BeliefsChanges
+	WHERE Value = 1
+	)
+	
+	SELECT BeliefType, BeliefKey AS Belief, min(Turn) as "Minimum Turn"
+	
+	FROM DataSets
+	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
+	JOIN BeliefKeys ON BeliefKeys.BeliefID = RankedTable.BeliefID
+	JOIN CivKeys ON CivKeys.CivID = RankedTable.CivID
+	JOIN GameSeeds ON GameSeeds.GameSeed = RankedTable.GameSeed
+	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
+	JOIN BeliefTypes ON BeliefTypes.TypeID = BeliefKeys.TypeID
+	GROUP BY RankedTable.BeliefID
+	ORDER BY BeliefKeys.TypeID, "Minimum Turn"
+	;
+	`; execute(r); editor.setValue(r); }, true);
+BeliefCountBtn.addEventListener("click", () => { noerror(); let r = `
+	with RankedTable as (
+	SELECT *
+	, row_number() OVER (PARTITION by BeliefID order by Turn) as rnk
+	, count(*) over (PARTITION by BeliefID) as cnt
+	
+	FROM BeliefsChanges
+	WHERE Value = 1
+	)
+	
+	SELECT BeliefType, BeliefKey AS Belief, count(Turn) as "Count"
+	
+	FROM DataSets
+	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
+	JOIN BeliefKeys ON BeliefKeys.BeliefID = RankedTable.BeliefID
+	JOIN CivKeys ON CivKeys.CivID = RankedTable.CivID
+	JOIN GameSeeds ON GameSeeds.GameSeed = RankedTable.GameSeed
+	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
+	JOIN BeliefTypes ON BeliefTypes.TypeID = BeliefKeys.TypeID
+	GROUP BY RankedTable.BeliefID
+	ORDER BY BeliefKeys.TypeID, "Count" DESC
+	;
+	`; execute(r); editor.setValue(r); }, true);
+PolicyAverageBtn.addEventListener("click", () => { noerror(); let r = `
+	with RankedTable as (
+	SELECT *
+	, row_number() OVER (PARTITION by PolicyID order by Turn) as rnk
+	, count(*) over (PARTITION by PolicyID) as cnt
+	
+	FROM PoliciesChanges
+	WHERE Value = 1
+	)
+	
+	SELECT PolicyBranch, PolicyKey AS Policy, Round(avg(Turn), 1) as "Average Turn"
+	
+	FROM DataSets
+	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
+	JOIN PolicyKeys ON PolicyKeys.PolicyID = RankedTable.PolicyID
+	JOIN CivKeys ON CivKeys.CivID = RankedTable.CivID
+	JOIN GameSeeds ON GameSeeds.GameSeed = RankedTable.GameSeed
+	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
+	JOIN PolicyBranches ON PolicyBranches.BranchID = PolicyKeys.BranchID
+	GROUP BY RankedTable.PolicyID
+	ORDER BY PolicyKeys.BranchID, "Average Turn"
+	;
+	`; execute(r); editor.setValue(r); }, true);
+PolicyMedianBtn.addEventListener("click", () => { noerror(); let r = `
+	with RankedTable as (
+	SELECT *
+	, row_number() OVER (PARTITION by PolicyID order by Turn) as rnk
+	, count(*) over (PARTITION by PolicyID) as cnt
+	
+	FROM PoliciesChanges
+	WHERE Value = 1
+	)
+	
+	SELECT PolicyBranch, PolicyKey AS Policy, avg(Turn) OVER (PARTITION by PolicyKeys.PolicyID) as "Median Turn"
+	
+	FROM DataSets
+	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
+	JOIN PolicyKeys ON PolicyKeys.PolicyID = RankedTable.PolicyID
+	JOIN CivKeys ON CivKeys.CivID = RankedTable.CivID
+	JOIN GameSeeds ON GameSeeds.GameSeed = RankedTable.GameSeed
+	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
+	JOIN PolicyBranches ON PolicyBranches.BranchID = PolicyKeys.BranchID
+	WHERE Value = 1 and 2*rnk - 1 = cnt or 2*rnk = cnt or 2*rnk - 2 = cnt
+	GROUP BY RankedTable.PolicyID
+	ORDER BY PolicyKeys.BranchID, "Median Turn"
+	;
+	`; execute(r); editor.setValue(r); }, true);
+PolicyMinumumBtn.addEventListener("click", () => { noerror(); let r = `
+	with RankedTable as (
+	SELECT *
+	, row_number() OVER (PARTITION by PolicyID order by Turn) as rnk
+	, count(*) over (PARTITION by PolicyID) as cnt
+	
+	FROM PoliciesChanges
+	WHERE Value = 1
+	)
+	
+	SELECT PolicyBranch, PolicyKey AS Policy, min(Turn) as "Minimum Turn"
+	
+	FROM DataSets
+	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
+	JOIN PolicyKeys ON PolicyKeys.PolicyID = RankedTable.PolicyID
+	JOIN CivKeys ON CivKeys.CivID = RankedTable.CivID
+	JOIN GameSeeds ON GameSeeds.GameSeed = RankedTable.GameSeed
+	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
+	JOIN PolicyBranches ON PolicyBranches.BranchID = PolicyKeys.BranchID
+	GROUP BY RankedTable.PolicyID
+	ORDER BY PolicyKeys.BranchID, "Minimum Turn"
+	;
+	`; execute(r); editor.setValue(r); }, true);
+PolicyCountBtn.addEventListener("click", () => { noerror(); let r = `
+	with RankedTable as (
+	SELECT *
+	, row_number() OVER (PARTITION by PolicyID order by Turn) as rnk
+	, count(*) over (PARTITION by PolicyID) as cnt
+	
+	FROM PoliciesChanges
+	WHERE Value = 1
+	)
+	
+	SELECT PolicyBranch, PolicyKey AS Policy, count(Turn) as "Count"
+	
+	FROM DataSets
+	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
+	JOIN PolicyKeys ON PolicyKeys.PolicyID = RankedTable.PolicyID
+	JOIN CivKeys ON CivKeys.CivID = RankedTable.CivID
+	JOIN GameSeeds ON GameSeeds.GameSeed = RankedTable.GameSeed
+	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
+	JOIN PolicyBranches ON PolicyBranches.BranchID = PolicyKeys.BranchID
+	GROUP BY RankedTable.PolicyID
+	ORDER BY PolicyKeys.BranchID, "Count" DESC
+	;
+	`; execute(r); editor.setValue(r); }, true);
+TechnologyAverageBtn.addEventListener("click", () => { noerror(); let r = `
+	with RankedTable as (
+	SELECT *
+	, row_number() OVER (PARTITION by TechnologyID order by Turn) as rnk
+	, count(*) over (PARTITION by TechnologyID) as cnt
+	
+	FROM TechnologiesChanges
+	WHERE Value = 1
+	)
+	
+	SELECT TechnologyKey AS Technology, round(avg(Turn), 1) as "Average Turn"
+	
+	FROM DataSets
+	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
+	JOIN TechnologyKeys ON TechnologyKeys.TechnologyID = RankedTable.TechnologyID
+	JOIN CivKeys ON CivKeys.CivID = RankedTable.CivID
+	JOIN GameSeeds ON GameSeeds.GameSeed = RankedTable.GameSeed
+	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
+	GROUP BY RankedTable.TechnologyID
+	ORDER BY TechnologyKeys.TechnologyID, "Average Turn"
+	;
+	`; execute(r); editor.setValue(r); }, true);
+TechnologyMedianBtn.addEventListener("click", () => { noerror(); let r = `
+	with RankedTable as (
+	SELECT *
+	, row_number() OVER (PARTITION by TechnologyID order by Turn) as rnk
+	, count(*) over (PARTITION by TechnologyID) as cnt
+	
+	FROM TechnologiesChanges
+	WHERE Value = 1
+	)
+	
+	SELECT TechnologyKey AS Technology, avg(Turn) OVER (PARTITION by TechnologyKeys.TechnologyID) as "Median Turn"
+	
+	FROM DataSets
+	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
+	JOIN TechnologyKeys ON TechnologyKeys.TechnologyID = RankedTable.TechnologyID
+	JOIN CivKeys ON CivKeys.CivID = RankedTable.CivID
+	JOIN GameSeeds ON GameSeeds.GameSeed = RankedTable.GameSeed
+	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
+	WHERE Value = 1 and 2*rnk - 1 = cnt or 2*rnk = cnt or 2*rnk - 2 = cnt
+	GROUP BY RankedTable.TechnologyID
+	ORDER BY TechnologyKeys.TechnologyID, "Median Turn"
+	;
+	`; execute(r); editor.setValue(r); }, true);
+TechnologyMinimumBtn.addEventListener("click", () => { noerror(); let r = `
+	with RankedTable as (
+	SELECT *
+	, row_number() OVER (PARTITION by TechnologyID order by Turn) as rnk
+	, count(*) over (PARTITION by TechnologyID) as cnt
+	
+	FROM TechnologiesChanges
+	WHERE Value = 1
+	)
+	
+	SELECT TechnologyKey AS Technology, min(Turn) as "Minimum Turn"
+	
+	FROM DataSets
+	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
+	JOIN TechnologyKeys ON TechnologyKeys.TechnologyID = RankedTable.TechnologyID
+	JOIN CivKeys ON CivKeys.CivID = RankedTable.CivID
+	JOIN GameSeeds ON GameSeeds.GameSeed = RankedTable.GameSeed
+	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
+	GROUP BY RankedTable.TechnologyID
+	ORDER BY TechnologyKeys.TechnologyID, "Minimum Turn"
 	;
 	`; execute(r); editor.setValue(r); }, true);
