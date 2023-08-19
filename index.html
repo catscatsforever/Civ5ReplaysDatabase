@@ -16,6 +16,33 @@
     .js-plotly-plot, .plot-container {
        height: 80vh
     }
+    input, section {
+      clear: both;
+      padding-top: 10px;
+      display: none;
+    }
+    .radioTab {
+      font-size: 20px;
+      display: block;
+      float: left;
+      padding: 10px 30px;
+      border-top: 2px solid transparent;
+      border-right: 1px solid transparent;
+      border-left: 1px solid transparent;
+      border-bottom: 1px solid #DDD;
+    }
+    #tab1:checked ~ #content1,
+    #tab2:checked ~ #content2,
+    #tab3:checked ~ #content3 {
+      display: block;
+    }
+    input:checked + label {
+      border-top-color: #222;
+      border-right-color: #DDD;
+      border-left-color: #DDD;
+      border-bottom-color: transparent;
+      text-decoration: none;
+    }
   </style>
 </head>
 
@@ -24,9 +51,30 @@
   <h1>CIV 5 Replays Database</h1>
 
   <main>
+
+
     <div id="inputs" style="display: none">
-      Choose game: <select id="gameID-select"></select>
-      dataset: <select id="dataset-select"></select>
+      <input id="tab1" type="radio" name="tabs" checked>
+      <label class="radioTab" for="tab1">Plot by Game</label>
+      <input id="tab2" type="radio" name="tabs">
+      <label class="radioTab" for="tab2">Plot by Player</label>
+      <input id="tab3" type="radio" name="tabs">
+      <label class="radioTab" for="tab3">Plot Distribution</label>
+      <section id="content1">
+        Choose game: <select id="gameID-select"></select>
+        <br>
+        dataset: <select id="dataset-select"></select>
+      </section>
+      <section id="content2">
+        Player: <select id="playerID-select"></select>
+        <br>
+        dataset: <select id="dataset-select2"></select>
+      </section>
+      <section id="content3">
+        <button id="beliefs-time">Beliefs-Time</button>
+        <button id="policies-time">Policies-Time</button>
+        <button id="techs-time">Technologies-Time</button>
+      </section>
 
       <div id="error" class="error"></div>
       <div id='plotOut'><!-- Plotly chart will be drawn inside this DIV --></div>

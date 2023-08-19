@@ -11,6 +11,14 @@ let errorElm = document.getElementById('error');
 let commandsElm = document.getElementById('commands');
 let savedbElm = document.getElementById('savedb');
 
+let tab1Rad = document.getElementById("tab1");
+let tab2Rad = document.getElementById("tab2");
+let tab3Rad = document.getElementById("tab3");
+
+let beliefsTimeBtn = document.getElementById("beliefs-time");
+let policiesTimeBtn = document.getElementById("policies-time");
+let techsTimeBtn = document.getElementById("techs-time");
+
 let BuildingClassesBtn = document.getElementById('BuildingClasses');
 let PoliciesBtn = document.getElementById('Policies');
 let ReplayDataSetsBtn = document.getElementById('ReplayDataSets');
@@ -19,6 +27,8 @@ let QuitTurnBtn = document.getElementById('QuitTurn');
 
 let gameSel = document.getElementById('gameID-select');
 let datasetSel = document.getElementById('dataset-select');
+let playerSel = document.getElementById('playerID-select');
+let dataset2Sel = document.getElementById('dataset-select2');
 
 let dbsizeLbl = document.getElementById('dbsize');
 
@@ -61,98 +71,111 @@ function execute(commands) {
 		}
 
 		tic();
-		// fill games select
-		if (id === 1) {
-			for (let i = 0; i < results[0].values.length; i++) {
-				const opt = document.createElement("option");
-				opt.value = results[0].values[i][0];
-				opt.text = results[0].values[i][0];
-				gameSel.add(opt);
-			}
-		}
-		// fill datasets select
-		else if (id === 2) {
-			for (let i = 0; i < results[0].values.length; i++) {
-				const opt = document.createElement("option");
-				opt.value = results[0].values[i][0];
-				opt.text = results[0].values[i][1];
-				datasetSel.add(opt);
-			}
-		}
 		// plot data
-		else if (id === 3) {
+		if (id === 0) {
 			console.log('res', results);
-			let players = [...new Set(results[0].values.map((el) => { return el[0] }))];
-			let playerQuitTurn = new Array(players.length);
-			let endTurn = results[0].values.at(-1)[1];  // ordered by turns, last row shows final recorded turn
-			let curX = new Array(players.length).fill(0), curY = new Array(players.length).fill(0);
-			let arrX = Array.from({length: players.length}, e => Array()), arrY = Array.from({length: players.length}, e => Array());
-			results[0].values.forEach((el) => {
-				let i = players.indexOf(el[0]);
-				let quitTurn = el[3] || endTurn;
-				playerQuitTurn[i] = playerQuitTurn[i] || quitTurn;
-				if ((el[1] < quitTurn) && (i !== -1)) {
-					// fill gaps
-					while (el[1] > (curX[i] + 1)) {
-						// increment turn while value stays the same
-						curX[i]++;
-						arrX[i].push(curX[i]);
-						arrY[i].push(curY[i]);
-					}
-					arrX[i].push(el[1]);
-					arrY[i].push(el[2]);
-					curX[i] = el[1];
-					curY[i] = el[2];
-				}
-			});
-			// fill data for yet alive players
-			for (let i = 0; i < players.length; i++) {
-				let curX = arrX[i].at(-1), curY = arrY[i].at(-1);
-				while (arrX[i].length < playerQuitTurn[i]) {
-					// increment turn while value stays the same
-					curX++;
-					arrX[i].push(curX);
-					arrY[i].push(curY);
+
+			let t = results[0].columns.indexOf('TraceName');
+			let x = results[0].columns.indexOf('Turn');
+			let y = results[0].columns.indexOf('Value');
+			let data = [];
+			let traces = [...new Set(results[0].values.map((el) => { return el[0] }))];
+			let arrX = Array.from({length: traces.length}, e => Array()),
+				arrY = Array.from({length: traces.length}, e => Array());
+			if (y >= 0) {
+				// distribution plot
+
+				results[0].values.forEach((el) => {
+					let i = traces.indexOf(el[t]);
+					arrX[i].push(el[x]);
+					arrY[i].push(el[y]);
+				});
+				console.log('arrX', arrX);
+				console.log('arrY', arrY);
+				for (let i = 0; i < traces.length; i++) {
+					data.push({
+						x: arrX[i],
+						y: arrY[i],
+						type: 'bar',
+						showlegend: true,
+						name: traces[i]
+					});
 				}
 			}
-			console.log('arrX', arrX);
-			console.log('arrY', arrY);
-			let data = [];
-			for (let i = 0; i < players.length; i++) {
-				data.push({
-					x: arrX[i],
-					y: arrY[i],
-					mode: 'lines',
-					type: 'scatter',
-					line: {shape: 'spline'},
-					legendgroup: `group${i}`,
-					name: players[i]
+			else {
+				if (y === -1) y = results[0].columns.indexOf('Delta');
+				let playerQuitTurn = new Array(traces.length);
+				let endTurn = results[0].values.at(-1)[1];  // ordered by turns, last row shows final recorded turn
+				let curX = new Array(traces.length).fill(0), curY = new Array(traces.length).fill(0);
+				results[0].values.forEach((el) => {
+					let i = traces.indexOf(el[0]);
+					let quitTurn = el[3] || endTurn;
+					playerQuitTurn[i] = playerQuitTurn[i] || quitTurn;
+					if ((el[1] < quitTurn) && (i !== -1)) {
+						// fill gaps
+						while (el[1] > (curX[i] + 1)) {
+							// increment turn while value stays the same
+							curX[i]++;
+							arrX[i].push(curX[i]);
+							arrY[i].push(curY[i]);
+						}
+						arrX[i].push(el[1]);
+						arrY[i].push(el[2]);
+						curX[i] = el[1];
+						curY[i] = el[2];
+					}
 				});
-				// add X marker when player "dies"
-				if (playerQuitTurn[i] < endTurn) {
+				// fill data for yet alive players
+				for (let i = 0; i < traces.length; i++) {
+					let curX = arrX[i].at(-1), curY = arrY[i].at(-1);
+					while (arrX[i].length < playerQuitTurn[i]) {
+						// increment turn while value stays the same
+						curX++;
+						arrX[i].push(curX);
+						arrY[i].push(curY);
+					}
+				}
+				console.log('arrX', arrX);
+				console.log('arrY', arrY);
+				for (let i = 0; i < traces.length; i++) {
 					data.push({
-						x: [arrX[i].at(-1)],
-						y: [arrY[i].at(-1)],
-						mode: 'markers',
+						x: arrX[i],
+						y: arrY[i],
+						mode: 'lines',
 						type: 'scatter',
-						marker: {
-							size: 12,
-							color: Plotly.PlotSchema.get().layout.layoutAttributes.colorway.dflt[data.length - 1],
-							symbol: 'x-dot'
-						},
+						line: {shape: 'spline'},
 						legendgroup: `group${i}`,
-						showlegend: false,
-						hoverinfo: 'skip'
-					})
+						showlegend: true,
+						name: traces[i]
+					});
+					// add X marker when player "dies"
+					if (playerQuitTurn[i] < endTurn) {
+						data.push({
+							x: [arrX[i].at(-1)],
+							y: [arrY[i].at(-1)],
+							mode: 'markers',
+							type: 'scatter',
+							marker: {
+								size: 12,
+								color: Plotly.PlotSchema.get().layout.layoutAttributes.colorway.dflt[data.length - 1],
+								symbol: 'x-dot'
+							},
+							legendgroup: `group${i}`,
+							showlegend: false,
+							hoverinfo: 'skip'
+						})
+					}
 				}
 			}
 			let layout = {
 				hovermode: "x unified",
+				barmode: 'relative',
 				xaxis: {
 					title: 'Turn'
 				},
 				yaxis: {
-					title: `${datasetSel.options[datasetSel.selectedIndex].text}`
+					title: `${tab1Rad.checked ? datasetSel.options[datasetSel.selectedIndex].text :
+						tab2Rad.checked ? dataset2Sel.options[dataset2Sel.selectedIndex].text : 'TODO'}`
 				},
 				legend: {
 					orientation: "h",
@@ -174,6 +197,31 @@ function execute(commands) {
 			};
 			Plotly.newPlot('plotOut', data, layout, config);
 		}
+		// fill games select
+		else if (id === 1) {
+			for (let i = 0; i < results[0].values.length; i++) {
+				const opt = document.createElement("option");
+				opt.value = results[0].values[i][0];
+				opt.text = results[0].values[i][0];
+				gameSel.add(opt);
+			}
+		}
+		// fill datasets select
+		else if (id === 2) {
+			for (let i = 0; i < results[0].values.length; i++) {
+				datasetSel.add(new Option(results[0].values[i][1], results[0].values[i][0]));
+				dataset2Sel.add(new Option(results[0].values[i][1], results[0].values[i][0]));
+			}
+		}
+		// fill player select
+		else if (id === 3) {
+			for (let i = 0; i < results[0].values.length; i++) {
+				const opt = document.createElement("option");
+				opt.value = i;
+				opt.text = results[0].values[i][0];
+				playerSel.add(opt);
+			}
+		}
 		else {
 			outputElm.innerHTML = "";
 			console.log('results:', results);
@@ -188,8 +236,14 @@ function execute(commands) {
 }
 
 function fillSelects() {
-	worker.postMessage({ action: 'exec', id: 1, sql: `Select GameID from Games Group by GameID` });
+	worker.postMessage({ action: 'exec', id: 1, sql: `
+	SELECT GameID from GameSeeds JOIN BeliefsChanges ON BeliefsChanges.GameSeed = GameSeeds.GameSeed
+	GROUP BY GameID ORDER BY GameID;` });
 	worker.postMessage({ action: 'exec', id: 2, sql: `Select * from ReplayDataSetKeys` });
+	worker.postMessage({ action: 'exec', id: 3, sql: `
+	SELECT Player from GameSeeds JOIN BeliefsChanges ON BeliefsChanges.GameSeed = GameSeeds.GameSeed
+	JOIN Games ON Games.GameID = GameSeeds.GameID
+	GROUP BY Player ORDER BY Player` });
 }
 
 // Create an HTML table
@@ -225,7 +279,7 @@ function toc(msg) {
 	console.log((msg || 'toc') + ": " + dt + "ms");
 }
 
-// Add syntax highlihjting to the textarea
+// Add syntax highlighting to the textarea
 let editor = CodeMirror.fromTextArea(commandsElm, {
 	mode: 'text/x-mysql',
 	viewportMargin: Infinity,
@@ -256,7 +310,7 @@ function fetchdb() {
 			editor.setValue(`\tANALYZE main;\n\tSELECT tbl AS Name, stat AS Rows FROM sqlite_stat1 ORDER BY Name;`);
 			execEditorContents();
 			fillSelects();
-			doPlot(null, 1, 1);
+			doPlot();
 		};
 		tic();
 		try {
@@ -292,29 +346,120 @@ function savedb() {
 }
 savedbElm.addEventListener("click", savedb, true);
 
-function doPlot(e, gameID, datasetID) {
-	Plotly.purge('plotOut');
+function doPlot(e) {
 	noerror();
-	gameID = gameID || gameSel.value;
-	datasetID = datasetID || datasetSel.value;
-	worker.postMessage({ action: 'exec', id: 3, sql: `
-		SELECT Games.Player, Turn, 
-    	sum(ReplayDataSetsChanges.Value) OVER (PARTITION by Games.GameID, Games.Player ORDER BY Turn) Value, PlayerQuitTurn.Value AS QuitTurn
-		
-		FROM DataSets
-		JOIN ReplayDataSetsChanges ON ReplayDataSetsChanges.DataSetID = DataSets.DataSetID
-		JOIN ReplayDataSetKeys ON ReplayDataSetKeys.ReplayDataSetID = ReplayDataSetsChanges.ReplayDataSetID
-		JOIN CivKeys ON CivKeys.CivID = ReplayDataSetsChanges.CivID
-		JOIN GameSeeds ON GameSeeds.GameSeed = ReplayDataSetsChanges.GameSeed
-		JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
-    	LEFT JOIN PlayerQuitTurn ON Games.Player = PlayerQuitTurn.Player AND Games.PlayerGameNumber = PlayerQuitTurn.PlayerGameNumber
-		WHERE Games.GameID = ${gameID} AND ReplayDataSetKeys.ReplayDataSetID = ${datasetID} 
-		ORDER BY Turn
-		;
-	` });
+	let gameID = gameSel.options.length > 0 ? gameSel.options[gameSel.selectedIndex].value : 1;
+	let datasetID = datasetSel.options.length > 0 ? datasetSel.options[datasetSel.selectedIndex].value : 1;
+	let playerName = playerSel.options.length > 0 ? playerSel.options[playerSel.selectedIndex].text : '12g';
+	let dataset2ID = dataset2Sel.options.length > 0 ? dataset2Sel.options[dataset2Sel.selectedIndex].value : 1;
+	let msg = '';
+	if (tab1Rad.checked) {
+		msg = `
+			SELECT Games.Player AS TraceName, Turn, 
+    		sum(ReplayDataSetsChanges.Value) OVER (PARTITION by Games.GameID, Games.Player ORDER BY Turn) Delta, PlayerQuitTurn.Value AS QuitTurn
+			
+			FROM DataSets
+			JOIN ReplayDataSetsChanges ON ReplayDataSetsChanges.DataSetID = DataSets.DataSetID
+			JOIN ReplayDataSetKeys ON ReplayDataSetKeys.ReplayDataSetID = ReplayDataSetsChanges.ReplayDataSetID
+			JOIN CivKeys ON CivKeys.CivID = ReplayDataSetsChanges.CivID
+			JOIN GameSeeds ON GameSeeds.GameSeed = ReplayDataSetsChanges.GameSeed
+			JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
+    		LEFT JOIN PlayerQuitTurn ON Games.Player = PlayerQuitTurn.Player AND Games.PlayerGameNumber = PlayerQuitTurn.PlayerGameNumber
+			WHERE Games.GameID = ${gameID} AND ReplayDataSetKeys.ReplayDataSetID = ${datasetID} 
+			ORDER BY Turn
+			;
+		`}
+	else if (tab2Rad.checked) {
+		msg = `
+			SELECT 'Game ' || Games.PlayerGameNumber || ' (' || Games.Civilization || ')' AS TraceName, Turn,
+			sum(ReplayDataSetsChanges.Value) OVER (PARTITION by Games.GameID, Games.Player ORDER BY Turn) Delta, PlayerQuitTurn.Value AS QuitTurn
+			
+			FROM DataSets
+			JOIN ReplayDataSetsChanges ON ReplayDataSetsChanges.DataSetID = DataSets.DataSetID
+			JOIN ReplayDataSetKeys ON ReplayDataSetKeys.ReplayDataSetID = ReplayDataSetsChanges.ReplayDataSetID
+			JOIN CivKeys ON CivKeys.CivID = ReplayDataSetsChanges.CivID
+			JOIN GameSeeds ON GameSeeds.GameSeed = ReplayDataSetsChanges.GameSeed
+			JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
+			LEFT JOIN PlayerQuitTurn ON Games.Player = PlayerQuitTurn.Player AND Games.PlayerGameNumber = PlayerQuitTurn.PlayerGameNumber
+			WHERE Games.Player = '${playerName}' AND ReplayDataSetKeys.ReplayDataSetID = ${dataset2ID}
+			ORDER BY Turn
+			;
+		`}
+	else if (tab3Rad.checked) {
+		msg = `
+			SELECT BeliefTypes.BeliefType AS TraceName, Turn,
+			sum(BeliefsChanges.Value) AS Value
+			
+			FROM DataSets
+			JOIN BeliefsChanges ON BeliefsChanges.DataSetID = DataSets.DataSetID
+			JOIN BeliefKeys ON BeliefKeys.BeliefID = BeliefsChanges.BeliefID
+			JOIN BeliefTypes ON BeliefTypes.TypeID = BeliefKeys.TypeID
+			JOIN CivKeys ON CivKeys.CivID = BeliefsChanges.CivID
+			JOIN GameSeeds ON GameSeeds.GameSeed = BeliefsChanges.GameSeed
+			JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
+			WHERE BeliefsChanges.Value = 1
+			GROUP BY TraceName, Turn
+			ORDER BY Turn
+			;
+		`}
+	console.log('msg', msg);
+	worker.postMessage({ action: 'exec', id: 0, sql: msg });
 }
+
 gameSel.addEventListener("change", doPlot, true);
 datasetSel.addEventListener("change", doPlot, true);
+playerSel.addEventListener("change", doPlot, true);
+dataset2Sel.addEventListener("change", doPlot, true);
+tab1Rad.addEventListener("click", doPlot, true);
+tab2Rad.addEventListener("click", doPlot, true);
+tab3Rad.addEventListener("click", doPlot, true);
+
+beliefsTimeBtn.addEventListener("click", () => worker.postMessage({ action: 'exec', id: 0, sql: `
+	SELECT BeliefTypes.BeliefType AS TraceName, Turn,
+	sum(BeliefsChanges.Value) AS Value
+	
+	FROM DataSets
+	JOIN BeliefsChanges ON BeliefsChanges.DataSetID = DataSets.DataSetID
+	JOIN BeliefKeys ON BeliefKeys.BeliefID = BeliefsChanges.BeliefID
+	JOIN BeliefTypes ON BeliefTypes.TypeID = BeliefKeys.TypeID
+	JOIN CivKeys ON CivKeys.CivID = BeliefsChanges.CivID
+	JOIN GameSeeds ON GameSeeds.GameSeed = BeliefsChanges.GameSeed
+	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
+	WHERE BeliefsChanges.Value = 1
+	GROUP BY TraceName, Turn
+	ORDER BY Turn
+	;
+`}), true);
+policiesTimeBtn.addEventListener("click", () => worker.postMessage({ action: 'exec', id: 0, sql: `
+	SELECT PolicyBranches.PolicyBranch AS TraceName, Turn,
+	sum(PoliciesChanges.Value) AS Value
+	
+	FROM DataSets
+	JOIN PoliciesChanges ON PoliciesChanges.DataSetID = DataSets.DataSetID
+	JOIN PolicyKeys ON PolicyKeys.PolicyID = PoliciesChanges.PolicyID
+	JOIN PolicyBranches ON PolicyBranches.BranchID = PolicyKeys.BranchID
+	JOIN CivKeys ON CivKeys.CivID = PoliciesChanges.CivID
+	JOIN GameSeeds ON GameSeeds.GameSeed = PoliciesChanges.GameSeed
+	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
+	WHERE PoliciesChanges.Value = 1
+	GROUP BY TraceName, Turn
+	ORDER BY Turn
+	;
+`}), true);
+techsTimeBtn.addEventListener("click", () => worker.postMessage({ action: 'exec', id: 0, sql: `
+	SELECT TechnologyKeys.TechnologyKey AS TraceName, Turn,
+	sum(TechnologiesChanges.Value) AS Value
+	
+	FROM DataSets
+	JOIN TechnologiesChanges ON TechnologiesChanges.DataSetID = DataSets.DataSetID
+	JOIN TechnologyKeys ON TechnologyKeys.TechnologyID = TechnologiesChanges.TechnologyID
+	JOIN CivKeys ON CivKeys.CivID = TechnologiesChanges.CivID
+	JOIN GameSeeds ON GameSeeds.GameSeed = TechnologiesChanges.GameSeed
+	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
+	WHERE TechnologiesChanges.Value = 1
+	GROUP BY TraceName, Turn
+	ORDER BY Turn
+`}), true);
 
 BuildingClassesBtn.addEventListener("click", () => { noerror(); let r = `
 	SELECT Player, Civilization, Standing, Games.GameID, BuildingClassKey AS BuildingClass, Turn
