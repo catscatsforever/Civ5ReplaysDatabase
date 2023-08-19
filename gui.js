@@ -15,6 +15,7 @@ let tab1Rad = document.getElementById("tab1");
 let tab2Rad = document.getElementById("tab2");
 let tab3Rad = document.getElementById("tab3");
 
+let plotAllPlayersBtn = document.getElementById("plotAllPlayers");
 let beliefsTimeBtn = document.getElementById("beliefs-time");
 let policiesTimeBtn = document.getElementById("policies-time");
 let techsTimeBtn = document.getElementById("techs-time");
@@ -413,7 +414,21 @@ dataset2Sel.addEventListener("change", doPlot, true);
 tab1Rad.addEventListener("click", doPlot, true);
 tab2Rad.addEventListener("click", doPlot, true);
 tab3Rad.addEventListener("click", doPlot, true);
-
+plotAllPlayersBtn.addEventListener("click", () => worker.postMessage({ action: 'exec', id: 0, sql: `
+	SELECT Games.Player || ' Game ' || Games.PlayerGameNumber || ' (' || Games.Civilization || ')' AS TraceName, Turn,
+	sum(ReplayDataSetsChanges.Value) OVER (PARTITION by Games.GameID, Games.Player ORDER BY Turn) Delta, PlayerQuitTurn.Value AS QuitTurn
+	
+	FROM DataSets
+	JOIN ReplayDataSetsChanges ON ReplayDataSetsChanges.DataSetID = DataSets.DataSetID
+	JOIN ReplayDataSetKeys ON ReplayDataSetKeys.ReplayDataSetID = ReplayDataSetsChanges.ReplayDataSetID
+	JOIN CivKeys ON CivKeys.CivID = ReplayDataSetsChanges.CivID
+	JOIN GameSeeds ON GameSeeds.GameSeed = ReplayDataSetsChanges.GameSeed
+	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
+	LEFT JOIN PlayerQuitTurn ON Games.Player = PlayerQuitTurn.Player AND Games.PlayerGameNumber = PlayerQuitTurn.PlayerGameNumber
+	WHERE ReplayDataSetKeys.ReplayDataSetID = ${dataset2Sel.options[dataset2Sel.selectedIndex].value}
+	ORDER BY Turn
+	;
+`}), true);
 beliefsTimeBtn.addEventListener("click", () => worker.postMessage({ action: 'exec', id: 0, sql: `
 	SELECT BeliefTypes.BeliefType AS TraceName, Turn,
 	sum(BeliefsChanges.Value) AS Value
