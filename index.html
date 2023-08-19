@@ -33,8 +33,12 @@
     }
     #tab1:checked ~ #content1,
     #tab2:checked ~ #content2,
-    #tab3:checked ~ #content3 {
+    #tab3:checked ~ #content3,
+    #tab4:checked ~ #content4 {
       display: block;
+    }
+    #tab4:checked ~ #plotOut {
+      display: none;
     }
     input:checked + label {
       border-top-color: #222;
@@ -60,6 +64,8 @@
       <label class="radioTab" for="tab2">Plot by Player</label>
       <input id="tab3" type="radio" name="tabs">
       <label class="radioTab" for="tab3">Plot Distribution</label>
+      <input id="tab4" type="radio" name="tabs">
+      <label class="radioTab" for="tab4">Tables</label>
       <section id="content1">
         Choose game: <select id="gameID-select"></select>
         <br>
@@ -79,30 +85,31 @@
         <button id="policies-time">Policies-Time</button>
         <button id="techs-time">Technologies-Time</button>
       </section>
+      <section id="content4">
+        <button id="BeliefsAverage" class="button">Average Turn of Belief Adoption</button>
+        <button id="BeliefsMedian" class="button">Median Turn of Belief Adoption</button>
+        <button id="BeliefsMinimum" class="button">Minimum Turn of Belief Adoption</button>
+        <button id="BeliefsTimes" class="button">Number Times of Belief Adoption</button>
+        <button id="PoliciesAverage" class="button">Average Turn of Policy Adoption</button>
+        <button id="PoliciesMedian" class="button">Median Turn of Policy Adoption</button>
+        <button id="PoliciesMinimum" class="button">Minimum Turn of Policy Adoption</button>
+        <button id="PoliciesTimes" class="button">Number Times of Belief Adoption</button>
+        <button id="TechnologiesAverage" class="button">Average Turn of Technology Research</button>
+        <button id="TechnologiesMedian" class="button">Median Turn of Technology Research</button>
+        <button id="TechnologiesMinimum" class="button">Minimum Turn of Technology Research</button>
+        <br>
+        <label for='commands'>Enter some SQL</label>
+        <textarea id="commands"></textarea>
+
+        <button id="execute" class="button">Execute</button>
+        <button id='savedb' class="button">Save the db</button>
+        <pre id="output">Loading...</pre>
+      </section>
 
       <div id="error" class="error"></div>
       <div id='plotOut'><!-- Plotly chart will be drawn inside this DIV --></div>
-      <br>
-      <button id="BeliefsAverage" class="button">Average Turn of Belief Adoption</button>
-      <button id="BeliefsMedian" class="button">Median Turn of Belief Adoption</button>
-      <button id="BeliefsMinimum" class="button">Minimum Turn of Belief Adoption</button>
-      <button id="BeliefsTimes" class="button">Number Times of Belief Adoption</button>
-      <button id="PoliciesAverage" class="button">Average Turn of Policy Adoption</button>
-      <button id="PoliciesMedian" class="button">Median Turn of Policy Adoption</button>
-      <button id="PoliciesMinimum" class="button">Minimum Turn of Policy Adoption</button>
-      <button id="PoliciesTimes" class="button">Number Times of Belief Adoption</button>
-      <button id="TechnologiesAverage" class="button">Average Turn of Technology Research</button>
-      <button id="TechnologiesMedian" class="button">Median Turn of Technology Research</button>
-      <button id="TechnologiesMinimum" class="button">Minimum Turn of Technology Research</button>
-      <br>
-      <label for='commands'>Enter some SQL</label>
-      <textarea id="commands"></textarea>
-
-      <button id="execute" class="button">Execute</button>
-      <button id='savedb' class="button">Save the db</button>
     </div>
 
-    <pre id="output">Loading...</pre>
   </main>
 
   <script type="text/javascript" src="sql.js"></script>
