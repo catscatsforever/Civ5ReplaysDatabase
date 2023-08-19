@@ -586,7 +586,7 @@ BeliefAverageBtn.addEventListener("click", () => { noerror(); let r = `
 	WHERE Value = 1
 	)
 
-	SELECT BeliefType, BeliefKey AS Belief, round(avg(Turn), 1) as "Average Turn"
+	SELECT BeliefType as "Belief Type", BeliefKey AS Belief, round(avg(Turn), 1) as "Average Turn"
 
 	FROM DataSets
 	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
@@ -609,7 +609,7 @@ BeliefMedianBtn.addEventListener("click", () => { noerror(); let r = `
 	WHERE Value = 1
 	)
 	
-	SELECT BeliefType, BeliefKey AS Belief, avg(Turn) OVER (PARTITION by BeliefKeys.BeliefID) as "Median Turn"
+	SELECT BeliefType as "Belief Type", BeliefKey AS Belief, avg(Turn) OVER (PARTITION by BeliefKeys.BeliefID) as "Median Turn"
 	
 	FROM DataSets
 	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
@@ -633,7 +633,7 @@ BeliefMinimumBtn.addEventListener("click", () => { noerror(); let r = `
 	WHERE Value = 1
 	)
 	
-	SELECT BeliefType, BeliefKey AS Belief, min(Turn) as "Minimum Turn"
+	SELECT BeliefType as "Belief Type", BeliefKey AS Belief, min(Turn) as "Minimum Turn"
 	
 	FROM DataSets
 	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
@@ -656,7 +656,7 @@ BeliefCountBtn.addEventListener("click", () => { noerror(); let r = `
 	WHERE Value = 1
 	)
 	
-	SELECT BeliefType, BeliefKey AS Belief, count(Turn) as "Count"
+	SELECT BeliefType as "Belief Type", BeliefKey AS Belief, count(Turn) as "Count"
 	
 	FROM DataSets
 	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
@@ -679,7 +679,7 @@ PolicyAverageBtn.addEventListener("click", () => { noerror(); let r = `
 	WHERE Value = 1
 	)
 	
-	SELECT PolicyBranch, PolicyKey AS Policy, Round(avg(Turn), 1) as "Average Turn"
+	SELECT PolicyBranch as "Policy Branch", PolicyKey AS Policy, Round(avg(Turn), 1) as "Average Turn"
 	
 	FROM DataSets
 	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
@@ -702,7 +702,7 @@ PolicyMedianBtn.addEventListener("click", () => { noerror(); let r = `
 	WHERE Value = 1
 	)
 	
-	SELECT PolicyBranch, PolicyKey AS Policy, avg(Turn) OVER (PARTITION by PolicyKeys.PolicyID) as "Median Turn"
+	SELECT PolicyBranch as "Policy Branch", PolicyKey AS Policy, avg(Turn) OVER (PARTITION by PolicyKeys.PolicyID) as "Median Turn"
 	
 	FROM DataSets
 	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
@@ -726,7 +726,7 @@ PolicyMinumumBtn.addEventListener("click", () => { noerror(); let r = `
 	WHERE Value = 1
 	)
 	
-	SELECT PolicyBranch, PolicyKey AS Policy, min(Turn) as "Minimum Turn"
+	SELECT PolicyBranch as "Policy Branch", PolicyKey AS Policy, min(Turn) as "Minimum Turn"
 	
 	FROM DataSets
 	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
@@ -749,7 +749,7 @@ PolicyCountBtn.addEventListener("click", () => { noerror(); let r = `
 	WHERE Value = 1
 	)
 	
-	SELECT PolicyBranch, PolicyKey AS Policy, count(Turn) as "Count"
+	SELECT PolicyBranch as "Policy Branch", PolicyKey AS Policy, count(Turn) as "Count"
 	
 	FROM DataSets
 	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
@@ -781,7 +781,7 @@ TechnologyAverageBtn.addEventListener("click", () => { noerror(); let r = `
 	JOIN GameSeeds ON GameSeeds.GameSeed = RankedTable.GameSeed
 	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
 	GROUP BY RankedTable.TechnologyID
-	ORDER BY TechnologyKeys.TechnologyID, "Average Turn"
+	ORDER BY "Average Turn"
 	;
 	`; execute(r); editor.setValue(r); }, true);
 TechnologyMedianBtn.addEventListener("click", () => { noerror(); let r = `
@@ -804,7 +804,7 @@ TechnologyMedianBtn.addEventListener("click", () => { noerror(); let r = `
 	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
 	WHERE Value = 1 and 2*rnk - 1 = cnt or 2*rnk = cnt or 2*rnk - 2 = cnt
 	GROUP BY RankedTable.TechnologyID
-	ORDER BY TechnologyKeys.TechnologyID, "Median Turn"
+	ORDER BY "Median Turn"
 	;
 	`; execute(r); editor.setValue(r); }, true);
 TechnologyMinimumBtn.addEventListener("click", () => { noerror(); let r = `
