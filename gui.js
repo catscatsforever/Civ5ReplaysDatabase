@@ -15,23 +15,19 @@ let tab1Rad = document.getElementById("tab1");
 let tab2Rad = document.getElementById("tab2");
 let tab3Rad = document.getElementById("tab3");
 
+let plotAllGamesBtn = document.getElementById("plotAllGames");
 let plotAllPlayersBtn = document.getElementById("plotAllPlayers");
 let beliefsTimeBtn = document.getElementById("beliefs-time");
 let policiesTimeBtn = document.getElementById("policies-time");
 let techsTimeBtn = document.getElementById("techs-time");
 
-// let BuildingClassesBtn = document.getElementById('BuildingClasses');
-// let PoliciesBtn = document.getElementById('Policies');
-// let ReplayDataSetsBtn = document.getElementById('ReplayDataSets');
-// let TechnologiesBtn = document.getElementById('Technologies');
-// let QuitTurnBtn = document.getElementById('QuitTurn');
 let BeliefAverageBtn = document.getElementById('BeliefsAverage');
 let BeliefMedianBtn = document.getElementById('BeliefsMedian');
 let BeliefMinimumBtn = document.getElementById('BeliefsMinimum');
 let BeliefCountBtn = document.getElementById('BeliefsTimes');
 let PolicyAverageBtn = document.getElementById('PoliciesAverage');
 let PolicyMedianBtn = document.getElementById('PoliciesMedian');
-let PolicyMinumumBtn = document.getElementById('PoliciesMinimum');
+let PolicyMinimumBtn = document.getElementById('PoliciesMinimum');
 let PolicyCountBtn = document.getElementById('PoliciesTimes');
 let TechnologyAverageBtn = document.getElementById('TechnologiesAverage');
 let TechnologyMedianBtn = document.getElementById('TechnologiesMedian');
@@ -90,6 +86,8 @@ function execute(commands) {
 			let t = results[0].columns.indexOf('TraceName');
 			let x = results[0].columns.indexOf('Turn');
 			let y = results[0].columns.indexOf('Value');
+			let end = results[0].columns.indexOf('EndTurn');
+			let rank = results[0].columns.indexOf('Standing');
 			let data = [];
 			let traces = [...new Set(results[0].values.map((el) => { return el[0] }))];
 			let arrX = Array.from({length: traces.length}, e => Array()),
@@ -114,15 +112,20 @@ function execute(commands) {
 					});
 				}
 			}
+			// scatter plot
 			else {
 				if (y === -1) y = results[0].columns.indexOf('Delta');
 				let playerQuitTurn = new Array(traces.length);
-				let endTurn = results[0].values.at(-1)[1];  // ordered by turns, last row shows final recorded turn
+				let playerEndTurn = new Array(traces.length);
+				let playerRank = new Array(traces.length);
 				let curX = new Array(traces.length).fill(0), curY = new Array(traces.length).fill(0);
 				results[0].values.forEach((el) => {
+					let endTurn = el[end] || results[0].values.at(-1)[1];
 					let i = traces.indexOf(el[0]);
 					let quitTurn = el[3] || endTurn;
 					playerQuitTurn[i] = playerQuitTurn[i] || quitTurn;
+					playerEndTurn[i] = playerEndTurn[i] || endTurn;
+					playerRank[i] = playerRank[i] || el[rank];
 					if ((el[1] < quitTurn) && (i !== -1)) {
 						// fill gaps
 						while (el[1] > (curX[i] + 1)) {
@@ -140,7 +143,7 @@ function execute(commands) {
 				// fill data for yet alive players
 				for (let i = 0; i < traces.length; i++) {
 					let curX = arrX[i].at(-1), curY = arrY[i].at(-1);
-					while (arrX[i].length < playerQuitTurn[i]) {
+					while (arrX[i].length < Math.min(playerQuitTurn[i], playerEndTurn[i])) {
 						// increment turn while value stays the same
 						curX++;
 						arrX[i].push(curX);
@@ -149,6 +152,7 @@ function execute(commands) {
 				}
 				console.log('arrX', arrX);
 				console.log('arrY', arrY);
+				console.log('rank', playerRank);
 				for (let i = 0; i < traces.length; i++) {
 					data.push({
 						x: arrX[i],
@@ -160,8 +164,8 @@ function execute(commands) {
 						showlegend: true,
 						name: traces[i]
 					});
-					// add X marker when player "dies"
-					if (playerQuitTurn[i] < endTurn) {
+					// mark winner
+					if (playerRank[i] === 1) {
 						data.push({
 							x: [arrX[i].at(-1)],
 							y: [arrY[i].at(-1)],
@@ -169,7 +173,24 @@ function execute(commands) {
 							type: 'scatter',
 							marker: {
 								size: 12,
-								color: Plotly.PlotSchema.get().layout.layoutAttributes.colorway.dflt[data.length - 1],
+								color: Plotly.PlotSchema.get().layout.layoutAttributes.colorway.dflt[(data.length - 1) % 10],
+								symbol: 'star'
+							},
+							legendgroup: `group${i}`,
+							showlegend: false,
+							hoverinfo: 'skip'
+						})
+					}
+					// add X marker when player "dies"
+					else {
+						data.push({
+							x: [arrX[i].at(-1)],
+							y: [arrY[i].at(-1)],
+							mode: 'markers',
+							type: 'scatter',
+							marker: {
+								size: 12,
+								color: Plotly.PlotSchema.get().layout.layoutAttributes.colorway.dflt[(data.length - 1) % 10],
 								symbol: 'x-dot'
 							},
 							legendgroup: `group${i}`,
@@ -194,7 +215,7 @@ function execute(commands) {
 					bgcolor: '#E2E2E2',
 					bordercolor: '#FFFFFF',
 					borderwidth: 2,
-					y: 1.05
+					y: 1.15
 				}
 			};
 			let config = {
@@ -368,7 +389,8 @@ function doPlot(e) {
 	if (tab1Rad.checked) {
 		msg = `
 			SELECT Games.Player AS TraceName, Turn, 
-    		sum(ReplayDataSetsChanges.Value) OVER (PARTITION by Games.GameID, Games.Player ORDER BY Turn) Delta, PlayerQuitTurn.Value AS QuitTurn
+    		sum(ReplayDataSetsChanges.Value) OVER (PARTITION by Games.GameID, Games.Player ORDER BY Turn) Delta,
+    		PlayerQuitTurn.Value AS QuitTurn, GameSeeds.EndTurn, Games.Standing
 			
 			FROM DataSets
 			JOIN ReplayDataSetsChanges ON ReplayDataSetsChanges.DataSetID = DataSets.DataSetID
@@ -384,7 +406,8 @@ function doPlot(e) {
 	else if (tab2Rad.checked) {
 		msg = `
 			SELECT 'Game ' || Games.PlayerGameNumber || ' (' || Games.Civilization || ')' AS TraceName, Turn,
-			sum(ReplayDataSetsChanges.Value) OVER (PARTITION by Games.GameID, Games.Player ORDER BY Turn) Delta, PlayerQuitTurn.Value AS QuitTurn
+			sum(ReplayDataSetsChanges.Value) OVER (PARTITION by Games.GameID, Games.Player ORDER BY Turn) Delta,
+			PlayerQuitTurn.Value AS QuitTurn, GameSeeds.EndTurn, Games.Standing
 			
 			FROM DataSets
 			JOIN ReplayDataSetsChanges ON ReplayDataSetsChanges.DataSetID = DataSets.DataSetID
@@ -425,9 +448,26 @@ dataset2Sel.addEventListener("change", doPlot, true);
 tab1Rad.addEventListener("click", doPlot, true);
 tab2Rad.addEventListener("click", doPlot, true);
 tab3Rad.addEventListener("click", doPlot, true);
+plotAllGamesBtn.addEventListener("click", () => worker.postMessage({ action: 'exec', id: 0, sql: `
+	SELECT Games.Player || ' Game ' || Games.PlayerGameNumber || ' (' || Games.Civilization || ')' AS TraceName, Turn,
+	sum(ReplayDataSetsChanges.Value) OVER (PARTITION by Games.GameID, Games.Player ORDER BY Turn) Delta,
+	PlayerQuitTurn.Value AS QuitTurn, GameSeeds.EndTurn, Games.Standing
+	
+	FROM DataSets
+	JOIN ReplayDataSetsChanges ON ReplayDataSetsChanges.DataSetID = DataSets.DataSetID
+	JOIN ReplayDataSetKeys ON ReplayDataSetKeys.ReplayDataSetID = ReplayDataSetsChanges.ReplayDataSetID
+	JOIN CivKeys ON CivKeys.CivID = ReplayDataSetsChanges.CivID
+	JOIN GameSeeds ON GameSeeds.GameSeed = ReplayDataSetsChanges.GameSeed
+	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
+	LEFT JOIN PlayerQuitTurn ON Games.Player = PlayerQuitTurn.Player AND Games.PlayerGameNumber = PlayerQuitTurn.PlayerGameNumber
+	WHERE ReplayDataSetKeys.ReplayDataSetID = ${dataset2Sel.options[dataset2Sel.selectedIndex].value}
+	ORDER BY Turn
+	;
+`}), true);
 plotAllPlayersBtn.addEventListener("click", () => worker.postMessage({ action: 'exec', id: 0, sql: `
 	SELECT Games.Player || ' Game ' || Games.PlayerGameNumber || ' (' || Games.Civilization || ')' AS TraceName, Turn,
-	sum(ReplayDataSetsChanges.Value) OVER (PARTITION by Games.GameID, Games.Player ORDER BY Turn) Delta, PlayerQuitTurn.Value AS QuitTurn
+	sum(ReplayDataSetsChanges.Value) OVER (PARTITION by Games.GameID, Games.Player ORDER BY Turn) Delta,
+	PlayerQuitTurn.Value AS QuitTurn, GameSeeds.EndTurn, Games.Standing
 	
 	FROM DataSets
 	JOIN ReplayDataSetsChanges ON ReplayDataSetsChanges.DataSetID = DataSets.DataSetID
@@ -716,7 +756,7 @@ PolicyMedianBtn.addEventListener("click", () => { noerror(); let r = `
 	ORDER BY PolicyKeys.BranchID, "Median Turn"
 	;
 	`; execute(r); editor.setValue(r); }, true);
-PolicyMinumumBtn.addEventListener("click", () => { noerror(); let r = `
+PolicyMinimumBtn.addEventListener("click", () => { noerror(); let r = `
 	with RankedTable as (
 	SELECT *
 	, row_number() OVER (PARTITION by PolicyID order by Turn) as rnk
