@@ -14,7 +14,13 @@
       font-weight: normal;
     }
     .js-plotly-plot, .plot-container {
-       height: 80vh
+       height: 70vh
+    }
+    th {
+      cursor: default
+    }
+    th:hover:after {
+      content: " ▼";
     }
     input, section {
       clear: both;
@@ -58,45 +64,51 @@
 
 
     <div id="inputs" style="display: none">
-      <input id="tab1" type="radio" name="tabs" checked>
+      <input id="tab1" type="radio" name="tabs" class="plot-clk" checked>
       <label class="radioTab" for="tab1">Plot by Game</label>
-      <input id="tab2" type="radio" name="tabs">
+      <input id="tab2" type="radio" name="tabs" class="plot-clk">
       <label class="radioTab" for="tab2">Plot by Player</label>
-      <input id="tab3" type="radio" name="tabs">
+      <input id="tab3" type="radio" name="tabs" class="plot-clk">
       <label class="radioTab" for="tab3">Plot Distribution</label>
-      <input id="tab4" type="radio" name="tabs">
+      <input id="tab4" type="radio" name="tabs" class="plot-clk">
       <label class="radioTab" for="tab4">Tables</label>
       <section id="content1">
-        Choose game: <select id="gameID-select"></select>
+        Choose game: <select id="gameID-select" class="plot-sel"></select>
         <br>
-        dataset: <select id="dataset-select"></select>
+        dataset: <select id="dataset-select" class="plot-sel"></select>
         <br>
-        <button id="plotAllGames">Plot all games</button>
+        <button id="plotAllGames" class="plot-clk">Plot all games</button>
       </section>
       <section id="content2">
-        Player: <select id="playerID-select"></select>
+        Player: <select id="playerID-select" class="plot-sel"></select>
         <br>
-        dataset: <select id="dataset-select2"></select>
+        dataset: <select id="dataset-select2" class="plot-sel"></select>
         <br>
-        <button id="plotAllPlayers">Plot all players</button>
+        <button id="plotAllPlayers" class="plot-clk">Plot all players</button>
       </section>
       <section id="content3">
-        <button id="beliefs-time">Beliefs-Time</button>
-        <button id="policies-time">Policies-Time</button>
-        <button id="techs-time">Technologies-Time</button>
+        <button id="beliefs-time" class="plot-clk">Beliefs-Time</button>
+        <button id="policies-time" class="plot-clk">Policies-Time</button>
+        <button id="techs-time" class="plot-clk">Technologies-Time</button>
       </section>
       <section id="content4">
-        <button id="BeliefsAverage" class="button">Average Turn of Belief Adoption</button>
-        <button id="BeliefsMedian" class="button">Median Turn of Belief Adoption</button>
-        <button id="BeliefsMinimum" class="button">Minimum Turn of Belief Adoption</button>
-        <button id="BeliefsTimes" class="button">Number Times of Belief Adoption</button>
-        <button id="PoliciesAverage" class="button">Average Turn of Policy Adoption</button>
-        <button id="PoliciesMedian" class="button">Median Turn of Policy Adoption</button>
-        <button id="PoliciesMinimum" class="button">Minimum Turn of Policy Adoption</button>
-        <button id="PoliciesTimes" class="button">Number Times of Policy Adoption</button>
-        <button id="TechnologiesAverage" class="button">Average Turn of Technology Research</button>
-        <button id="TechnologiesMedian" class="button">Median Turn of Technology Research</button>
-        <button id="TechnologiesMinimum" class="button">Minimum Turn of Technology Research</button>
+        <div>
+          <button id="BeliefsAverage" class="button">Average Turn of Belief Adoption</button>
+          <button id="BeliefsMedian" class="button">Median Turn of Belief Adoption</button>
+          <button id="BeliefsMinimum" class="button">Minimum Turn of Belief Adoption</button>
+          <button id="BeliefsTimes" class="button">Number Times of Belief Adoption</button>
+        </div>
+        <div>
+          <button id="PoliciesAverage" class="button">Average Turn of Policy Adoption</button>
+          <button id="PoliciesMedian" class="button">Median Turn of Policy Adoption</button>
+          <button id="PoliciesMinimum" class="button">Minimum Turn of Policy Adoption</button>
+          <button id="PoliciesTimes" class="button">Number Times of Policy Adoption</button>
+        </div>
+        <div>
+          <button id="TechnologiesAverage" class="button">Average Turn of Technology Research</button>
+          <button id="TechnologiesMedian" class="button">Median Turn of Technology Research</button>
+          <button id="TechnologiesMinimum" class="button">Minimum Turn of Technology Research</button>
+        </div>
         <br>
         <label for='commands'>Enter some SQL</label>
         <textarea id="commands"></textarea>

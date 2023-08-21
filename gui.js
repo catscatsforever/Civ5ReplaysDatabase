@@ -3,6 +3,8 @@
 		plotly
 		codemirror
 */
+
+const colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
 let inputsElm = document.getElementById('inputs');
 
 let execBtn = document.getElementById("execute");
@@ -66,6 +68,7 @@ function noerror() {
 function execute(commands) {
 	tic();
 	worker.onmessage = function (event) {
+		console.log("e", event);
 		let results = event.data.results;
 		let id = event.data.id;
 		toc("Executing SQL");
@@ -81,142 +84,153 @@ function execute(commands) {
 		tic();
 		// plot data
 		if (id === 0) {
-			console.log('res', results);
+			//console.log('res', results);
 
-			let t = results[0].columns.indexOf('TraceName');
-			let x = results[0].columns.indexOf('Turn');
-			let y = results[0].columns.indexOf('Value');
-			let end = results[0].columns.indexOf('EndTurn');
-			let rank = results[0].columns.indexOf('Standing');
+			let conf = Object.assign(...results[0].values.map(([k, v]) => ({ [k]: v })));
+			//console.log('conf', conf);
 			let data = [];
-			let traces = [...new Set(results[0].values.map((el) => { return el[0] }))];
-			let arrX = Array.from({length: traces.length}, e => Array()),
-				arrY = Array.from({length: traces.length}, e => Array());
-			if (y >= 0) {
+			if (conf.type === 'bar') {
 				// distribution plot
-
-				results[0].values.forEach((el) => {
-					let i = traces.indexOf(el[t]);
-					arrX[i].push(el[x]);
-					arrY[i].push(el[y]);
-				});
+				let tracesData = results[1].values.map(([k, v]) => (k));
+				console.log('tracesData', tracesData);
+				let arrX = Object.assign(...Object.values(tracesData).map((v) => ({ [v]: [] }))),
+					arrY = Object.assign(...Object.values(tracesData).map((v) => ({ [v]: [] })));
+				for (let i = 0; i < results[2].values.length; i++) {
+					arrX[results[2].values[i][0]].push(results[2].values[i][1]);
+					arrY[results[2].values[i][0]].push(results[2].values[i][2]);
+				}
 				console.log('arrX', arrX);
 				console.log('arrY', arrY);
-				for (let i = 0; i < traces.length; i++) {
+				tracesData.forEach((i, n) => {
 					data.push({
 						x: arrX[i],
 						y: arrY[i],
 						type: 'bar',
 						showlegend: true,
-						name: traces[i]
+						name: i
 					});
-				}
+				});
+				console.log('data', data)
 			}
 			// scatter plot
-			else {
-				if (y === -1) y = results[0].columns.indexOf('Delta');
-				let playerQuitTurn = new Array(traces.length);
-				let playerEndTurn = new Array(traces.length);
-				let playerRank = new Array(traces.length);
-				let curX = new Array(traces.length).fill(0), curY = new Array(traces.length).fill(0);
-				results[0].values.forEach((el) => {
-					let endTurn = el[end] || results[0].values.at(-1)[1];
-					let i = traces.indexOf(el[0]);
-					let quitTurn = el[3] || endTurn;
-					playerQuitTurn[i] = playerQuitTurn[i] || quitTurn;
-					playerEndTurn[i] = playerEndTurn[i] || endTurn;
-					playerRank[i] = playerRank[i] || el[rank];
-					if ((el[1] < quitTurn) && (i !== -1)) {
-						// fill gaps
-						while (el[1] > (curX[i] + 1)) {
-							// increment turn while value stays the same
-							curX[i]++;
-							arrX[i].push(curX[i]);
-							arrY[i].push(curY[i]);
-						}
-						arrX[i].push(el[1]);
-						arrY[i].push(el[2]);
-						curX[i] = el[1];
-						curY[i] = el[2];
+			else if (conf.type === 'scatter') {
+				let gamesData = Object.assign(...results[1].values.map(([k, v]) => ({ [k]: v })));
+				Object.entries(gamesData).forEach(([k, v]) => {
+					if (!v) v = 330;
+				});
+				//console.log('gamesData', gamesData);
+				let tracesData = Object.assign(...results[2].values.map((k, v) => {
+						return { [k[1]]: Object.assign(...k.map((d,i) => {
+								return { [results[2].columns[i]]: d }
+							})) }
+					}
+				));
+				let nTraces = Object.keys(tracesData).length;
+				Object.values(tracesData).forEach((v) => {
+					if (!v.QuitTurn) {
+						v.QuitTurn = gamesData[v.GameID];
 					}
 				});
-				// fill data for yet alive players
-				for (let i = 0; i < traces.length; i++) {
+				let arrX = Object.assign(...Object.values(tracesData).map((v) => ({ [v.rowid]: [] }))),
+					arrY = Object.assign(...Object.values(tracesData).map((v) => ({ [v.rowid]: [] })));
+				let curX = Object.assign(...Object.values(tracesData).map((v) => ({ [v.rowid]: 0 }))),
+					curY = Object.assign(...Object.values(tracesData).map((v) => ({ [v.rowid]: 0 })));
+				for (let i = 0; i < results[3].values.length; i++) {
+					let lastTurn = tracesData[results[3].values[i][0]].QuitTurn ?? gamesData[tracesData[results[3].values[i][0]].GameID];
+					if (results[3].values[i][1] < lastTurn) {
+						// fill gaps
+						while (results[3].values[i][1] > (curX[results[3].values[i][0]] + 1)) {
+							// increment turn while value stays the same
+							curX[results[3].values[i][0]]++;
+							arrX[results[3].values[i][0]].push(curX[results[3].values[i][0]]);
+							arrY[results[3].values[i][0]].push(curY[results[3].values[i][0]]);
+						}
+						curX[results[3].values[i][0]] = results[3].values[i][1];
+						curY[results[3].values[i][0]] = results[3].values[i][2];
+						arrX[results[3].values[i][0]].push(results[3].values[i][1]);
+						arrY[results[3].values[i][0]].push(results[3].values[i][2]);
+					}
+				}
+				//console.log('arrX', arrX);
+				//console.log('arrY', arrY);
+				Object.keys(tracesData).forEach((i, n) => {
+					// fill data for yet alive players
 					let curX = arrX[i].at(-1), curY = arrY[i].at(-1);
-					while (arrX[i].length < Math.min(playerQuitTurn[i], playerEndTurn[i])) {
+					let lastTurn = tracesData[i].QuitTurn ?? gamesData[tracesData[i].GameID];
+					while (curX < lastTurn) {
 						// increment turn while value stays the same
 						curX++;
 						arrX[i].push(curX);
 						arrY[i].push(curY);
 					}
-				}
-				console.log('arrX', arrX);
-				console.log('arrY', arrY);
-				console.log('rank', playerRank);
-				for (let i = 0; i < traces.length; i++) {
 					data.push({
 						x: arrX[i],
 						y: arrY[i],
-						mode: 'lines',
-						type: 'scatter',
-						line: {shape: 'spline'},
+						mode: conf.mode,
+						type: conf.type,
+						line: {
+							shape: 'spline',
+							color: colors[n % 10],
+						},
 						legendgroup: `group${i}`,
 						showlegend: true,
-						name: traces[i]
+						name: tracesData[i].TraceName
 					});
-					// mark winner
-					if (playerRank[i] === 1) {
-						data.push({
-							x: [arrX[i].at(-1)],
-							y: [arrY[i].at(-1)],
-							mode: 'markers',
-							type: 'scatter',
-							marker: {
-								size: 12,
-								color: Plotly.PlotSchema.get().layout.layoutAttributes.colorway.dflt[(data.length - 1) % 10],
-								symbol: 'star'
-							},
-							legendgroup: `group${i}`,
-							showlegend: false,
-							hoverinfo: 'skip'
-						})
+					if (tracesData[i].Standing) {
+						// mark winner
+						if (tracesData[i].Standing === 1) {
+							data.push({
+								x: [arrX[i].at(-1)],
+								y: [arrY[i].at(-1)],
+								mode: 'markers',
+								type: conf.type,
+								marker: {
+									size: 12,
+									color: colors[n % 10],
+									symbol: 'star'
+								},
+								legendgroup: `group${i}`,
+								showlegend: false,
+								hoverinfo: 'skip'
+							})
+						}
+						// add X marker when player "dies"
+						else {
+							data.push({
+								x: [arrX[i].at(-1)],
+								y: [arrY[i].at(-1)],
+								mode: 'markers',
+								type: conf.type,
+								marker: {
+									size: 12,
+									color: colors[n % 10],
+									symbol: 'x-dot'
+								},
+								legendgroup: `group${i}`,
+								showlegend: false,
+								hoverinfo: 'skip'
+							})
+						}
 					}
-					// add X marker when player "dies"
-					else {
-						data.push({
-							x: [arrX[i].at(-1)],
-							y: [arrY[i].at(-1)],
-							mode: 'markers',
-							type: 'scatter',
-							marker: {
-								size: 12,
-								color: Plotly.PlotSchema.get().layout.layoutAttributes.colorway.dflt[(data.length - 1) % 10],
-								symbol: 'x-dot'
-							},
-							legendgroup: `group${i}`,
-							showlegend: false,
-							hoverinfo: 'skip'
-						})
-					}
-				}
+				})
 			}
 			let layout = {
 				hovermode: "x unified",
 				barmode: 'relative',
 				xaxis: {
-					title: 'Turn'
+					title: conf.xaxis
 				},
 				yaxis: {
-					title: `${tab1Rad.checked ? datasetSel.options[datasetSel.selectedIndex].text :
-						tab2Rad.checked ? dataset2Sel.options[dataset2Sel.selectedIndex].text : 'TODO'}`
+					title: conf.yaxis ?? 'TODO'
 				},
 				legend: {
-					orientation: "h",
+					orientation: "v",
 					bgcolor: '#E2E2E2',
 					bordercolor: '#FFFFFF',
-					borderwidth: 2,
-					y: 1.15
-				}
+					borderwidth: 2
+				},
+				//plot_bgcolor: 'black',
+				//paper_bgcolor: 'black'
 			};
 			let config = {
 				responsive: true,
@@ -226,7 +240,7 @@ function execute(commands) {
 					height: 2160,
 					width: 3840,
 					scale: 1 // Multiply title/legend/axis/canvas sizes by this factor
-				}
+				},
 			};
 			Plotly.newPlot('plotOut', data, layout, config);
 		}
@@ -238,20 +252,14 @@ function execute(commands) {
 				opt.text = results[0].values[i][0];
 				gameSel.add(opt);
 			}
-		}
-		// fill datasets select
-		else if (id === 2) {
-			for (let i = 0; i < results[0].values.length; i++) {
-				datasetSel.add(new Option(results[0].values[i][1], results[0].values[i][0]));
-				dataset2Sel.add(new Option(results[0].values[i][1], results[0].values[i][0]));
+			for (let i = 0; i < results[1].values.length; i++) {
+				datasetSel.add(new Option(results[1].values[i][1], results[1].values[i][0]));
+				dataset2Sel.add(new Option(results[1].values[i][1], results[1].values[i][0]));
 			}
-		}
-		// fill player select
-		else if (id === 3) {
-			for (let i = 0; i < results[0].values.length; i++) {
+			for (let i = 0; i < results[2].values.length; i++) {
 				const opt = document.createElement("option");
 				opt.value = i;
-				opt.text = results[0].values[i][0];
+				opt.text = results[2].values[i][0];
 				playerSel.add(opt);
 			}
 		}
@@ -261,6 +269,28 @@ function execute(commands) {
 			for (let i = 0; i < results.length; i++) {
 				outputElm.appendChild(tableCreate(results[i].columns, results[i].values));
 			}
+			const allTables = document.querySelectorAll("table");
+
+			for (const table of allTables) {
+				const tBody = table.tBodies[0];
+				const rows = Array.from(tBody.rows);
+				const headerCells = table.tHead.rows[0].cells;
+
+				for (const th of headerCells) {
+					const cellIndex = th.cellIndex;
+
+					th.addEventListener("click", () => {
+						rows.sort((tr1, tr2) => {
+							const tr1Text = tr1.cells[cellIndex].textContent;
+							const tr2Text = tr2.cells[cellIndex].textContent;
+							return tr1Text.localeCompare(tr2Text, undefined, { numeric: true });
+						});
+
+						tBody.append(...rows);
+					});
+				}
+			}
+
 		}
 		toc("Displaying results");
 	};
@@ -270,13 +300,13 @@ function execute(commands) {
 
 function fillSelects() {
 	worker.postMessage({ action: 'exec', id: 1, sql: `
-	SELECT GameID from GameSeeds JOIN BeliefsChanges ON BeliefsChanges.GameSeed = GameSeeds.GameSeed
-	GROUP BY GameID ORDER BY GameID;` });
-	worker.postMessage({ action: 'exec', id: 2, sql: `Select * from ReplayDataSetKeys` });
-	worker.postMessage({ action: 'exec', id: 3, sql: `
-	SELECT Player from GameSeeds JOIN BeliefsChanges ON BeliefsChanges.GameSeed = GameSeeds.GameSeed
-	JOIN Games ON Games.GameID = GameSeeds.GameID
-	GROUP BY Player ORDER BY Player` });
+		SELECT GameID from GameSeeds JOIN BeliefsChanges ON BeliefsChanges.GameSeed = GameSeeds.GameSeed
+		GROUP BY GameID ORDER BY GameID;
+		SELECT * FROM ReplayDataSetKeys;
+		SELECT Player from GameSeeds JOIN BeliefsChanges ON BeliefsChanges.GameSeed = GameSeeds.GameSeed
+		JOIN Games ON Games.GameID = GameSeeds.GameID
+		GROUP BY Player ORDER BY Player;
+	`});
 }
 
 // Create an HTML table
@@ -378,244 +408,152 @@ function savedb() {
 	worker.postMessage({ action: 'export' });
 }
 savedbElm.addEventListener("click", savedb, true);
-
 function doPlot(e) {
+	tic();
 	noerror();
 	let gameID = gameSel.options.length > 0 ? gameSel.options[gameSel.selectedIndex].value : 1;
-	let datasetID = datasetSel.options.length > 0 ? datasetSel.options[datasetSel.selectedIndex].value : 1;
+	let dataset = datasetSel.options.length > 0 ? datasetSel.options[datasetSel.selectedIndex] : {value:1, text:'Score'};
 	let playerName = playerSel.options.length > 0 ? playerSel.options[playerSel.selectedIndex].text : '12g';
-	let dataset2ID = dataset2Sel.options.length > 0 ? dataset2Sel.options[dataset2Sel.selectedIndex].value : 1;
-	let msg = '';
-	if (tab1Rad.checked) {
-		msg = `
-			SELECT Games.Player AS TraceName, Turn, 
-    		sum(ReplayDataSetsChanges.Value) OVER (PARTITION by Games.GameID, Games.Player ORDER BY Turn) Delta,
-    		PlayerQuitTurn.Value AS QuitTurn, GameSeeds.EndTurn, Games.Standing
-			
-			FROM DataSets
-			JOIN ReplayDataSetsChanges ON ReplayDataSetsChanges.DataSetID = DataSets.DataSetID
-			JOIN ReplayDataSetKeys ON ReplayDataSetKeys.ReplayDataSetID = ReplayDataSetsChanges.ReplayDataSetID
-			JOIN CivKeys ON CivKeys.CivID = ReplayDataSetsChanges.CivID
-			JOIN GameSeeds ON GameSeeds.GameSeed = ReplayDataSetsChanges.GameSeed
-			JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
-    		LEFT JOIN PlayerQuitTurn ON Games.Player = PlayerQuitTurn.Player AND Games.PlayerGameNumber = PlayerQuitTurn.PlayerGameNumber
-			WHERE Games.GameID = ${gameID} AND ReplayDataSetKeys.ReplayDataSetID = ${datasetID} 
-			ORDER BY Turn
-			;
-		`}
+	let dataset2 = dataset2Sel.options.length > 0 ? dataset2Sel.options[dataset2Sel.selectedIndex] : {value:1, text:'Score'};
+	let condition1 = `Games.GameID = 1`;
+	let condition2 = `ReplayDataSetKeys.ReplayDataSetID = 1`;
+	let traceName = `Games.Player`;
+	let yaxisName = ``;
+	if (e?.target === plotAllGamesBtn) {
+		condition1 = '';
+		condition2 = `ReplayDataSetKeys.ReplayDataSetID = ${dataset.value}`;
+		traceName = `Games.Player || ' Game ' || Games.PlayerGameNumber || ' (' || Games.Civilization || ')'`;
+		yaxisName = dataset.text;
+	}
+	else if (e?.target === plotAllPlayersBtn) {
+		condition1 = '';
+		condition2 = `ReplayDataSetKeys.ReplayDataSetID = ${dataset2.value}`;
+		traceName = `Games.Player || ' Game ' || Games.PlayerGameNumber || ' (' || Games.Civilization || ')'`;
+		yaxisName = dataset2.text;
+	}
+	else if (tab1Rad.checked) {
+		condition1 = `Games.GameID = ${gameID}`;
+		condition2 = `ReplayDataSetKeys.ReplayDataSetID = ${dataset.value}`;
+		yaxisName = dataset.text;
+	}
 	else if (tab2Rad.checked) {
-		msg = `
-			SELECT 'Game ' || Games.PlayerGameNumber || ' (' || Games.Civilization || ')' AS TraceName, Turn,
-			sum(ReplayDataSetsChanges.Value) OVER (PARTITION by Games.GameID, Games.Player ORDER BY Turn) Delta,
-			PlayerQuitTurn.Value AS QuitTurn, GameSeeds.EndTurn, Games.Standing
-			
-			FROM DataSets
-			JOIN ReplayDataSetsChanges ON ReplayDataSetsChanges.DataSetID = DataSets.DataSetID
-			JOIN ReplayDataSetKeys ON ReplayDataSetKeys.ReplayDataSetID = ReplayDataSetsChanges.ReplayDataSetID
-			JOIN CivKeys ON CivKeys.CivID = ReplayDataSetsChanges.CivID
-			JOIN GameSeeds ON GameSeeds.GameSeed = ReplayDataSetsChanges.GameSeed
-			JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
-			LEFT JOIN PlayerQuitTurn ON Games.Player = PlayerQuitTurn.Player AND Games.PlayerGameNumber = PlayerQuitTurn.PlayerGameNumber
-			WHERE Games.Player = '${playerName}' AND ReplayDataSetKeys.ReplayDataSetID = ${dataset2ID}
-			ORDER BY Turn
-			;
-		`}
+		condition1 = `Games.Player = '${playerName.replace(/'/g, "''")}'`;
+		condition2 = `ReplayDataSetKeys.ReplayDataSetID = ${dataset2.value}`;
+		traceName = `'Game ' || Games.PlayerGameNumber || ' (' || Games.Civilization || ')'`;
+		yaxisName = dataset2.text;
+	}
 	else if (tab3Rad.checked) {
-		msg = `
-			SELECT BeliefTypes.BeliefType AS TraceName, Turn,
-			sum(BeliefsChanges.Value) AS Value
-			
-			FROM DataSets
-			JOIN BeliefsChanges ON BeliefsChanges.DataSetID = DataSets.DataSetID
-			JOIN BeliefKeys ON BeliefKeys.BeliefID = BeliefsChanges.BeliefID
-			JOIN BeliefTypes ON BeliefTypes.TypeID = BeliefKeys.TypeID
-			JOIN CivKeys ON CivKeys.CivID = BeliefsChanges.CivID
-			JOIN GameSeeds ON GameSeeds.GameSeed = BeliefsChanges.GameSeed
-			JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
-			WHERE BeliefsChanges.Value = 1
-			GROUP BY TraceName, Turn
-			ORDER BY Turn
-			;
-		`}
-	console.log('msg', msg);
-	worker.postMessage({ action: 'exec', id: 0, sql: msg });
-}
+		doBarPlot(e);
+		return;
+	}
+	let msg = `
+		WITH
+  			config(Key,Value) AS (
+    			VALUES('type','scatter'),
+          			('mode', 'lines'),
+					('xaxis','Turn'),
+					('yaxis','${yaxisName}')
+  			)
+		SELECT * FROM config
+		;
 
-gameSel.addEventListener("change", doPlot, true);
-datasetSel.addEventListener("change", doPlot, true);
-playerSel.addEventListener("change", doPlot, true);
-dataset2Sel.addEventListener("change", doPlot, true);
-tab1Rad.addEventListener("click", doPlot, true);
-tab2Rad.addEventListener("click", doPlot, true);
-tab3Rad.addEventListener("click", doPlot, true);
-plotAllGamesBtn.addEventListener("click", () => worker.postMessage({ action: 'exec', id: 0, sql: `
-	SELECT Games.Player || ' Game ' || Games.PlayerGameNumber || ' (' || Games.Civilization || ')' AS TraceName, Turn,
-	sum(ReplayDataSetsChanges.Value) OVER (PARTITION by Games.GameID, Games.Player ORDER BY Turn) Delta,
-	PlayerQuitTurn.Value AS QuitTurn, GameSeeds.EndTurn, Games.Standing
-	
-	FROM DataSets
-	JOIN ReplayDataSetsChanges ON ReplayDataSetsChanges.DataSetID = DataSets.DataSetID
-	JOIN ReplayDataSetKeys ON ReplayDataSetKeys.ReplayDataSetID = ReplayDataSetsChanges.ReplayDataSetID
-	JOIN CivKeys ON CivKeys.CivID = ReplayDataSetsChanges.CivID
-	JOIN GameSeeds ON GameSeeds.GameSeed = ReplayDataSetsChanges.GameSeed
-	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
-	LEFT JOIN PlayerQuitTurn ON Games.Player = PlayerQuitTurn.Player AND Games.PlayerGameNumber = PlayerQuitTurn.PlayerGameNumber
-	WHERE ReplayDataSetKeys.ReplayDataSetID = ${dataset2Sel.options[dataset2Sel.selectedIndex].value}
-	ORDER BY Turn
-	;
-`}), true);
-plotAllPlayersBtn.addEventListener("click", () => worker.postMessage({ action: 'exec', id: 0, sql: `
-	SELECT Games.Player || ' Game ' || Games.PlayerGameNumber || ' (' || Games.Civilization || ')' AS TraceName, Turn,
-	sum(ReplayDataSetsChanges.Value) OVER (PARTITION by Games.GameID, Games.Player ORDER BY Turn) Delta,
-	PlayerQuitTurn.Value AS QuitTurn, GameSeeds.EndTurn, Games.Standing
-	
-	FROM DataSets
-	JOIN ReplayDataSetsChanges ON ReplayDataSetsChanges.DataSetID = DataSets.DataSetID
-	JOIN ReplayDataSetKeys ON ReplayDataSetKeys.ReplayDataSetID = ReplayDataSetsChanges.ReplayDataSetID
-	JOIN CivKeys ON CivKeys.CivID = ReplayDataSetsChanges.CivID
-	JOIN GameSeeds ON GameSeeds.GameSeed = ReplayDataSetsChanges.GameSeed
-	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
-	LEFT JOIN PlayerQuitTurn ON Games.Player = PlayerQuitTurn.Player AND Games.PlayerGameNumber = PlayerQuitTurn.PlayerGameNumber
-	WHERE ReplayDataSetKeys.ReplayDataSetID = ${dataset2Sel.options[dataset2Sel.selectedIndex].value}
-	ORDER BY Turn
-	;
-`}), true);
-beliefsTimeBtn.addEventListener("click", () => worker.postMessage({ action: 'exec', id: 0, sql: `
-	SELECT BeliefTypes.BeliefType AS TraceName, Turn,
-	sum(BeliefsChanges.Value) AS Value
-	
-	FROM DataSets
-	JOIN BeliefsChanges ON BeliefsChanges.DataSetID = DataSets.DataSetID
-	JOIN BeliefKeys ON BeliefKeys.BeliefID = BeliefsChanges.BeliefID
-	JOIN BeliefTypes ON BeliefTypes.TypeID = BeliefKeys.TypeID
-	JOIN CivKeys ON CivKeys.CivID = BeliefsChanges.CivID
-	JOIN GameSeeds ON GameSeeds.GameSeed = BeliefsChanges.GameSeed
-	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
-	WHERE BeliefsChanges.Value = 1
-	GROUP BY TraceName, Turn
-	ORDER BY Turn
-	;
-`}), true);
-policiesTimeBtn.addEventListener("click", () => worker.postMessage({ action: 'exec', id: 0, sql: `
-	SELECT PolicyBranches.PolicyBranch AS TraceName, Turn,
-	sum(PoliciesChanges.Value) AS Value
-	
-	FROM DataSets
-	JOIN PoliciesChanges ON PoliciesChanges.DataSetID = DataSets.DataSetID
-	JOIN PolicyKeys ON PolicyKeys.PolicyID = PoliciesChanges.PolicyID
-	JOIN PolicyBranches ON PolicyBranches.BranchID = PolicyKeys.BranchID
-	JOIN CivKeys ON CivKeys.CivID = PoliciesChanges.CivID
-	JOIN GameSeeds ON GameSeeds.GameSeed = PoliciesChanges.GameSeed
-	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
-	WHERE PoliciesChanges.Value = 1
-	GROUP BY TraceName, Turn
-	ORDER BY Turn
-	;
-`}), true);
-techsTimeBtn.addEventListener("click", () => worker.postMessage({ action: 'exec', id: 0, sql: `
-	SELECT TechnologyKeys.TechnologyKey AS TraceName, Turn,
-	sum(TechnologiesChanges.Value) AS Value
-	
-	FROM DataSets
-	JOIN TechnologiesChanges ON TechnologiesChanges.DataSetID = DataSets.DataSetID
-	JOIN TechnologyKeys ON TechnologyKeys.TechnologyID = TechnologiesChanges.TechnologyID
-	JOIN CivKeys ON CivKeys.CivID = TechnologiesChanges.CivID
-	JOIN GameSeeds ON GameSeeds.GameSeed = TechnologiesChanges.GameSeed
-	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
-	WHERE TechnologiesChanges.Value = 1
-	GROUP BY TraceName, Turn
-	ORDER BY Turn
-`}), true);
+		WITH
+  			gamesData AS (
+    			SELECT GameSeeds.GameID, GameSeeds.EndTurn FROM GameSeeds
+					JOIN Games ON Games.GameID = GameSeeds.GameID
+    				${condition1 ? `WHERE ${condition1}` : ''}
+    				GROUP BY Games.GameID
+  			)
+		SELECT * FROM gamesData
+		;
 
-/*BuildingClassesBtn.addEventListener("click", () => { noerror(); let r = `
-	SELECT Player, Civilization, Standing, Games.GameID, BuildingClassKey AS BuildingClass, Turn
-	--SELECT *
-
-	FROM DataSets
-	JOIN BuildingClassesChanges ON BuildingClassesChanges.DataSetID = DataSets.DataSetID
-	JOIN BuildingClassKeys ON BuildingClassKeys.BuildingClassID = BuildingClassesChanges.BuildingClassID
-	JOIN CivKeys ON CivKeys.CivID = BuildingClassesChanges.CivID
-	JOIN GameSeeds ON GameSeeds.GameSeed = BuildingClassesChanges.GameSeed
-	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
-	WHERE BuildingClassKey = "Barn" OR BuildingClassKey = "Granary"
-	;
-	`; execute(r); editor.setValue(r); }, true);
-PoliciesBtn.addEventListener("click", () => { noerror(); let r = `
-	SELECT Player, Civilization, Games.GameID, Standing, PolicyKey AS Policy, Games.GameID,
-	AVG(Turn)
-
-	FROM DataSets
-	JOIN PoliciesChanges ON PoliciesChanges.DataSetID = DataSets.DataSetID
-	JOIN PolicyKeys ON PolicyKeys.PolicyID = PoliciesChanges.PolicyID
-	JOIN CivKeys ON CivKeys.CivID = PoliciesChanges.CivID
-	JOIN GameSeeds ON GameSeeds.GameSeed = PoliciesChanges.GameSeed
-	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
-	--WHERE Value = 1 AND PolicyKey IN ("Tradition Finisher", "Liberty Finisher")
-	WHERE Value = 1 AND PolicyKey IN ("Secularism", "Humanism", "Free Thought")
-	GROUP BY Policy
-	;
-	`; execute(r); editor.setValue(r); }, true);
-ReplayDataSetsBtn.addEventListener("click", () => { noerror(); let r = `
-	SELECT Player, Civilization, Standing, Games.GameID, ReplayDataSetKey AS ReplayDataSet, sum(Value) AS SUM_Value, Max(Turn),
-	(SELECT Value FROM PlayerQuitTurn WHERE PlayerQuitTurn.Player = Games.Player AND PlayerQuitTurn.PlayerGameNumber = Games.PlayerGameNumber) AS QuitTurn
-	--SELECT *
+		WITH
+  			tracesData AS (
+				SELECT GameID, Games.rowid, Games.Player AS TraceName, Standing, Value AS QuitTurn
+				FROM Games
+				LEFT JOIN PlayerQuitTurn ON Games.Player = PlayerQuitTurn.Player AND Games.PlayerGameNumber = PlayerQuitTurn.PlayerGameNumber
+				${condition1 ? `WHERE ${condition1}` : ''}
+  			)
+		SELECT * FROM tracesData
+		;
 	
-	FROM DataSets
-	JOIN ReplayDataSetsChanges ON ReplayDataSetsChanges.DataSetID = DataSets.DataSetID
-	JOIN ReplayDataSetKeys ON ReplayDataSetKeys.ReplayDataSetID = ReplayDataSetsChanges.ReplayDataSetID
-	JOIN CivKeys ON CivKeys.CivID = ReplayDataSetsChanges.CivID
-	JOIN GameSeeds ON GameSeeds.GameSeed = ReplayDataSetsChanges.GameSeed
-	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
-	WHERE ReplayDataSetKeys.ReplayDataSetID = 71
-	AND Turn < 
-	CASE WHEN (SELECT Value FROM PlayerQuitTurn WHERE PlayerQuitTurn.Player = Games.Player AND PlayerQuitTurn.PlayerGameNumber = Games.PlayerGameNumber) IS NOT NULL THEN
-		(SELECT Value FROM PlayerQuitTurn WHERE PlayerQuitTurn.Player = Games.Player AND PlayerQuitTurn.PlayerGameNumber = Games.PlayerGameNumber)
-	ELSE
-		330
-	END
-	--WHERE ReplayDataSetKey = "Born Scientists"-- AND Player = "Edward Gromyako"
-	--WHERE ReplayDataSetKeys.ReplayDataSetID = 6
-	GROUP BY Games.GameID, Civilization
-	HAVING SUM_Value > 0
-	ORDER BY Games.GameID, Player/*, sum(Value) DESC
-	;
-	`; execute(r); editor.setValue(r); }, true);
-TechnologiesBtn.addEventListener("click", () => { noerror(); let r = `
-	SELECT Player, Civilization, Standing, Games.GameID, TechnologyKey AS Technology, AVG(Turn)
-
-	FROM DataSets
-	JOIN TechnologiesChanges ON TechnologiesChanges.DataSetID = DataSets.DataSetID
-	JOIN TechnologyKeys ON TechnologyKeys.TechnologyID = TechnologiesChanges.TechnologyID
-	JOIN CivKeys ON CivKeys.CivID = TechnologiesChanges.CivID
-	JOIN GameSeeds ON GameSeeds.GameSeed = TechnologiesChanges.GameSeed
-	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
-	WHERE Value = 1 AND (TechnologyKey = "Plastics")
-	ORDER BY Turn
-	;
-	`; execute(r); editor.setValue(r); }, true);
-QuitTurnBtn.addEventListener("click", () => { noerror(); let r = `
-	CREATE TABLE If not EXISTS PlayerQuitTurn (
-		"Player" TEXT,
-		"PlayerGameNumber" INTEGER,
-		"Value" INTEGER NOT NULL
-	)
-	;
-	
-	DELETE FROM PlayerQuitTurn
-	;
-	
-	REPLACE INTO PlayerQuitTurn
-		SELECT Player, PlayerGameNumber, Turn
-	
-		FROM ReplayDataSetsChanges
+		SELECT Games.rowid, Turn AS x, 
+    	sum(ReplayDataSetsChanges.Value) OVER (PARTITION by Games.GameID, Games.Player ORDER BY Turn) y
+		
+		FROM DataSets
+		JOIN ReplayDataSetsChanges ON ReplayDataSetsChanges.DataSetID = DataSets.DataSetID
+		JOIN ReplayDataSetKeys ON ReplayDataSetKeys.ReplayDataSetID = ReplayDataSetsChanges.ReplayDataSetID
 		JOIN CivKeys ON CivKeys.CivID = ReplayDataSetsChanges.CivID
 		JOIN GameSeeds ON GameSeeds.GameSeed = ReplayDataSetsChanges.GameSeed
 		JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
-		WHERE ReplayDataSetID = 6 AND Value < 0
-	;
-	SELECT * FROM PlayerQuitTurn
-	;
-	`; execute(r); editor.setValue(r); }, true);*/
+    	LEFT JOIN PlayerQuitTurn ON Games.Player = PlayerQuitTurn.Player AND Games.PlayerGameNumber = PlayerQuitTurn.PlayerGameNumber
+		WHERE ${condition1 ? condition1 : ''} ${condition2 ? (condition1 ? `AND ${condition2}` : condition2) : ''}
+		;
+	`;
+	console.log('msg', msg);
+	worker.postMessage({ action: 'exec', id: 0, sql: msg });
+}
+function doBarPlot(e) {
+	noerror();
+	let traceName = '';
+	let table1, table2, table3, field1, field2, field3;
+	if (e?.target === policiesTimeBtn) {
+		table1 = 'PoliciesChanges';
+		table2 = 'PolicyKeys';
+		table3 = 'PolicyBranches';
+		field1 = 'PolicyID';
+		field2 = 'BranchID';
+		field3 = 'PolicyBranch';
+	}
+	else if (e?.target === techsTimeBtn) {
+		table1 = 'TechnologiesChanges';
+		table2 = 'TechnologyKeys';
+		field1 = 'TechnologyID';
+		field2 = 'TechnologyKey';
+	}
+	else if (tab3Rad.checked || e?.target === beliefsTimeBtn) {
+		table1 = 'BeliefsChanges';
+		table2 = 'BeliefKeys';
+		table3 = 'BeliefTypes';
+		field1 = 'BeliefID';
+		field2 = 'TypeID';
+		field3 = 'BeliefType';
+	}
+	msg = `
+		WITH
+  			config(Key,Value) AS (
+    			VALUES('type','bar'),
+          			('mode', 'lines'),
+					('xaxis','Turn'),
+					('yaxis','Occurrences')
+  			)
+		SELECT * FROM config
+		;
+		
+		SELECT ${field3 ? `${field3} FROM ${table3}` : `${field2} FROM ${table2}`}
+		;
+		
+		SELECT ${table3 ? `${table3}.${field3}` : `${table2}.${field2}`}, Turn,
+		sum(${table1}.Value) AS Value
+		
+		FROM DataSets
+		JOIN ${table1} ON ${table1}.DataSetID = DataSets.DataSetID
+		JOIN ${table2} ON ${table2}.${field1} = ${table1}.${field1}
+		${table3 ? `JOIN ${table3} ON ${table3}.${field2} = ${table2}.${field2}` : ''}
+		WHERE ${table1}.Value = 1
+		GROUP BY Turn, ${table2}.${field2}
+		ORDER BY Turn
+		;
+	`;
+	console.log('msg', msg);
+	worker.postMessage({ action: 'exec', id: 0, sql: msg });
+}
+document.querySelectorAll(".plot-sel").forEach(el => {
+	el.addEventListener("change", doPlot, true);
+});
+document.querySelectorAll(".plot-clk").forEach(el => {
+	el.addEventListener("click", doPlot, true);
+});
 BeliefAverageBtn.addEventListener("click", () => { noerror(); let r = `
 	with RankedTable as (
 	SELECT *
