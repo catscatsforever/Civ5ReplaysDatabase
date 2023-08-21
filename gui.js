@@ -422,13 +422,13 @@ function doPlot(e) {
 	if (e?.target === plotAllGamesBtn) {
 		condition1 = '';
 		condition2 = `ReplayDataSetKeys.ReplayDataSetID = ${dataset.value}`;
-		traceName = `Games.Player || ' Game ' || Games.PlayerGameNumber || ' (' || Games.Civilization || ')'`;
+		traceName = `Games.Player || ' (' || Games.PlayerGameNumber || ')'`;
 		yaxisName = dataset.text;
 	}
 	else if (e?.target === plotAllPlayersBtn) {
 		condition1 = '';
 		condition2 = `ReplayDataSetKeys.ReplayDataSetID = ${dataset2.value}`;
-		traceName = `Games.Player || ' Game ' || Games.PlayerGameNumber || ' (' || Games.Civilization || ')'`;
+		traceName = `Games.Player || ' ' || Games.PlayerGameNumber || ': ' || Games.Civilization`;
 		yaxisName = dataset2.text;
 	}
 	else if (tab1Rad.checked) {
@@ -439,7 +439,7 @@ function doPlot(e) {
 	else if (tab2Rad.checked) {
 		condition1 = `Games.Player = '${playerName.replace(/'/g, "''")}'`;
 		condition2 = `ReplayDataSetKeys.ReplayDataSetID = ${dataset2.value}`;
-		traceName = `'Game ' || Games.PlayerGameNumber || ' (' || Games.Civilization || ')'`;
+		traceName = `Games.PlayerGameNumber || ': ' || Games.Civilization`;
 		yaxisName = dataset2.text;
 	}
 	else if (tab3Rad.checked) {
@@ -469,7 +469,7 @@ function doPlot(e) {
 
 		WITH
   			tracesData AS (
-				SELECT GameID, Games.rowid, Games.Player AS TraceName, Standing, Value AS QuitTurn
+				SELECT GameID, Games.rowid, ${traceName} AS TraceName, Standing, Value AS QuitTurn
 				FROM Games
 				LEFT JOIN PlayerQuitTurn ON Games.Player = PlayerQuitTurn.Player AND Games.PlayerGameNumber = PlayerQuitTurn.PlayerGameNumber
 				${condition1 ? `WHERE ${condition1}` : ''}
