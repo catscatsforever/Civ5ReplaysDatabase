@@ -22,6 +22,8 @@ let plotAllPlayersBtn = document.getElementById("plotAllPlayers");
 let beliefsTimeBtn = document.getElementById("beliefs-time");
 let policiesTimeBtn = document.getElementById("policies-time");
 let techsTimeBtn = document.getElementById("techs-time");
+let sankeyPoliciesBtn = document.getElementById("sankey-policies");
+let sankeyTechsBtn = document.getElementById("sankey-techs");
 
 let BeliefAverageBtn = document.getElementById('BeliefsAverage');
 let BeliefMedianBtn = document.getElementById('BeliefsMedian');
@@ -111,6 +113,66 @@ function execute(commands) {
 					});
 				});
 				console.log('data', data)
+			}
+			// sankey plot
+			else if (conf.type === 'sankey') {
+				let d = {};
+				let s = [], t = [], v = [];
+				results[2].values.forEach((el) => {
+					let arr = JSON.parse(el);
+					for (let i = 0; i < arr.length - 1; i++) {
+						let fg = false;
+						for (let j = 0; j < s.length; j++) {
+							if (s[j] === arr[i] && t[j] === arr[i + 1]) {
+								fg = true;
+								v[j]++;
+								break;
+							}
+						}
+						if (fg === false) {
+							s.push(arr[i]);
+							t.push(arr[i + 1]);
+							v.push(1);
+						}
+					}
+				});
+				console.log(s,t,v);
+				let data1 = {
+					type: "sankey",
+					domain: {
+						x: [0,1],
+						y: [0,1]
+					},
+					orientation: "h",
+					node: {
+						pad: 35,
+						thickness: 30,
+						line: {
+							color: "black",
+							width: 0.5
+						},
+						label: results[1].values.map((el) => el[1])
+					},
+					link: {
+						source: s,
+						target: t,
+						value: v
+					}
+				};
+				if (conf.title === 'Policy Branches Flow') {
+					data1.node.x = [0.2, 0.1, 0.3, 0.4, 0.45, 0.45, 0.45, 0.45, 0.65, 0.8, 0.7, 0.9];
+					data1.node.y = [0.15, 0.5, 0.8, 0.6, 0.03, 0.15, 0.4, 0.25, 0.1, 0.7, 0.8, 0.5];
+				}
+
+				data = [data1];
+				let layout1 = {
+					title: conf.title,
+					font: {
+						size: 10
+					}
+				};
+				Plotly.newPlot('plotOut', data, layout1);
+				return;
 			}
 			// scatter plot
 			else if (conf.type === 'scatter') {
@@ -356,6 +418,14 @@ let editor = CodeMirror.fromTextArea(commandsElm, {
 		"Ctrl-S": savedb,
 	}
 });
+const resizeWatcher = new ResizeObserver(entries => {
+	for (const entry of entries){
+		if (entry.contentRect.width !== 0) {
+			editor.refresh();
+		}
+	}
+});
+resizeWatcher.observe(document.getElementById("sqlBox"));
 
 // Load a db from URL
 function fetchdb() {
@@ -434,6 +504,7 @@ function doPlot(e) {
 	else if (tab1Rad.checked) {
 		condition1 = `Games.GameID = ${gameID}`;
 		condition2 = `ReplayDataSetKeys.ReplayDataSetID = ${dataset.value}`;
+		traceName = `Games.Player||' ('||Games.Civilization||')'`;
 		yaxisName = dataset.text;
 	}
 	else if (tab2Rad.checked) {
@@ -548,11 +619,151 @@ function doBarPlot(e) {
 	console.log('msg', msg);
 	worker.postMessage({ action: 'exec', id: 0, sql: msg });
 }
+
+
+function doSankeyPlot(e) {
+	let msg = '';
+	let pols, title;
+	if (e?.target === sankeyPoliciesBtn) {
+		msg = `
+			WITH
+			config(Key,Value) AS (
+				VALUES('type','sankey'),
+					('title', 'Policy Branches Flow')
+			)
+			SELECT * FROM config
+			;
+			SELECT * FROM PolicyBranches
+			;
+			WITH
+				data AS (
+					SELECT *
+					FROM PoliciesChanges
+					JOIN PolicyKeys ON PolicyKeys.PolicyID = PoliciesChanges.PolicyID
+					WHERE ((PoliciesChanges.PolicyID IN (0,6,12,18,24,30,36,49,56)) OR (PoliciesChanges.PolicyID > 62)) AND value = 1
+					GROUP BY GameSeed, PoliciesChanges.CivID, BranchID
+					ORDER BY GameSeed, PoliciesChanges.CivID
+     		)
+     		SELECT '['||Arr||']' AS seq FROM (
+     			SELECT *, GROUP_CONCAT(BranchID)
+     			OVER (PARTITION BY GameSeed,CivID ORDER BY Turn ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS Arr
+     			FROM data
+     		)
+     		GROUP BY GameSeed, CivID
+     		HAVING COUNT(*) > 1
+			;
+
+		`;
+		worker.postMessage({ action: 'exec', id: 0, sql: msg });
+		return;
+	}
+	else if (e?.target === sankeyTechsBtn) {
+		msg = `
+			WITH
+			config(Key,Value) AS (
+				VALUES('type','sankey'),
+					('title', 'Technologies Flow')
+			)
+			SELECT * FROM config
+			;
+			SELECT * FROM TechnologyKeys
+			;
+			WITH
+				data AS (
+					SELECT *
+					FROM TechnologiesChanges
+					WHERE TechnologyID IN (0,24,26,32,33,34,42,43,45,47,53,54,62) AND value = 1
+					GROUP BY GameSeed, CivID, Turn
+					ORDER BY GameSeed, CivID
+			)
+			SELECT '['||Arr||']' AS seq FROM (
+				SELECT *, GROUP_CONCAT(TechnologyID)
+				OVER (PARTITION BY GameSeed,CivID ORDER BY Turn ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS Arr
+				FROM data
+			)
+			GROUP BY GameSeed, CivID
+			HAVING COUNT(*) > 1
+			;
+		`;
+		worker.postMessage({ action: 'exec', id: 0, sql: msg });
+		return;
+	}
+	else if (e?.target.id === 'sankey-tradition') {
+		pols = '6,7,8,9,10,11'
+	}
+	else if (e?.target.id === 'sankey-liberty') {
+		pols = '0,1,2,3,4,5'
+	}
+	else if (e?.target.id === 'sankey-honor') {
+		pols = '12,13,14,15,16,17'
+	}
+	else if (e?.target.id === 'sankey-piety') {
+		pols = '18,19,20,21,22,23'
+	}
+	else if (e?.target.id === 'sankey-patronage') {
+		pols = '24,25,26,27,28,29'
+	}
+	else if (e?.target.id === 'sankey-aesthetics') {
+		pols = '49,50,51,52,53,54'
+	}
+	else if (e?.target.id === 'sankey-commerce') {
+		pols = '30,31,32,33,34,35'
+	}
+	else if (e?.target.id === 'sankey-exploration') {
+		pols = '56,57,58,59,60,61'
+	}
+	else if (e?.target.id === 'sankey-rationalism') {
+		pols = '36,37,38,39,40,41'
+	}
+	else if (e?.target.id === 'sankey-freedom') {
+		pols = '63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,108'
+	}
+	else if (e?.target.id === 'sankey-order') {
+		pols = '78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,109'
+	}
+	else if (e?.target.id === 'sankey-autocracy') {
+		pols = '93,94,95,96,97,98,99,100,101,102,103,104,105,106,110'
+	}
+	msg = `
+		WITH
+		config(Key,Value) AS (
+			VALUES('type','sankey'),
+				('title', '${e?.target.textContent.replace(/'/g, "''")}')
+		)
+		SELECT * FROM config
+		;
+		SELECT * FROM PolicyKeys
+		;
+		WITH
+			data AS (
+				SELECT *
+				FROM PoliciesChanges
+				WHERE PolicyID IN (${pols}) AND value = 1
+				GROUP BY GameSeed, CivID, Turn
+				ORDER BY GameSeed, CivID
+		)
+		SELECT '['||Arr||']' AS seq FROM (
+			SELECT *, GROUP_CONCAT(PolicyID)
+			OVER (PARTITION BY GameSeed,CivID ORDER BY Turn ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS Arr
+			FROM data
+		)
+		GROUP BY GameSeed, CivID
+		HAVING COUNT(*) > 1
+		;
+	`;
+	worker.postMessage({ action: 'exec', id: 0, sql: msg });
+}
+sankeyPoliciesBtn.addEventListener("click", doSankeyPlot, true);
+sankeyTechsBtn.addEventListener("click", doSankeyPlot, true);
+
 document.querySelectorAll(".plot-sel").forEach(el => {
 	el.addEventListener("change", doPlot, true);
 });
 document.querySelectorAll(".plot-clk").forEach(el => {
 	el.addEventListener("click", doPlot, true);
+});
+document.querySelectorAll(".sankey-clk").forEach(el => {
+	el.addEventListener("click", doSankeyPlot, true);
 });
 BeliefAverageBtn.addEventListener("click", () => { noerror(); let r = `
 	with RankedTable as (

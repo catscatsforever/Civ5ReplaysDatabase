@@ -16,6 +16,78 @@
     .js-plotly-plot, .plot-container {
        height: 70vh
     }
+
+    .btn {
+      margin-top: 10px;
+      margin-left: 7px;
+      background-color: rgb(255, 255, 255);
+      border: 1px solid #DDD;
+      box-sizing: border-box;
+      color: rgb(34, 34, 34);
+      display: inline-block;
+      font-family: Circular, -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+      font-size: 17px;
+      line-height: 20px;
+      outline: none;
+      padding: 10px 17px;
+      position: relative;
+      text-align: center;
+      text-decoration: none;
+      touch-action: manipulation;
+      user-select: none;
+      width: auto;
+    }
+    .btn:hover {
+      box-shadow: #222 0 0 0 2px;
+      transition: box-shadow 0.2s ease 0s;
+      color: #222;
+    }
+    .btn:focus {
+      color: #222;
+    }
+    .btn:active {
+      background-color: rgb(247, 247, 247);
+      border-color: rgb(0, 0, 0);
+      transform: scale(0.96);
+      color: #222;
+    }
+    .sp {
+      margin-top: 10px;
+      margin-left: 7px;
+      box-sizing: border-box;
+      color: rgb(34, 34, 34);
+      display: inline-block;
+      font-family: Circular, -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+      font-size: 17px;
+      line-height: 20px;
+      outline: none;
+      padding: 10px 17px;
+      position: relative;
+      text-align: center;
+      text-decoration: none;
+      touch-action: manipulation;
+      user-select: none;
+      width: auto;
+    }
+    .chk {
+      font-family: Circular, -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+      font-size: 17px;
+      line-height: 20px;
+      position: relative;
+      display: inline-block;
+       accent-color: #222;
+       height: 20px;
+       width: 20px;
+     }
+
+      .button {
+      margin-top: 7px;
+      font-size: 20px;
+      border-top: 2px solid transparent;
+      border-right: 1px solid transparent;
+      border-left: 1px solid transparent;
+      border-bottom: 1px solid #DDD;
+    }
     th {
       cursor: default
     }
@@ -46,6 +118,12 @@
     #tab4:checked ~ #plotOut {
       display: none;
     }
+    #sqlBox {
+      display: none;
+    }
+    #showSql:checked ~ #sqlBox {
+      display: block;
+    }
     input:checked + label {
       border-top-color: #222;
       border-right-color: #DDD;
@@ -73,53 +151,81 @@
       <input id="tab4" type="radio" name="tabs" class="plot-clk">
       <label class="radioTab" for="tab4">Tables</label>
       <section id="content1">
-        Choose game: <select id="gameID-select" class="plot-sel"></select>
+        <span class="sp">Choose game:</span>
+        <select id="gameID-select" class="btn plot-sel"></select>
         <br>
-        dataset: <select id="dataset-select" class="plot-sel"></select>
+        <select id="dataset-select" class="btn plot-sel"></select>
         <br>
-        <button id="plotAllGames" class="plot-clk">Plot all games</button>
+        <button id="plotAllGames" class="btn plot-clk">Plot all games</button>
       </section>
       <section id="content2">
-        Player: <select id="playerID-select" class="plot-sel"></select>
+        <span class="sp">Player:</span>
+        <select id="playerID-select" class="btn plot-sel"></select>
         <br>
-        dataset: <select id="dataset-select2" class="plot-sel"></select>
+        <select id="dataset-select2" class="btn plot-sel"></select>
         <br>
-        <button id="plotAllPlayers" class="plot-clk">Plot all players</button>
+        <button id="plotAllPlayers" class="btn plot-clk">Plot all players</button>
       </section>
       <section id="content3">
-        <button id="beliefs-time" class="plot-clk">Beliefs-Time</button>
-        <button id="policies-time" class="plot-clk">Policies-Time</button>
-        <button id="techs-time" class="plot-clk">Technologies-Time</button>
+        <span class="sp">Bar charts:</span>
+        <br>
+        <button id="beliefs-time" class="btn plot-clk">Beliefs-Time</button>
+        <button id="policies-time" class="btn plot-clk">Policies-Time</button>
+        <button id="techs-time" class="btn plot-clk">Technologies-Time</button>
+        <br>
+        <span class="sp">Sankey diagrams:</span>
+        <br>
+        <button id="sankey-policies" class="btn">Policy Branches</button>
+        <br>
+        <button id="sankey-tradition" class="btn sankey-clk">Tradition</button>
+        <button id="sankey-liberty" class="btn sankey-clk">Liberty</button>
+        <button id="sankey-honor" class="btn sankey-clk">Honor</button>
+        <br>
+        <button id="sankey-piety" class="btn sankey-clk">Piety</button>
+        <button id="sankey-patronage" class="btn sankey-clk">Patronage</button>
+        <button id="sankey-aesthetics" class="btn sankey-clk">Aesthetics</button>
+        <br>
+        <button id="sankey-commerce" class="btn sankey-clk">Commerce</button>
+        <button id="sankey-exploration" class="btn sankey-clk">Exploration</button>
+        <button id="sankey-rationalism" class="btn sankey-clk">Rationalism</button>
+        <br>
+        <button id="sankey-freedom" class="btn sankey-clk">Freedom</button>
+        <button id="sankey-order" class="btn sankey-clk">Order</button>
+        <button id="sankey-autocracy" class="btn sankey-clk">Autocracy</button>
+        <br>
+        <button id="sankey-techs" class="btn">Techs-test</button>
       </section>
       <section id="content4">
         <div>
-          <button id="BeliefsAverage" class="button">Average Turn of Belief Adoption</button>
-          <button id="BeliefsMedian" class="button">Median Turn of Belief Adoption</button>
-          <button id="BeliefsMinimum" class="button">Minimum Turn of Belief Adoption</button>
-          <button id="BeliefsTimes" class="button">Number Times of Belief Adoption</button>
+          <button id="BeliefsAverage" class="btn">Average Turn of Belief Adoption</button>
+          <button id="BeliefsMedian" class="btn">Median Turn of Belief Adoption</button>
+          <button id="BeliefsMinimum" class="btn">Minimum Turn of Belief Adoption</button>
+          <button id="BeliefsTimes" class="btn">Number Times of Belief Adoption</button>
         </div>
         <div>
-          <button id="PoliciesAverage" class="button">Average Turn of Policy Adoption</button>
-          <button id="PoliciesMedian" class="button">Median Turn of Policy Adoption</button>
-          <button id="PoliciesMinimum" class="button">Minimum Turn of Policy Adoption</button>
-          <button id="PoliciesTimes" class="button">Number Times of Policy Adoption</button>
+          <button id="PoliciesAverage" class="btn">Average Turn of Policy Adoption</button>
+          <button id="PoliciesMedian" class="btn">Median Turn of Policy Adoption</button>
+          <button id="PoliciesMinimum" class="btn">Minimum Turn of Policy Adoption</button>
+          <button id="PoliciesTimes" class="btn">Number Times of Policy Adoption</button>
         </div>
         <div>
-          <button id="TechnologiesAverage" class="button">Average Turn of Technology Research</button>
-          <button id="TechnologiesMedian" class="button">Median Turn of Technology Research</button>
-          <button id="TechnologiesMinimum" class="button">Minimum Turn of Technology Research</button>
+          <button id="TechnologiesAverage" class="btn">Average Turn of Technology Research</button>
+          <button id="TechnologiesMedian" class="btn">Median Turn of Technology Research</button>
+          <button id="TechnologiesMinimum" class="btn">Minimum Turn of Technology Research</button>
         </div>
         <br>
-        <label for='commands'>Enter some SQL</label>
-        <textarea id="commands"></textarea>
-
-        <button id="execute" class="button">Execute</button>
-        <button id='savedb' class="button">Save the db</button>
+        <label for="showSql" class="sp" style="padding: 5px 5px">Show SQL</label>
+        <input id="showSql" type="checkbox" class="chk">
+        <div id="sqlBox">
+          <textarea id="commands"></textarea>
+          <button id="execute" class="btn">Execute</button>
+          <button id="savedb" class="btn">Save the db</button>
+        </div>
         <pre id="output">Loading...</pre>
       </section>
 
       <div id="error" class="error"></div>
-      <div id='plotOut'><!-- Plotly chart will be drawn inside this DIV --></div>
+      <div id="plotOut"><!-- Plotly chart will be drawn inside this DIV --></div>
     </div>
 
   </main>
