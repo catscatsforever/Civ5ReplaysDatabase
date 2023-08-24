@@ -36,6 +36,9 @@ let PolicyCountBtn = document.getElementById('PoliciesTimes');
 let TechnologyAverageBtn = document.getElementById('TechnologiesAverage');
 let TechnologyMedianBtn = document.getElementById('TechnologiesMedian');
 let TechnologyMinimumBtn = document.getElementById('TechnologiesMinimum');
+let WonderAverageBtn = document.getElementById('WondersAverage');
+let WonderMedianBtn = document.getElementById('WondersMedian');
+let WonderMinimumBtn = document.getElementById('WondersMinimum');
 
 let gameSel = document.getElementById('gameID-select');
 let datasetSel = document.getElementById('dataset-select');
@@ -822,7 +825,7 @@ BeliefMinimumBtn.addEventListener("click", () => { noerror(); let r = `
 	WHERE Value = 1
 	)
 	
-	SELECT BeliefType as "Belief Type", BeliefKey AS Belief, min(Turn) as "Minimum Turn"
+	SELECT BeliefType as "Belief Type", BeliefKey AS Belief, min(Turn) as "Minimum Turn", Player, CivKey
 	
 	FROM DataSets
 	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
@@ -915,7 +918,7 @@ PolicyMinimumBtn.addEventListener("click", () => { noerror(); let r = `
 	WHERE Value = 1
 	)
 	
-	SELECT PolicyBranch as "Policy Branch", PolicyKey AS Policy, min(Turn) as "Minimum Turn"
+	SELECT PolicyBranch as "Policy Branch", PolicyKey AS Policy, min(Turn) as "Minimum Turn", Player, CivKey
 	
 	FROM DataSets
 	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
@@ -1006,7 +1009,7 @@ TechnologyMinimumBtn.addEventListener("click", () => { noerror(); let r = `
 	WHERE Value = 1
 	)
 	
-	SELECT TechnologyKey AS Technology, min(Turn) as "Minimum Turn"
+	SELECT TechnologyKey AS Technology, min(Turn) as "Minimum Turn", Player, CivKey
 	
 	FROM DataSets
 	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
@@ -1016,5 +1019,90 @@ TechnologyMinimumBtn.addEventListener("click", () => { noerror(); let r = `
 	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
 	GROUP BY RankedTable.TechnologyID
 	ORDER BY TechnologyKeys.TechnologyID, "Minimum Turn"
+	;
+	`; execute(r); editor.setValue(r); }, true);
+WonderAverageBtn.addEventListener("click", () => { noerror(); let r = `
+	with RankedTable as (
+	SELECT *
+	, row_number() OVER (PARTITION by BuildingClassID order by Turn) as rnk
+	, count(*) over (PARTITION by BuildingClassID) as cnt
+	 
+	FROM BuildingClassesChanges as BuildingClassesChangesOut
+	WHERE Value = 1 and Turn = (
+		SELECT min(sub.Turn)
+		FROM BuildingClassesChanges as sub
+		WHERE sub.Value = 1 and BuildingClassesChangesOut.BuildingClassID = sub.BuildingClassID and BuildingClassesChangesOut.GameSeed = sub.GameSeed
+		)
+	)
+
+	SELECT BuildingClassType, BuildingClassKey AS Building, round(avg(Turn),1) as "Average Turn"
+
+	FROM DataSets
+	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
+	JOIN BuildingClassKeys ON BuildingClassKeys.BuildingClassID = RankedTable.BuildingClassID
+	JOIN CivKeys ON CivKeys.CivID = RankedTable.CivID
+	JOIN GameSeeds ON GameSeeds.GameSeed = RankedTable.GameSeed
+	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
+	JOIN BuildingClassTypes ON BuildingClassTypes.TypeID = BuildingClassKeys.TypeID
+	GROUP BY RankedTable.BuildingClassID
+	HAVING BuildingClassKeys.TypeID in (1,2)
+	ORDER BY BuildingClassKeys.TypeID, "Average Turn"
+	;
+	`; execute(r); editor.setValue(r); }, true);
+WonderMedianBtn.addEventListener("click", () => { noerror(); let r = `
+	with RankedTable as (
+	SELECT *
+	, row_number() OVER (PARTITION by BuildingClassID order by Turn) as rnk
+	, count(*) over (PARTITION by BuildingClassID) as cnt
+	 
+	FROM BuildingClassesChanges as BuildingClassesChangesOut
+	WHERE Value = 1 and Turn = (
+		SELECT min(sub.Turn)
+		FROM BuildingClassesChanges as sub
+		WHERE sub.Value = 1 and BuildingClassesChangesOut.BuildingClassID = sub.BuildingClassID and BuildingClassesChangesOut.GameSeed = sub.GameSeed
+		)
+	)
+
+	SELECT BuildingClassType, BuildingClassKey AS Building, avg(Turn) as "Median Turn"
+
+	FROM DataSets
+	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
+	JOIN BuildingClassKeys ON BuildingClassKeys.BuildingClassID = RankedTable.BuildingClassID
+	JOIN CivKeys ON CivKeys.CivID = RankedTable.CivID
+	JOIN GameSeeds ON GameSeeds.GameSeed = RankedTable.GameSeed
+	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
+	JOIN BuildingClassTypes ON BuildingClassTypes.TypeID = BuildingClassKeys.TypeID
+	WHERE 2*rnk - 1 = cnt or 2*rnk = cnt or 2*rnk - 2 = cnt
+	GROUP BY RankedTable.BuildingClassID
+	HAVING BuildingClassKeys.TypeID in (1,2)
+	ORDER BY BuildingClassKeys.TypeID, "Median Turn"
+	;
+	`; execute(r); editor.setValue(r); }, true);
+WonderMinimumBtn.addEventListener("click", () => { noerror(); let r = `
+	with RankedTable as (
+	SELECT *
+	, row_number() OVER (PARTITION by BuildingClassID order by Turn) as rnk
+	, count(*) over (PARTITION by BuildingClassID) as cnt
+	 
+	FROM BuildingClassesChanges as BuildingClassesChangesOut
+	WHERE Value = 1 and Turn = (
+		SELECT min(sub.Turn)
+		FROM BuildingClassesChanges as sub
+		WHERE sub.Value = 1 and BuildingClassesChangesOut.BuildingClassID = sub.BuildingClassID and BuildingClassesChangesOut.GameSeed = sub.GameSeed
+		)
+	)
+
+	SELECT BuildingClassType, BuildingClassKey AS Building, min(Turn) as "Minimum Turn", Player, CivKey
+
+	FROM DataSets
+	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
+	JOIN BuildingClassKeys ON BuildingClassKeys.BuildingClassID = RankedTable.BuildingClassID
+	JOIN CivKeys ON CivKeys.CivID = RankedTable.CivID
+	JOIN GameSeeds ON GameSeeds.GameSeed = RankedTable.GameSeed
+	JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
+	JOIN BuildingClassTypes ON BuildingClassTypes.TypeID = BuildingClassKeys.TypeID
+	GROUP BY RankedTable.BuildingClassID
+	HAVING BuildingClassKeys.TypeID in (1,2)
+	ORDER BY BuildingClassKeys.TypeID, "Minimum Turn"
 	;
 	`; execute(r); editor.setValue(r); }, true);
