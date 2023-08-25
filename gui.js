@@ -119,27 +119,66 @@ function execute(commands) {
 			}
 			// sankey plot
 			else if (conf.type === 'sankey') {
-				let d = {};
-				let s = [], t = [], v = [];
+				let keysData = Object.assign(...results[1].values.map((k) => ({ [k[0]]: k[1] }))),
+					s = {},
+					t = {},
+					v = {},
+					arrX = [],
+					arrL = [],
+					nextId = 0,
+					mask = new Array(conf.numEntries - 1);
 				results[2].values.forEach((el) => {
 					let arr = JSON.parse(el);
-					for (let i = 0; i < arr.length - 1; i++) {
+					for (let i = 0; i < arr.length; i++) {
+						if (!mask[i]) mask[i] = {};
+						if (i === arr.length - 1) {
+							if (mask[i][arr[i]] === undefined) {
+								mask[i][arr[i]] = nextId;
+								arrX.push(i);
+								arrL.push(keysData[arr[i]]);
+								nextId++;
+							}
+							continue;
+						}
+						if (s[i] === undefined) {
+							s[i] = [];
+							t[i] = [];
+							v[i] = [];
+						}
 						let fg = false;
-						for (let j = 0; j < s.length; j++) {
-							if (s[j] === arr[i] && t[j] === arr[i + 1]) {
+						for (let j = 0; j < s[i].length; j++) {
+							if (s[i][j] === arr[i] && t[i][j] === arr[i + 1]) {
 								fg = true;
-								v[j]++;
+								v[i][j]++;
 								break;
 							}
 						}
 						if (fg === false) {
-							s.push(arr[i]);
-							t.push(arr[i + 1]);
-							v.push(1);
+							if (mask[i][arr[i]] === undefined) {
+								mask[i][arr[i]] = nextId;
+								arrX.push(i);
+								arrL.push(keysData[arr[i]]);
+								nextId++;
+							}
+							s[i].push(arr[i]);
+							t[i].push(arr[i + 1]);
+							v[i].push(1);
 						}
 					}
 				});
-				console.log(s,t,v);
+				let arrS = [], arrT = [], arrV = [];
+				for (let k in s) {
+					s[k].forEach((el, i) => {s[k][i] = mask[k][el]});
+					arrS.push(...s[k]);
+				}
+				for (let k in t) {
+					t[k].forEach((el, i) => {t[k][i] = mask[(parseInt(k) + 1).toString()][el]});
+					arrT.push(...t[k]);
+				}
+				for (let k in v)
+					arrV.push(...v[k]);
+				arrX = arrX.map((x) =>  (x) / (Object.keys(s).length));
+				let setL = [...new Set(arrL)];
 				let data1 = {
 					type: "sankey",
 					domain: {
@@ -147,6 +186,7 @@ function execute(commands) {
 						y: [0,1]
 					},
 					orientation: "h",
+					arrangement: "freeform",
 					node: {
 						pad: 35,
 						thickness: 30,
@@ -154,18 +194,19 @@ function execute(commands) {
 							color: "black",
 							width: 0.5
 						},
-						label: results[1].values.map((el) => el[1])
+						label: arrL,
+						x: arrX,
+						color: arrL.map((el, i) => colors[setL.indexOf(el) % colors.length])
 					},
 					link: {
-						source: s,
-						target: t,
-						value: v
+						source: arrS,
+						target: arrT,
+						value: arrV
+					},
+					textfont: {
+						size: 12
 					}
 				};
-				if (conf.title === 'Policy Branches Flow') {
-					data1.node.x = [0.2, 0.1, 0.3, 0.4, 0.45, 0.45, 0.45, 0.45, 0.65, 0.8, 0.7, 0.9];
-					data1.node.y = [0.15, 0.5, 0.8, 0.6, 0.03, 0.15, 0.4, 0.25, 0.1, 0.7, 0.8, 0.5];
-				}
 
 				data = [data1];
 				let layout1 = {
@@ -626,13 +667,14 @@ function doBarPlot(e) {
 
 function doSankeyPlot(e) {
 	let msg = '';
-	let pols, title;
+	let pols, title, numEntries = 7;
 	if (e?.target === sankeyPoliciesBtn) {
 		msg = `
 			WITH
 			config(Key,Value) AS (
 				VALUES('type','sankey'),
-					('title', 'Policy Branches Flow')
+					('title', 'Policy Branches Flow'),
+					('numEntries', 9)
 			)
 			SELECT * FROM config
 			;
@@ -665,7 +707,8 @@ function doSankeyPlot(e) {
 			WITH
 			config(Key,Value) AS (
 				VALUES('type','sankey'),
-					('title', 'Technologies Flow')
+					('title', 'Technologies Flow'),
+					('numEntries', 13)
 			)
 			SELECT * FROM config
 			;
@@ -692,46 +735,50 @@ function doSankeyPlot(e) {
 		return;
 	}
 	else if (e?.target.id === 'sankey-tradition') {
-		pols = '6,7,8,9,10,11'
+		pols = '6,7,8,9,10,11,42'
 	}
 	else if (e?.target.id === 'sankey-liberty') {
-		pols = '0,1,2,3,4,5'
+		pols = '0,1,2,3,4,5,43'
 	}
 	else if (e?.target.id === 'sankey-honor') {
-		pols = '12,13,14,15,16,17'
+		pols = '12,13,14,15,16,17,44'
 	}
 	else if (e?.target.id === 'sankey-piety') {
-		pols = '18,19,20,21,22,23'
+		pols = '18,19,20,21,22,23,45'
 	}
 	else if (e?.target.id === 'sankey-patronage') {
-		pols = '24,25,26,27,28,29'
+		pols = '24,25,26,27,28,29,46'
 	}
 	else if (e?.target.id === 'sankey-aesthetics') {
-		pols = '49,50,51,52,53,54'
+		pols = '49,50,51,52,53,54,55'
 	}
 	else if (e?.target.id === 'sankey-commerce') {
-		pols = '30,31,32,33,34,35'
+		pols = '30,31,32,33,34,35,47'
 	}
 	else if (e?.target.id === 'sankey-exploration') {
-		pols = '56,57,58,59,60,61'
+		pols = '56,57,58,59,60,61,62'
 	}
 	else if (e?.target.id === 'sankey-rationalism') {
-		pols = '36,37,38,39,40,41'
+		pols = '36,37,38,39,40,41,48'
 	}
 	else if (e?.target.id === 'sankey-freedom') {
-		pols = '63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,108'
+		pols = '63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,108';
+		numEntries = 16;
 	}
 	else if (e?.target.id === 'sankey-order') {
-		pols = '78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,109'
+		pols = '78,79,80,81,82,83,84,85,86,87,89,90,91,92,109';
+		numEntries = 15;
 	}
 	else if (e?.target.id === 'sankey-autocracy') {
-		pols = '93,94,95,96,97,98,99,100,101,102,103,104,105,106,110'
+		pols = '93,94,95,96,97,98,99,100,101,102,103,104,105,106,110';
+		numEntries = 15;
 	}
 	msg = `
 		WITH
 		config(Key,Value) AS (
 			VALUES('type','sankey'),
-				('title', '${e?.target.textContent.replace(/'/g, "''")}')
+				('title', '${e?.target.textContent.replace(/'/g, "''")}'),
+				('numEntries', ${numEntries})
 		)
 		SELECT * FROM config
 		;
@@ -742,7 +789,7 @@ function doSankeyPlot(e) {
 				SELECT *
 				FROM PoliciesChanges
 				WHERE PolicyID IN (${pols}) AND value = 1
-				GROUP BY GameSeed, CivID, Turn
+				GROUP BY GameSeed, CivID, Turn, PolicyID
 				ORDER BY GameSeed, CivID
 		)
 		SELECT '['||Arr||']' AS seq FROM (
