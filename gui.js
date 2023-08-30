@@ -1048,7 +1048,7 @@ TechnologyAverageBtn.addEventListener("click", () => { noerror(); let r = `
 	, count(*) over (PARTITION by TechnologyID) as cnt
 	
 	FROM TechnologiesChanges
-	WHERE TechnologyID != 0 Value = 1
+	WHERE TechnologyID != 0 and Value = 1
 	)
 	
 	SELECT EraKey as "Era", TechnologyKey AS Technology, round(avg(Turn), 1) as "Average Turn"
@@ -1071,7 +1071,7 @@ TechnologyMedianBtn.addEventListener("click", () => { noerror(); let r = `
 	, count(*) over (PARTITION by TechnologyID) as cnt
 	
 	FROM TechnologiesChanges
-	WHERE TechnologyID != 0 Value = 1
+	WHERE TechnologyID != 0 and Value = 1
 	)
 	
 	SELECT EraKey as "Era", TechnologyKey AS Technology, avg(Turn) OVER (PARTITION by TechnologyKeys.TechnologyID) as "Median Turn"
