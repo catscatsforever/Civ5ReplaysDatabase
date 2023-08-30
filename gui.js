@@ -1048,7 +1048,7 @@ TechnologyAverageBtn.addEventListener("click", () => { noerror(); let r = `
 	, count(*) over (PARTITION by TechnologyID) as cnt
 	
 	FROM TechnologiesChanges
-	WHERE Value = 1
+	WHERE TechnologyID != 0 Value = 1
 	)
 	
 	SELECT EraKey as "Era", TechnologyKey AS Technology, round(avg(Turn), 1) as "Average Turn"
@@ -1071,7 +1071,7 @@ TechnologyMedianBtn.addEventListener("click", () => { noerror(); let r = `
 	, count(*) over (PARTITION by TechnologyID) as cnt
 	
 	FROM TechnologiesChanges
-	WHERE Value = 1
+	WHERE TechnologyID != 0 Value = 1
 	)
 	
 	SELECT EraKey as "Era", TechnologyKey AS Technology, avg(Turn) OVER (PARTITION by TechnologyKeys.TechnologyID) as "Median Turn"
@@ -1095,7 +1095,7 @@ TechnologyMinimumBtn.addEventListener("click", () => { noerror(); let r = `
 	, count(*) over (PARTITION by TechnologyID) as cnt
 	
 	FROM TechnologiesChanges
-	WHERE Value = 1
+	WHERE TechnologyID != 0 and Value = 1
 	)
 	
 	SELECT EraKey as "Era", TechnologyKey AS Technology, min(Turn) as "Minimum Turn", Player, Civilization
@@ -1118,7 +1118,7 @@ WonderAverageBtn.addEventListener("click", () => { noerror(); let r = `
 	, count(*) over (PARTITION by BuildingClassID) as cnt
 	 
 	FROM BuildingClassesChanges as BuildingClassesChangesOut
-	WHERE Value = 1 and Turn = (
+	WHERE BuildingClassID != 46 and Value = 1 and Turn = (
 		SELECT min(sub.Turn)
 		FROM BuildingClassesChanges as sub
 		WHERE sub.Value = 1 and BuildingClassesChangesOut.BuildingClassID = sub.BuildingClassID and BuildingClassesChangesOut.GameSeed = sub.GameSeed
@@ -1146,7 +1146,7 @@ WonderMedianBtn.addEventListener("click", () => { noerror(); let r = `
 	, count(*) over (PARTITION by BuildingClassID) as cnt
 	 
 	FROM BuildingClassesChanges as BuildingClassesChangesOut
-	WHERE Value = 1 and Turn = (
+	WHERE BuildingClassID != 46 and Value = 1 and Turn = (
 		SELECT min(sub.Turn)
 		FROM BuildingClassesChanges as sub
 		WHERE sub.Value = 1 and BuildingClassesChangesOut.BuildingClassID = sub.BuildingClassID and BuildingClassesChangesOut.GameSeed = sub.GameSeed
@@ -1175,7 +1175,7 @@ WonderMinimumBtn.addEventListener("click", () => { noerror(); let r = `
 	, count(*) over (PARTITION by BuildingClassID) as cnt
 	 
 	FROM BuildingClassesChanges as BuildingClassesChangesOut
-	WHERE Value = 1 and Turn = (
+	WHERE BuildingClassID != 46 and Value = 1 and Turn = (
 		SELECT min(sub.Turn)
 		FROM BuildingClassesChanges as sub
 		WHERE sub.Value = 1 and BuildingClassesChangesOut.BuildingClassID = sub.BuildingClassID and BuildingClassesChangesOut.GameSeed = sub.GameSeed
