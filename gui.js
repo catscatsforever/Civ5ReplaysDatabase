@@ -5,6 +5,15 @@
 */
 
 const colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
+const winColors = {
+	anyWin: 'rgba(223,207,36,0.5)',
+	0: 'rgba(0,0,0,0.2)',
+	1: 'rgba(132,87,45,0.5)',
+	2: 'rgba(0,137,173,0.5)',
+	3: 'rgba(190,22,0,0.5)',
+	4: 'rgba(173,0,123,0.5)',
+	5: 'rgba(126,115,211,0.5)',
+};
 let inputsElm = document.getElementById('inputs');
 
 let execBtn = document.getElementById("execute");
@@ -22,8 +31,6 @@ let plotAllPlayersBtn = document.getElementById("plotAllPlayers");
 let beliefsTimeBtn = document.getElementById("beliefs-time");
 let policiesTimeBtn = document.getElementById("policies-time");
 let techsTimeBtn = document.getElementById("techs-time");
-let sankeyPoliciesBtn = document.getElementById("sankey-policies");
-let sankeyTechsBtn = document.getElementById("sankey-techs");
 
 let BeliefAverageBtn = document.getElementById('BeliefsAverage');
 let BeliefMedianBtn = document.getElementById('BeliefsMedian');
@@ -45,14 +52,358 @@ let datasetSel = document.getElementById('dataset-select');
 let playerSel = document.getElementById('playerID-select');
 let dataset2Sel = document.getElementById('dataset-select2');
 
+let sankeyGroups1Rad = document.getElementById('sankey-groups1');
+let sankeyGroups2Rad = document.getElementById('sankey-groups2');
+let sankeyGroups3Rad = document.getElementById('sankey-groups3');
+
 let dbsizeLbl = document.getElementById('dbsize');
 
 // Start the worker in which sql.js will run
 let worker = new Worker("worker.sql-wasm.js");
 worker.onerror = error;
+worker.onmessage = function (event) {
+	console.log("e", event);
+	let results = event.data.results;
+	let id = event.data.id;
+	// on db load
+	if (event.data.ready === true) {
+		toc("Loading database from file");
+		editor.setValue(`\tANALYZE main;\n\tSELECT tbl AS Name, stat AS Rows FROM sqlite_stat1 ORDER BY Name;`);
+		execEditorContents();
+		fillSelects();
+		doPlot();
+		return;
+	}
+	// export db
+	if (event.data?.buffer?.length) {
+		toc("Exporting the database");
+		let arraybuff = event.data.buffer;
+		let blob = new Blob([arraybuff]);
+		let a = document.createElement("a");
+		document.body.appendChild(a);
+		a.href = window.URL.createObjectURL(blob);
+		a.download = "sql.db";
+		a.onclick = function () {
+			setTimeout(function () {
+				window.URL.revokeObjectURL(a.href);
+			}, 1500);
+		};
+		a.click();
+		return;
+	}
+	if (!results) {
+		error({message: event.data.error || 'No data!'});
+		return;
+	}
+	if (results.length === 0) {
+		error({message: `No results found!`});
+		return;
+	}
+	toc("Executing SQL");
+	tic();
+	// plot data
+	if (id === 0) {
+		let conf = Object.assign(...results[0].values.map(([k, v]) => ({ [k]: v })));
+		let data = [];
+		// bar plot
+		if (conf.type === 'bar') {
+			let tracesData = results[1].values.map(([k, v]) => (k));
+			console.log('tracesData', tracesData);
+			let arrX = Object.assign(...Object.values(tracesData).map((v) => ({ [v]: [] }))),
+				arrY = Object.assign(...Object.values(tracesData).map((v) => ({ [v]: [] })));
+			for (let i = 0; i < results[2].values.length; i++) {
+				arrX[results[2].values[i][0]].push(results[2].values[i][1]);
+				arrY[results[2].values[i][0]].push(results[2].values[i][2]);
+			}
+			tracesData.forEach((i, n) => {
+				data.push({
+					x: arrX[i],
+					y: arrY[i],
+					type: 'bar',
+					showlegend: true,
+					name: i
+				});
+			});
+		}
+		// sankey plot
+		else if (conf.type === 'sankey') {
+			let keysData = Object.assign(...results[1].values.map((k) => ({ [k[0]]: k[1] }))),
+				blob = { s: {}, t: {}, v: {} },
+				arrL = [], arrLL = [], mask = new Array(conf.numEntries - 1),
+				nextId = 0, groupLabels = (conf.groups > 1) ? JSON.parse(conf.labels) : [' '];
+			results[2].values.forEach((el) => {
+				let arr = JSON.parse(el[0]);
+				let winID = (conf.groups > 1) ? el[1] : 0;
+				for (let i = 0; i < arr.length; i++) {
+					if (mask[i] === undefined) mask[i] = {};
+					if (i === arr.length - 1) {
+						if (!mask[i][arr[i]]) {
+							mask[i][arr[i]] = nextId++;
+							arrL.push(keysData[arr[i]]);
+						}
+						continue;
+					}
+					if (blob.s[i] === undefined) {
+						blob.s[i] = Array.from({length: conf.groups}, _=>[]);
+						blob.t[i] = Array.from({length: conf.groups}, _=>[]);
+						blob.v[i] = Array.from({length: conf.groups}, _=>[]);
+					}
+					let fg = false;
+					for (let j = 0; j < blob.s[i][winID].length; j++) {
+						if (blob.s[i][winID][j] === arr[i] && blob.t[i][winID][j] === arr[i + 1]) {
+							fg = true;
+							blob.v[i][winID][j]++;
+							break;
+						}
+					}
+					if (!fg) {
+						if (mask[i][arr[i]] === undefined) {
+							mask[i][arr[i]] = nextId++;
+							arrL.push(keysData[arr[i]]);
+						}
+						blob.s[i][winID].push(arr[i]);
+						blob.t[i][winID].push(arr[i + 1]);
+						blob.v[i][winID].push(1);
+					}
+				}
+			});
+			let arrS = [], arrT = [], arrV = [], arrCl = [];
+			for (let k in blob.s) {
+				Object.keys(blob.v[k]).forEach((el) => {
+					blob.s[k][el].forEach((el2, i2) => {blob.s[k][el][i2] = mask[k][el2]});
+					blob.t[k][el].forEach((el2, i2) => {blob.t[k][el][i2] = mask[(parseInt(k) + 1).toString()][el2]});
+					arrS.push(...blob.s[k][el]);
+					arrT.push(...blob.t[k][el]);
+					arrV.push(...blob.v[k][el]);
+					blob.v[k][el].forEach((x) => {
+						arrCl.push(conf.groups === 2 ? (el > 0 ? winColors.anyWin : winColors[el]) : winColors[el]);
+						arrLL.push(groupLabels[el]);
+					});
+				});
+			}
+			// fix wrong x node coords for incomplete branches
+			// ref. https://community.plotly.com/t/sankey-avoid-placing-incomplete-branches-to-the-right/44873
+			let dummyId = nextId++;
+			for (let k in blob.t) {
+				if (!blob.s[(parseInt(k) + 1).toString()]) continue;
+				let a = new Set(Object.values(blob.s[(parseInt(k) + 1).toString()]).flat());
+				let b = new Set(Object.values(blob.t[k]).flat());
+				// select nodes with no outgoing links
+				let res = [...new Set([...b].filter(x => !a.has(x)))];
+				// create a dummy node that continues all incomplete branches and make it invisible
+				arrS.push(...res);
+				arrT.push(...res.map(_ => dummyId));
+				arrV.push(...res.map(_ => 0.001));
+				arrCl.push(...res.map(_ => 'rgba(0,0,0,0)'));
+				arrLL.push(...res.map(_ => ''));
+			}
 
-// Open a database
-worker.postMessage({ action: 'open' });
+			data = [{
+				type: "sankey",
+				arrangement: "freeform",
+				node: {
+					pad: 35,
+					thickness: 30,
+					line: { width: 0 },
+					label: arrL,
+					color: arrL.map((el) => colors[[...new Set(arrL)].indexOf(el) % colors.length]).concat('rgba(0,0,0,0)')
+				},
+				link: {
+					source: arrS,
+					target: arrT,
+					value: arrV,
+					color: arrCl,
+					customdata: Array.from({length: arrLL.length}, (el,i)=>{return {extra:(arrV[i] / results[2].values.length * 100).toFixed(1) + '%', value: arrV[i], label: arrLL[i]}}),
+					hovertemplate: `<b>%{customdata.label}</b><br><br>source: %{source.label}<br>target: %{target.label}<extra>%{customdata.value}<br>%{customdata.extra}</extra>`
+				},
+				textfont: { size: 12 }
+			}];
+			Plotly.newPlot('plotOut', data, { title: conf.title, font: { size: 25 } });
+			toc("Displaying results");
+			return;
+		}
+		// scatter plot
+		else if (conf.type === 'scatter') {
+			let gamesData = Object.assign(...results[1].values.map(([k, v]) => ({ [k]: v })));
+			Object.entries(gamesData).forEach(([k, v]) => {
+				if (!v) gamesData[k] = 330;
+			});
+			let tracesData = Object.assign(...results[2].values.map((k) => {
+					return { [k[1]]: Object.assign(...k.map((d,i) => {
+							return { [results[2].columns[i]]: d }
+						})) }
+				}
+			));
+			Object.values(tracesData).forEach((v) => {
+				if (!v.QuitTurn) {
+					v.QuitTurn = gamesData[v.GameID];
+				}
+			});
+			let arrX = Object.assign(...Object.values(tracesData).map((v) => ({ [v.rowid]: [] }))),
+				arrY = Object.assign(...Object.values(tracesData).map((v) => ({ [v.rowid]: [] })));
+			let curX = Object.assign(...Object.values(tracesData).map((v) => ({ [v.rowid]: 0 }))),
+				curY = Object.assign(...Object.values(tracesData).map((v) => ({ [v.rowid]: 0 })));
+			for (let i = 0; i < results[3].values.length; i++) {
+				let lastTurn = tracesData[results[3].values[i][0]].QuitTurn ?? gamesData[tracesData[results[3].values[i][0]].GameID];
+				if (results[3].values[i][1] < lastTurn) {
+					// fill gaps
+					while (results[3].values[i][1] > (curX[results[3].values[i][0]] + 1)) {
+						// increment turn while value stays the same
+						curX[results[3].values[i][0]]++;
+						arrX[results[3].values[i][0]].push(curX[results[3].values[i][0]]);
+						arrY[results[3].values[i][0]].push(curY[results[3].values[i][0]]);
+					}
+					curX[results[3].values[i][0]] = results[3].values[i][1];
+					curY[results[3].values[i][0]] = results[3].values[i][2];
+					arrX[results[3].values[i][0]].push(results[3].values[i][1]);
+					arrY[results[3].values[i][0]].push(results[3].values[i][2]);
+				}
+			}
+			Object.keys(tracesData).forEach((i, n) => {
+				// fill data for yet alive players
+				let curX = arrX[i].at(-1), curY = arrY[i].at(-1);
+				let lastTurn = tracesData[i].QuitTurn ?? gamesData[tracesData[i].GameID];
+				while (curX < lastTurn) {
+					// increment turn while value stays the same
+					curX++;
+					arrX[i].push(curX);
+					arrY[i].push(curY);
+				}
+				data.push({
+					x: arrX[i],
+					y: arrY[i],
+					mode: conf.mode,
+					type: conf.type,
+					line: {
+						shape: 'spline',
+						color: colors[n % 10],
+					},
+					legendgroup: `group${i}`,
+					showlegend: true,
+					name: tracesData[i].TraceName
+				});
+				if (tracesData[i].Standing) {
+					// mark winner
+					if (tracesData[i].Standing === 1) {
+						data.push({
+							x: [arrX[i].at(-1)],
+							y: [arrY[i].at(-1)],
+							mode: 'markers',
+							type: conf.type,
+							marker: {
+								size: 12,
+								color: colors[n % 10],
+								symbol: 'star'
+							},
+							legendgroup: `group${i}`,
+							showlegend: false,
+							hoverinfo: 'skip'
+						})
+					}
+					// add X marker when player "dies"
+					else {
+						data.push({
+							x: [arrX[i].at(-1)],
+							y: [arrY[i].at(-1)],
+							mode: 'markers',
+							type: conf.type,
+							marker: {
+								size: 12,
+								color: colors[n % 10],
+								symbol: 'x-dot'
+							},
+							legendgroup: `group${i}`,
+							showlegend: false,
+							hoverinfo: 'skip'
+						})
+					}
+				}
+			})
+		}
+		let layout = {
+			hovermode: "x unified",
+			barmode: 'relative',
+			xaxis: {
+				title: conf.xaxis
+			},
+			yaxis: {
+				title: conf.yaxis ?? 'TODO'
+			},
+			legend: {
+				orientation: "v",
+				bgcolor: '#E2E2E2',
+				bordercolor: '#FFFFFF',
+				borderwidth: 2
+			},
+			//plot_bgcolor: 'black',
+			//paper_bgcolor: 'black'
+		};
+		let config = {
+			responsive: true,
+			toImageButtonOptions: {
+				format: 'png', // one of png, svg, jpeg, webp
+				filename: `Game${gameSel.selectedIndex}${datasetSel.options[datasetSel.selectedIndex].text}`,
+				height: 2160,
+				width: 3840,
+				scale: 1 // Multiply title/legend/axis/canvas sizes by this factor
+			},
+		};
+		Plotly.newPlot('plotOut', data, layout, config);
+	}
+	// fill games select
+	else if (id === 1) {
+		for (let i = 0; i < results[0].values.length; i++) {
+			const opt = document.createElement("option");
+			opt.value = results[0].values[i][0];
+			opt.text = results[0].values[i][0];
+			gameSel.add(opt);
+		}
+		for (let i = 0; i < results[1].values.length; i++) {
+			datasetSel.add(new Option(results[1].values[i][1], results[1].values[i][0]));
+			dataset2Sel.add(new Option(results[1].values[i][1], results[1].values[i][0]));
+		}
+		for (let i = 0; i < results[2].values.length; i++) {
+			const opt = document.createElement("option");
+			opt.value = i;
+			opt.text = results[2].values[i][0];
+			playerSel.add(opt);
+		}
+	}
+	// fill table
+	else {
+		outputElm.innerHTML = "";
+		console.log('results:', results);
+		for (let i = 0; i < results.length; i++) {
+			outputElm.appendChild(tableCreate(results[i].columns, results[i].values));
+		}
+		const allTables = document.querySelectorAll("table");
+
+		for (const table of allTables) {
+			const tBody = table.tBodies[0];
+			const rows = Array.from(tBody.rows);
+			const headerCells = table.tHead.rows[0].cells;
+
+			for (const th of headerCells) {
+				const cellIndex = th.cellIndex;
+
+				th.addEventListener("click", () => {
+					let dir = th.classList.contains("sort-desc");
+					th.parentElement.childNodes.forEach(el=>el.classList.remove("sort-asc", "sort-desc"));
+					th.classList.add(dir === true ? "sort-asc" : "sort-desc");
+					rows.sort((tr1, tr2) => {
+						const tr1Text = tr1.cells[cellIndex].textContent;
+						const tr2Text = tr2.cells[cellIndex].textContent;
+						return dir ? 1 : -1 * tr2Text.localeCompare(tr1Text, undefined, { numeric: true });
+					});
+
+					tBody.append(...rows);
+				});
+			}
+		}
+
+	}
+	toc("Displaying results");
+};
 
 
 // Connect to the HTML element we 'print' to
@@ -72,334 +423,6 @@ function noerror() {
 // Run a command in the database
 function execute(commands) {
 	tic();
-	worker.onmessage = function (event) {
-		console.log("e", event);
-		let results = event.data.results;
-		let id = event.data.id;
-		toc("Executing SQL");
-		if (!results) {
-			error({message: event.data.error});
-			return;
-		}
-		if (results.length === 0) {
-			error({message: `No results found!`});
-			return;
-		}
-
-		tic();
-		// plot data
-		if (id === 0) {
-			//console.log('res', results);
-
-			let conf = Object.assign(...results[0].values.map(([k, v]) => ({ [k]: v })));
-			//console.log('conf', conf);
-			let data = [];
-			if (conf.type === 'bar') {
-				// distribution plot
-				let tracesData = results[1].values.map(([k, v]) => (k));
-				console.log('tracesData', tracesData);
-				let arrX = Object.assign(...Object.values(tracesData).map((v) => ({ [v]: [] }))),
-					arrY = Object.assign(...Object.values(tracesData).map((v) => ({ [v]: [] })));
-				for (let i = 0; i < results[2].values.length; i++) {
-					arrX[results[2].values[i][0]].push(results[2].values[i][1]);
-					arrY[results[2].values[i][0]].push(results[2].values[i][2]);
-				}
-				console.log('arrX', arrX);
-				console.log('arrY', arrY);
-				tracesData.forEach((i, n) => {
-					data.push({
-						x: arrX[i],
-						y: arrY[i],
-						type: 'bar',
-						showlegend: true,
-						name: i
-					});
-				});
-				console.log('data', data)
-			}
-			// sankey plot
-			else if (conf.type === 'sankey') {
-				let keysData = Object.assign(...results[1].values.map((k) => ({ [k[0]]: k[1] }))),
-					s = {},
-					t = {},
-					v = {},
-					arrX = [],
-					arrL = [],
-					nextId = 0,
-					mask = new Array(conf.numEntries - 1);
-				results[2].values.forEach((el) => {
-					let arr = JSON.parse(el);
-					for (let i = 0; i < arr.length; i++) {
-						if (!mask[i]) mask[i] = {};
-						if (i === arr.length - 1) {
-							if (mask[i][arr[i]] === undefined) {
-								mask[i][arr[i]] = nextId;
-								arrX.push(i);
-								arrL.push(keysData[arr[i]]);
-								nextId++;
-							}
-							continue;
-						}
-						if (s[i] === undefined) {
-							s[i] = [];
-							t[i] = [];
-							v[i] = [];
-						}
-						let fg = false;
-						for (let j = 0; j < s[i].length; j++) {
-							if (s[i][j] === arr[i] && t[i][j] === arr[i + 1]) {
-								fg = true;
-								v[i][j]++;
-								break;
-							}
-						}
-						if (fg === false) {
-							if (mask[i][arr[i]] === undefined) {
-								mask[i][arr[i]] = nextId;
-								arrX.push(i);
-								arrL.push(keysData[arr[i]]);
-								nextId++;
-							}
-							s[i].push(arr[i]);
-							t[i].push(arr[i + 1]);
-							v[i].push(1);
-						}
-					}
-				});
-				let arrS = [], arrT = [], arrV = [];
-				for (let k in s) {
-					s[k].forEach((el, i) => {s[k][i] = mask[k][el]});
-					arrS.push(...s[k]);
-				}
-				for (let k in t) {
-					t[k].forEach((el, i) => {t[k][i] = mask[(parseInt(k) + 1).toString()][el]});
-					arrT.push(...t[k]);
-				}
-				for (let k in v)
-					arrV.push(...v[k]);
-				arrX = arrX.map((x) =>  (x) / (Object.keys(s).length));
-				let setL = [...new Set(arrL)];
-				let data1 = {
-					type: "sankey",
-					domain: {
-						x: [0,1],
-						y: [0,1]
-					},
-					orientation: "h",
-					arrangement: "freeform",
-					node: {
-						pad: 35,
-						thickness: 30,
-						line: {
-							color: "black",
-							width: 0.5
-						},
-						label: arrL,
-						x: arrX,
-						color: arrL.map((el, i) => colors[setL.indexOf(el) % colors.length])
-					},
-					link: {
-						source: arrS,
-						target: arrT,
-						value: arrV
-					},
-					textfont: {
-						size: 12
-					}
-				};
-
-				data = [data1];
-				let layout1 = {
-					title: conf.title,
-					font: {
-						size: 10
-					}
-				};
-				Plotly.newPlot('plotOut', data, layout1);
-				return;
-			}
-			// scatter plot
-			else if (conf.type === 'scatter') {
-				let gamesData = Object.assign(...results[1].values.map(([k, v]) => ({ [k]: v })));
-				Object.entries(gamesData).forEach(([k, v]) => {
-					if (!v) v = 330;
-				});
-				//console.log('gamesData', gamesData);
-				let tracesData = Object.assign(...results[2].values.map((k, v) => {
-						return { [k[1]]: Object.assign(...k.map((d,i) => {
-								return { [results[2].columns[i]]: d }
-							})) }
-					}
-				));
-				let nTraces = Object.keys(tracesData).length;
-				Object.values(tracesData).forEach((v) => {
-					if (!v.QuitTurn) {
-						v.QuitTurn = gamesData[v.GameID];
-					}
-				});
-				let arrX = Object.assign(...Object.values(tracesData).map((v) => ({ [v.rowid]: [] }))),
-					arrY = Object.assign(...Object.values(tracesData).map((v) => ({ [v.rowid]: [] })));
-				let curX = Object.assign(...Object.values(tracesData).map((v) => ({ [v.rowid]: 0 }))),
-					curY = Object.assign(...Object.values(tracesData).map((v) => ({ [v.rowid]: 0 })));
-				for (let i = 0; i < results[3].values.length; i++) {
-					let lastTurn = tracesData[results[3].values[i][0]].QuitTurn ?? gamesData[tracesData[results[3].values[i][0]].GameID];
-					if (results[3].values[i][1] < lastTurn) {
-						// fill gaps
-						while (results[3].values[i][1] > (curX[results[3].values[i][0]] + 1)) {
-							// increment turn while value stays the same
-							curX[results[3].values[i][0]]++;
-							arrX[results[3].values[i][0]].push(curX[results[3].values[i][0]]);
-							arrY[results[3].values[i][0]].push(curY[results[3].values[i][0]]);
-						}
-						curX[results[3].values[i][0]] = results[3].values[i][1];
-						curY[results[3].values[i][0]] = results[3].values[i][2];
-						arrX[results[3].values[i][0]].push(results[3].values[i][1]);
-						arrY[results[3].values[i][0]].push(results[3].values[i][2]);
-					}
-				}
-				//console.log('arrX', arrX);
-				//console.log('arrY', arrY);
-				Object.keys(tracesData).forEach((i, n) => {
-					// fill data for yet alive players
-					let curX = arrX[i].at(-1), curY = arrY[i].at(-1);
-					let lastTurn = tracesData[i].QuitTurn ?? gamesData[tracesData[i].GameID];
-					while (curX < lastTurn) {
-						// increment turn while value stays the same
-						curX++;
-						arrX[i].push(curX);
-						arrY[i].push(curY);
-					}
-					data.push({
-						x: arrX[i],
-						y: arrY[i],
-						mode: conf.mode,
-						type: conf.type,
-						line: {
-							shape: 'spline',
-							color: colors[n % 10],
-						},
-						legendgroup: `group${i}`,
-						showlegend: true,
-						name: tracesData[i].TraceName
-					});
-					if (tracesData[i].Standing) {
-						// mark winner
-						if (tracesData[i].Standing === 1) {
-							data.push({
-								x: [arrX[i].at(-1)],
-								y: [arrY[i].at(-1)],
-								mode: 'markers',
-								type: conf.type,
-								marker: {
-									size: 12,
-									color: colors[n % 10],
-									symbol: 'star'
-								},
-								legendgroup: `group${i}`,
-								showlegend: false,
-								hoverinfo: 'skip'
-							})
-						}
-						// add X marker when player "dies"
-						else {
-							data.push({
-								x: [arrX[i].at(-1)],
-								y: [arrY[i].at(-1)],
-								mode: 'markers',
-								type: conf.type,
-								marker: {
-									size: 12,
-									color: colors[n % 10],
-									symbol: 'x-dot'
-								},
-								legendgroup: `group${i}`,
-								showlegend: false,
-								hoverinfo: 'skip'
-							})
-						}
-					}
-				})
-			}
-			let layout = {
-				hovermode: "x unified",
-				barmode: 'relative',
-				xaxis: {
-					title: conf.xaxis
-				},
-				yaxis: {
-					title: conf.yaxis ?? 'TODO'
-				},
-				legend: {
-					orientation: "v",
-					bgcolor: '#E2E2E2',
-					bordercolor: '#FFFFFF',
-					borderwidth: 2
-				},
-				//plot_bgcolor: 'black',
-				//paper_bgcolor: 'black'
-			};
-			let config = {
-				responsive: true,
-				toImageButtonOptions: {
-					format: 'png', // one of png, svg, jpeg, webp
-					filename: `Game${gameSel.selectedIndex}${datasetSel.options[datasetSel.selectedIndex].text}`,
-					height: 2160,
-					width: 3840,
-					scale: 1 // Multiply title/legend/axis/canvas sizes by this factor
-				},
-			};
-			Plotly.newPlot('plotOut', data, layout, config);
-		}
-		// fill games select
-		else if (id === 1) {
-			for (let i = 0; i < results[0].values.length; i++) {
-				const opt = document.createElement("option");
-				opt.value = results[0].values[i][0];
-				opt.text = results[0].values[i][0];
-				gameSel.add(opt);
-			}
-			for (let i = 0; i < results[1].values.length; i++) {
-				datasetSel.add(new Option(results[1].values[i][1], results[1].values[i][0]));
-				dataset2Sel.add(new Option(results[1].values[i][1], results[1].values[i][0]));
-			}
-			for (let i = 0; i < results[2].values.length; i++) {
-				const opt = document.createElement("option");
-				opt.value = i;
-				opt.text = results[2].values[i][0];
-				playerSel.add(opt);
-			}
-		}
-		else {
-			outputElm.innerHTML = "";
-			console.log('results:', results);
-			for (let i = 0; i < results.length; i++) {
-				outputElm.appendChild(tableCreate(results[i].columns, results[i].values));
-			}
-			const allTables = document.querySelectorAll("table");
-
-			for (const table of allTables) {
-				const tBody = table.tBodies[0];
-				const rows = Array.from(tBody.rows);
-				const headerCells = table.tHead.rows[0].cells;
-
-				for (const th of headerCells) {
-					const cellIndex = th.cellIndex;
-
-					th.addEventListener("click", () => {
-						rows.sort((tr1, tr2) => {
-							const tr1Text = tr1.cells[cellIndex].textContent;
-							const tr2Text = tr2.cells[cellIndex].textContent;
-							return tr1Text.localeCompare(tr2Text, undefined, { numeric: true });
-						});
-
-						tBody.append(...rows);
-					});
-				}
-			}
-
-		}
-		toc("Displaying results");
-	};
 	worker.postMessage({ action: 'exec', sql: commands });
 	outputElm.textContent = "Fetching results...";
 }
@@ -482,13 +505,6 @@ function fetchdb() {
 		let b = uInt8Array.length;
 		dbsizeLbl.textContent = `DB size is ${(b/Math.pow(1024,~~(Math.log2(b)/10))).toFixed(2)} 
 			${("KMGTPEZY"[~~(Math.log2(b)/10)-1]||"") + "B"}`;
-		worker.onmessage = function () {
-			toc("Loading database from file");
-			editor.setValue(`\tANALYZE main;\n\tSELECT tbl AS Name, stat AS Rows FROM sqlite_stat1 ORDER BY Name;`);
-			execEditorContents();
-			fillSelects();
-			doPlot();
-		};
 		tic();
 		try {
 			worker.postMessage({ action: 'open', buffer: uInt8Array }, [uInt8Array]);
@@ -503,21 +519,6 @@ fetchdb();
 
 // Save the db to a file
 function savedb() {
-	worker.onmessage = function (event) {
-		toc("Exporting the database");
-		let arraybuff = event.data.buffer;
-		let blob = new Blob([arraybuff]);
-		let a = document.createElement("a");
-		document.body.appendChild(a);
-		a.href = window.URL.createObjectURL(blob);
-		a.download = "sql.db";
-		a.onclick = function () {
-			setTimeout(function () {
-				window.URL.revokeObjectURL(a.href);
-			}, 1500);
-		};
-		a.click();
-	};
 	tic();
 	worker.postMessage({ action: 'export' });
 }
@@ -605,7 +606,6 @@ function doPlot(e) {
 		WHERE ${condition1 ? condition1 : ''} ${condition2 ? (condition1 ? `AND ${condition2}` : condition2) : ''}
 		;
 	`;
-	console.log('msg', msg);
 	worker.postMessage({ action: 'exec', id: 0, sql: msg });
 }
 function doBarPlot(e) {
@@ -664,17 +664,46 @@ function doBarPlot(e) {
 	worker.postMessage({ action: 'exec', id: 0, sql: msg });
 }
 
-
+let lastSankeyId, lastSankeyTitle;
 function doSankeyPlot(e) {
+	let target = e?.target.id;
 	let msg = '';
-	let pols, title, numEntries = 7;
-	if (e?.target === sankeyPoliciesBtn) {
+	let pols, numEntries = 7,
+		numGroups, groupLabels, groupSelector;
+	if (e?.target.classList.contains('sankey-clk') && e?.target?.type !== 'radio') {
+		lastSankeyId = target;
+		lastSankeyTitle = e.target.textContent;
+	}
+	if(e?.target.id === 'sankey-groups1' || e?.target.id === 'sankey-groups2' || e?.target.id === 'sankey-groups3') {
+		if (lastSankeyId === undefined) return;
+		target = lastSankeyId;
+	}
+
+	if (sankeyGroups1Rad.checked) {
+		numGroups = 1;
+		groupSelector = '0';
+		groupLabels = '[]';
+	}
+	else if (sankeyGroups2Rad.checked) {
+		numGroups = 2;
+		groupSelector = 'WinID > 1';
+		groupLabels = '["Losers","Winners"]';
+	}
+	else if (sankeyGroups3Rad.checked) {
+		numGroups = 6;
+		groupSelector = 'WinID';
+		groupLabels = '["Losers","Time Victory","Science Victory","Domination Victory","Cultural Victory","Diplomatic Victory"]';
+	}
+
+	if (target === 'sankey-policies') {
 		msg = `
 			WITH
 			config(Key,Value) AS (
 				VALUES('type','sankey'),
 					('title', 'Policy Branches Flow'),
-					('numEntries', 9)
+					('numEntries', 9),
+					('groups', ${numGroups}),
+					('labels', '${groupLabels}')
 			)
 			SELECT * FROM config
 			;
@@ -685,11 +714,14 @@ function doSankeyPlot(e) {
 					SELECT *
 					FROM PoliciesChanges
 					JOIN PolicyKeys ON PolicyKeys.PolicyID = PoliciesChanges.PolicyID
+        			JOIN GameSeeds ON GameSeeds.GameSeed = PoliciesChanges.GameSeed
+        			JOIN CivKeys ON CivKeys.CivID = PoliciesChanges.CivID
+        			JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.Civilization = CivKeys.CivKey
 					WHERE ((PoliciesChanges.PolicyID IN (0,6,12,18,24,30,36,49,56)) OR (PoliciesChanges.PolicyID > 62)) AND value = 1
-					GROUP BY GameSeed, PoliciesChanges.CivID, BranchID
-					ORDER BY GameSeed, PoliciesChanges.CivID
+					GROUP BY PoliciesChanges.GameSeed, PoliciesChanges.CivID, BranchID
+					ORDER BY PoliciesChanges.GameSeed, PoliciesChanges.CivID
      		)
-     		SELECT '['||Arr||']' AS seq FROM (
+     		SELECT '['||Arr||']', ${groupSelector} AS seq FROM (
      			SELECT *, GROUP_CONCAT(BranchID)
      			OVER (PARTITION BY GameSeed,CivID ORDER BY Turn ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS Arr
      			FROM data
@@ -702,13 +734,15 @@ function doSankeyPlot(e) {
 		worker.postMessage({ action: 'exec', id: 0, sql: msg });
 		return;
 	}
-	else if (e?.target === sankeyTechsBtn) {
+	else if (target === 'sankey-techs') {
 		msg = `
 			WITH
 			config(Key,Value) AS (
 				VALUES('type','sankey'),
 					('title', 'Technologies Flow'),
-					('numEntries', 13)
+					('numEntries', 13),
+					('groups', ${numGroups}),
+					('labels', '${groupLabels}')
 			)
 			SELECT * FROM config
 			;
@@ -718,11 +752,14 @@ function doSankeyPlot(e) {
 				data AS (
 					SELECT *
 					FROM TechnologiesChanges
+        			JOIN GameSeeds ON GameSeeds.GameSeed = TechnologiesChanges.GameSeed
+        			JOIN CivKeys ON CivKeys.CivID = TechnologiesChanges.CivID
+        			JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.Civilization = CivKeys.CivKey
 					WHERE TechnologyID IN (0,24,26,32,33,34,42,43,45,47,53,54,62) AND value = 1
-					GROUP BY GameSeed, CivID, Turn
-					ORDER BY GameSeed, CivID
+					GROUP BY TechnologiesChanges.GameSeed, TechnologiesChanges.CivID, Turn
+					ORDER BY TechnologiesChanges.GameSeed, TechnologiesChanges.CivID
 			)
-			SELECT '['||Arr||']' AS seq FROM (
+			SELECT '['||Arr||']', ${groupSelector} AS seq FROM (
 				SELECT *, GROUP_CONCAT(TechnologyID)
 				OVER (PARTITION BY GameSeed,CivID ORDER BY Turn ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS Arr
 				FROM data
@@ -734,51 +771,54 @@ function doSankeyPlot(e) {
 		worker.postMessage({ action: 'exec', id: 0, sql: msg });
 		return;
 	}
-	else if (e?.target.id === 'sankey-tradition') {
+	else if (target === 'sankey-tradition') {
 		pols = '6,7,8,9,10,11,42'
 	}
-	else if (e?.target.id === 'sankey-liberty') {
+	else if (target === 'sankey-liberty') {
 		pols = '0,1,2,3,4,5,43'
 	}
-	else if (e?.target.id === 'sankey-honor') {
+	else if (target === 'sankey-honor') {
 		pols = '12,13,14,15,16,17,44'
 	}
-	else if (e?.target.id === 'sankey-piety') {
+	else if (target === 'sankey-piety') {
 		pols = '18,19,20,21,22,23,45'
 	}
-	else if (e?.target.id === 'sankey-patronage') {
+	else if (target === 'sankey-patronage') {
 		pols = '24,25,26,27,28,29,46'
 	}
-	else if (e?.target.id === 'sankey-aesthetics') {
+	else if (target === 'sankey-aesthetics') {
 		pols = '49,50,51,52,53,54,55'
 	}
-	else if (e?.target.id === 'sankey-commerce') {
+	else if (target === 'sankey-commerce') {
 		pols = '30,31,32,33,34,35,47'
 	}
-	else if (e?.target.id === 'sankey-exploration') {
+	else if (target === 'sankey-exploration') {
 		pols = '56,57,58,59,60,61,62'
 	}
-	else if (e?.target.id === 'sankey-rationalism') {
+	else if (target === 'sankey-rationalism') {
 		pols = '36,37,38,39,40,41,48'
 	}
-	else if (e?.target.id === 'sankey-freedom') {
+	else if (target === 'sankey-freedom') {
 		pols = '63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,108';
 		numEntries = 16;
 	}
-	else if (e?.target.id === 'sankey-order') {
+	else if (target === 'sankey-order') {
 		pols = '78,79,80,81,82,83,84,85,86,87,89,90,91,92,109';
 		numEntries = 15;
 	}
-	else if (e?.target.id === 'sankey-autocracy') {
+	else if (target === 'sankey-autocracy') {
 		pols = '93,94,95,96,97,98,99,100,101,102,103,104,105,106,110';
 		numEntries = 15;
 	}
+
 	msg = `
 		WITH
 		config(Key,Value) AS (
 			VALUES('type','sankey'),
-				('title', '${e?.target.textContent.replace(/'/g, "''")}'),
-				('numEntries', ${numEntries})
+				('title', '${lastSankeyTitle.replace(/'/g, "''")}'),
+				('numEntries', ${numEntries}),
+				('groups', ${numGroups}),
+				('labels', '${groupLabels}')
 		)
 		SELECT * FROM config
 		;
@@ -788,11 +828,14 @@ function doSankeyPlot(e) {
 			data AS (
 				SELECT *
 				FROM PoliciesChanges
+        		JOIN GameSeeds ON GameSeeds.GameSeed = PoliciesChanges.GameSeed
+        		JOIN CivKeys ON CivKeys.CivID = PoliciesChanges.CivID
+        		JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.Civilization = CivKeys.CivKey
 				WHERE PolicyID IN (${pols}) AND value = 1
-				GROUP BY GameSeed, CivID, Turn, PolicyID
-				ORDER BY GameSeed, CivID
+				GROUP BY PoliciesChanges.GameSeed, PoliciesChanges.CivID, Turn, PolicyID
+				ORDER BY PoliciesChanges.GameSeed, PoliciesChanges.CivID
 		)
-		SELECT '['||Arr||']' AS seq FROM (
+		SELECT '['||Arr||']' AS seq, ${groupSelector} FROM (
 			SELECT *, GROUP_CONCAT(PolicyID)
 			OVER (PARTITION BY GameSeed,CivID ORDER BY Turn ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS Arr
 			FROM data
@@ -803,9 +846,6 @@ function doSankeyPlot(e) {
 	`;
 	worker.postMessage({ action: 'exec', id: 0, sql: msg });
 }
-sankeyPoliciesBtn.addEventListener("click", doSankeyPlot, true);
-sankeyTechsBtn.addEventListener("click", doSankeyPlot, true);
-
 document.querySelectorAll(".plot-sel").forEach(el => {
 	el.addEventListener("change", doPlot, true);
 });

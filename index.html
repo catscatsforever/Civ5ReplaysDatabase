@@ -91,15 +91,18 @@
     th {
       cursor: default
     }
-    th:hover:after {
+    .sort-asc:after {
       content: " ▼";
+    }
+    .sort-desc:after {
+      content: " ▲";
     }
     input, section {
       clear: both;
       padding-top: 10px;
       display: none;
     }
-    .radioTab {
+    .labelTab {
       font-size: 20px;
       display: block;
       float: left;
@@ -142,14 +145,14 @@
 
 
     <div id="inputs" style="display: none">
-      <input id="tab1" type="radio" name="tabs" class="plot-clk" checked>
-      <label class="radioTab" for="tab1">Plot by Game</label>
-      <input id="tab2" type="radio" name="tabs" class="plot-clk">
-      <label class="radioTab" for="tab2">Plot by Player</label>
-      <input id="tab3" type="radio" name="tabs" class="plot-clk">
-      <label class="radioTab" for="tab3">Plot Distribution</label>
-      <input id="tab4" type="radio" name="tabs" class="plot-clk">
-      <label class="radioTab" for="tab4">Tables</label>
+      <input class="radioTab plot-clk" id="tab1" type="radio" name="tabs" checked>
+      <label class="labelTab" for="tab1">Plot by Game</label>
+      <input class="radioTab plot-clk" id="tab2" type="radio" name="tabs">
+      <label class="labelTab" for="tab2">Plot by Player</label>
+      <input class="radioTab plot-clk" id="tab3" type="radio" name="tabs">
+      <label class="labelTab" for="tab3">Plot Distribution</label>
+      <input class="radioTab plot-clk" id="tab4" type="radio" name="tabs">
+      <label class="labelTab" for="tab4">Tables</label>
       <section id="content1">
         <span class="sp">Choose game:</span>
         <select id="gameID-select" class="btn plot-sel"></select>
@@ -175,7 +178,15 @@
         <br>
         <span class="sp">Sankey diagrams:</span>
         <br>
-        <button id="sankey-policies" class="btn">Policy Branches</button>
+          Show groups:
+        <input class="sp sankey-clk" id="sankey-groups1" type="radio" name="groupMode" checked>
+        <label for="sankey-groups1">Simple</label>
+        <input class="sp sankey-clk" id="sankey-groups2" type="radio" name="groupMode">
+        <label for="sankey-groups2">Winners</label>
+        <input class="sp sankey-clk" id="sankey-groups3" type="radio" name="groupMode">
+        <label for="sankey-groups3">Winners (Detailed)</label>
+        <br>
+        <button id="sankey-policies" class="btn sankey-clk">Policy Branches</button>
         <br>
         <button id="sankey-tradition" class="btn sankey-clk">Tradition</button>
         <button id="sankey-liberty" class="btn sankey-clk">Liberty</button>
@@ -193,7 +204,7 @@
         <button id="sankey-order" class="btn sankey-clk">Order</button>
         <button id="sankey-autocracy" class="btn sankey-clk">Autocracy</button>
         <br>
-        <button id="sankey-techs" class="btn">Techs-test</button>
+        <button id="sankey-techs" class="btn sankey-clk">Techs-test</button>
       </section>
       <section id="content4">
         <div>
