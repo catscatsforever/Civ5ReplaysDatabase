@@ -358,7 +358,7 @@ worker.onmessage = function (event) {
 		for (let i = 0; i < results[0].values.length; i++) {
 			const opt = document.createElement("option");
 			opt.value = results[0].values[i][0];
-			opt.text = results[0].values[i][0];
+			opt.text = `${results[0].values[i][0]}	${results[0].values[i][1]}`;
 			gameSel.add(opt);
 		}
 		for (let i = 0; i < results[1].values.length; i++) {
@@ -432,8 +432,11 @@ function execute(commands) {
 
 function fillSelects() {
 	worker.postMessage({ action: 'exec', id: 1, sql: `
-		SELECT GameID from GameSeeds JOIN BeliefsChanges ON BeliefsChanges.GameSeed = GameSeeds.GameSeed
-		GROUP BY GameID ORDER BY GameID;
+		SELECT GameSeeds.GameID, '('||GROUP_CONCAT(Player, ', ')||')' FROM Games
+		JOIN GameSeeds ON GameSeeds.GameID = Games.GameID
+		WHERE GameSeeds.EndTurn > 0
+		GROUP BY Games.GameID
+		ORDER BY GameSeeds.GameID;
 		SELECT * FROM ReplayDataSetKeys;
 		SELECT Player from GameSeeds JOIN BeliefsChanges ON BeliefsChanges.GameSeed = GameSeeds.GameSeed
 		JOIN Games ON Games.GameID = GameSeeds.GameID
