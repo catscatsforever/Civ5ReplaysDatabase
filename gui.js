@@ -4,7 +4,8 @@
 		codemirror
 */
 
-const colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf"];
+const colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf",
+	"#fffe35", "#a83651", "#d53aff", "#6ec388", "#d6a989"];
 const winColors = {
 	anyWin: 'rgba(223,207,36,0.5)',
 	0: 'rgba(0,0,0,0.2)',
@@ -121,7 +122,8 @@ worker.onmessage = function (event) {
 					y: arrY[i],
 					type: 'bar',
 					showlegend: true,
-					name: i
+					name: i,
+					color: colors[n % colors.length]
 				});
 			});
 		}
@@ -276,7 +278,7 @@ worker.onmessage = function (event) {
 					type: conf.type,
 					line: {
 						shape: 'spline',
-						color: colors[n % 10],
+						color: colors[n % colors.length]
 					},
 					legendgroup: `group${i}`,
 					showlegend: true,
@@ -292,7 +294,7 @@ worker.onmessage = function (event) {
 							type: conf.type,
 							marker: {
 								size: 12,
-								color: colors[n % 10],
+								color: colors[n % colors.length],
 								symbol: 'star'
 							},
 							legendgroup: `group${i}`,
@@ -309,7 +311,7 @@ worker.onmessage = function (event) {
 							type: conf.type,
 							marker: {
 								size: 12,
-								color: colors[n % 10],
+								color: colors[n % colors.length],
 								symbol: 'x-dot'
 							},
 							legendgroup: `group${i}`,
