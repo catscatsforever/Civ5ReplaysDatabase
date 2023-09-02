@@ -2,6 +2,7 @@
 		sql.js
 		plotly
 		codemirror
+		fflate
 */
 
 const colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf",
@@ -499,22 +500,30 @@ resizeWatcher.observe(document.getElementById("sqlBox"));
 // Load a db from URL
 function fetchdb() {
 	let r = new XMLHttpRequest();
-	r.open('GET', 'sample.db', true);
+	r.open('GET', 'sample.zip', true);
 	r.responseType = 'arraybuffer';
 	r.onload = function () {
+		toc('loading DB');
 		inputsElm.style.display = 'block';
 		const uInt8Array = new Uint8Array(r.response);
+		tic();
+		const unzipped = fflate.unzipSync(uInt8Array)['sample.db'];
+		toc('decompression finished');
 		let b = uInt8Array.length;
-		dbsizeLbl.textContent = `DB size is ${(b/Math.pow(1024,~~(Math.log2(b)/10))).toFixed(2)} 
-			${("KMGTPEZY"[~~(Math.log2(b)/10)-1]||"") + "B"}`;
+		let b2 = unzipped.length;
+		dbsizeLbl.textContent = `DB size is ${(b2/Math.pow(1024,~~(Math.log2(b2)/10))).toFixed(2)} \
+			${("KMGTPEZY"[~~(Math.log2(b2)/10)-1]||"") + "B"} \
+			(${(b / Math.pow(1024, ~~(Math.log2(b) / 10))).toFixed(2)} \
+			${("KMGTPEZY"[~~(Math.log2(b) / 10) - 1] || "") + "B"} compressed)`;
 		tic();
 		try {
-			worker.postMessage({ action: 'open', buffer: uInt8Array }, [uInt8Array]);
+			worker.postMessage({ action: 'open', buffer: unzipped }, [unzipped]);
 		}
 		catch (exception) {
-			worker.postMessage({ action: 'open', buffer: uInt8Array });
+			worker.postMessage({ action: 'open', buffer: unzipped });
 		}
 	};
+	tic();
 	r.send();
 }
 fetchdb();
