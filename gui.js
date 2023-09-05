@@ -16,6 +16,118 @@ const winColors = {
 	4: 'rgba(173,0,123,0.5)',
 	5: 'rgba(126,115,211,0.5)',
 };
+const IconMarkups = {
+	ICON_ALPHA: 'Civ5Icon.Alpha.png',
+	ICON_BLOCKADED: 'Civ5Icon.Blockaded.png',
+	ICON_BULLET: 'Civ5Icon.Bullet.png',
+	ICON_CAPITAL: 'Civ5Icon.Capital.png',
+	ICON_CITIZEN: 'Civ5Icon.Citizen.png',
+	ICON_CITY_STATE: 'Civ5Icon.CityState.png',
+	ICON_CONNECTED: 'Civ5Icon.Connected.png',
+	ICON_CULTURE: 'Civ5Icon.Culture.png',
+	ICON_DENOUNCE: 'Civ5Icon.Denounce.png',
+	ICON_FLOWER: 'Civ5Icon.Flower.png',
+	ICON_FOOD: 'Civ5Icon.Food.png',
+	ICON_GOLD: 'Civ5Icon.Gold.png',
+	ICON_GOLDEN_AGE: 'Civ5Icon.GoldenAge.png',
+	ICON_GREAT_PEOPLE: 'Civ5Icon.GreatPeople.png',
+	ICON_HAPPINESS_1: 'Civ5Icon.Happiness1.png',
+	ICON_HAPPINESS_2: 'Civ5Icon.Happiness2.png',
+	ICON_HAPPINESS_3: 'Civ5Icon.Happiness3.png',
+	ICON_HAPPINESS_4: 'Civ5Icon.Happiness4.png',
+	ICON_INFLUENCE: 'Civ5Icon.Influence.png',
+	ICON_INQUISITOR: 'Civ5Icon.Inquisitor.png',
+	ICON_INVEST: 'Civ5Icon.Invest.png',
+	ICON_LOCKED: 'Civ5Icon.Locked.png',
+	ICON_MINUS: 'Civ5Icon.Minus.png',
+	ICON_MISSIONARY: 'Civ5Icon.Missionary.png',
+	ICON_MOVES: 'Civ5Icon.Moves.png',
+	ICON_MUSHROOM: 'Civ5Icon.Mushroom.png',
+	ICON_OCCUPIED: 'Civ5Icon.Occupied.png',
+	ICON_OMEGA: 'Civ5Icon.Omega.png',
+	ICON_PEACE: 'Civ5Icon.Peace.png',
+	ICON_PIRATE: 'Civ5Icon.Pirate.png',
+	ICON_PLUS: 'Civ5Icon.Plus.png',
+	ICON_PRODUCTION: 'Civ5Icon.Production.png',
+	ICON_PROPHET: 'Civ5Icon.Prophet.png',
+	ICON_PUPPET: 'Civ5Icon.Puppet.png',
+	ICON_RANGE_STRENGTH: 'Civ5Icon.RangeStrength.png',
+	ICON_RAZING: 'Civ5Icon.Razing.png',
+	ICON_RELIGION: 'Civ5Icon.Religion.png',
+	ICON_RELIGION_BUDDHISM: 'Civ5Icon.ReligionBuddhism.png',
+	ICON_RELIGION_CHRISTIANITY: 'Civ5Icon.ReligionChristianity.png',
+	ICON_RELIGION_CONFUCIANISM: 'Civ5Icon.ReligionConfucianism.png',
+	ICON_RELIGION_HINDUISM: 'Civ5Icon.ReligionHinduism.png',
+	ICON_RELIGION_ISLAM: 'Civ5Icon.ReligionIslam.png',
+	ICON_RELIGION_JUDAISM: 'Civ5Icon.ReligionJudaism.png',
+	ICON_RELIGION_ORTHODOX: 'Civ5Icon.ReligionOrthodox.png',
+	ICON_RELIGION_PANTHEON: 'Civ5Icon.ReligionPantheon.png',
+	ICON_RELIGION_PROTESTANT: 'Civ5Icon.ReligionProtestant.png',
+	ICON_RELIGION_SHINTO: 'Civ5Icon.ReligionShinto.png',
+	ICON_RELIGION_SIKHISM: 'Civ5Icon.ReligionSikhism.png',
+	ICON_RELIGION_TAOISM: 'Civ5Icon.ReligionTaoism.png',
+	ICON_RELIGION_TENGRIISM: 'Civ5Icon.ReligionTengriism.png',
+	ICON_RELIGION_ZOROASTRIANISM: 'Civ5Icon.ReligionZoroastrianism.png',
+	ICON_RES_ALUMINUM: 'Civ5Icon.ResAluminum.png',
+	ICON_RES_BANANA: 'Civ5Icon.ResBanana.png',
+	ICON_RES_CITRUS: 'Civ5Icon.ResCitrus.png',
+	ICON_RES_COAL: 'Civ5Icon.ResCoal.png',
+	ICON_RES_COPPER: 'Civ5Icon.ResCopper.png',
+	ICON_RES_COTTON: 'Civ5Icon.ResCotton.png',
+	ICON_RES_COW: 'Civ5Icon.ResCow.png',
+	ICON_RES_CRAB: 'Civ5Icon.ResCrab.png',
+	ICON_RES_DEER: 'Civ5Icon.ResDeer.png',
+	ICON_RES_DYE: 'Civ5Icon.ResDye.png',
+	ICON_RES_FISH: 'Civ5Icon.ResFish.png',
+	ICON_RES_FUR: 'Civ5Icon.ResFur.png',
+	ICON_RES_GEMS: 'Civ5Icon.ResGems.png',
+	ICON_RES_GOLD: 'Civ5Icon.ResGold.png',
+	ICON_RES_HORSE: 'Civ5Icon.ResHorse.png',
+	ICON_RES_INCENSE: 'Civ5Icon.ResIncense.png',
+	ICON_RES_IRON: 'Civ5Icon.ResIron.png',
+	ICON_RES_IVORY: 'Civ5Icon.ResIvory.png',
+	ICON_RES_JEWELRY: 'Civ5Icon.ResJewelry.png',
+	ICON_RES_MARBLE: 'Civ5Icon.ResMarble.png',
+	ICON_RES_OIL: 'Civ5Icon.ResOil.png',
+	ICON_RES_PEARLS: 'Civ5Icon.ResPearls.png',
+	ICON_RES_PORCELAIN: 'Civ5Icon.ResPorcelain.png',
+	ICON_RES_SALT: 'Civ5Icon.ResSalt.png',
+	ICON_RES_SHEEP: 'Civ5Icon.ResSheep.png',
+	ICON_RES_SILK: 'Civ5Icon.ResSilk.png',
+	ICON_RES_SILVER: 'Civ5Icon.ResSilver.png',
+	ICON_RES_SPICES: 'Civ5Icon.ResSpices.png',
+	ICON_RES_STONE: 'Civ5Icon.ResStone.png',
+	ICON_RES_SUGAR: 'Civ5Icon.ResSugar.png',
+	ICON_RES_TRUFFLES: 'Civ5Icon.ResTruffles.png',
+	ICON_RES_URANIUM: 'Civ5Icon.ResUranium.png',
+	ICON_RES_WHALE: 'Civ5Icon.ResWhale.png',
+	ICON_RES_WHEAT: 'Civ5Icon.ResWheat.png',
+	ICON_RES_WINE: 'Civ5Icon.ResWine.png',
+	ICON_RESEARCH: 'Civ5Icon.Research.png',
+	ICON_RESISTANCE: 'Civ5Icon.Resistance.png',
+	ICON_SPY: 'Civ5Icon.Spy.png',
+	ICON_STAR: 'Civ5Icon.Star.png',
+	ICON_STRENGTH: 'Civ5Icon.Strength.png',
+	ICON_TEAM_1: 'Civ5Icon.Team1.png',
+	ICON_TEAM_10: 'Civ5Icon.Team10.png',
+	ICON_TEAM_11: 'Civ5Icon.Team11.png',
+	ICON_TEAM_2: 'Civ5Icon.Team2.png',
+	ICON_TEAM_3: 'Civ5Icon.Team3.png',
+	ICON_TEAM_4: 'Civ5Icon.Team4.png',
+	ICON_TEAM_5: 'Civ5Icon.Team5.png',
+	ICON_TEAM_6: 'Civ5Icon.Team6.png',
+	ICON_TEAM_7: 'Civ5Icon.Team7.png',
+	ICON_TEAM_8: 'Civ5Icon.Team8.png',
+	ICON_TEAM_9: 'Civ5Icon.Team9.png',
+	ICON_TEAM_USA: 'Civ5Icon.TeamUsa.png',
+	ICON_TRADE: 'Civ5Icon.Trade.png',
+	ICON_TRADE_WHITE: 'Civ5Icon.TradeWhite.png',
+	ICON_VIEW_CITY: 'Civ5Icon.ViewCity.png',
+	ICON_WAR: 'Civ5Icon.War.png',
+	ICON_WORKER: 'Civ5Icon.Worker.png',
+	ICON_WTF1: 'Civ5Icon.Wtf1.png',
+	ICON_WTF2: 'Civ5Icon.Wtf2.png'
+};
 let inputsElm = document.getElementById('inputs');
 
 let execBtn = document.getElementById("execute");
@@ -49,10 +161,14 @@ let WonderAverageBtn = document.getElementById('WondersAverage');
 let WonderMedianBtn = document.getElementById('WondersMedian');
 let WonderMinimumBtn = document.getElementById('WondersMinimum');
 
-let gameSel = document.getElementById('gameID-select');
-let datasetSel = document.getElementById('dataset-select');
-let playerSel = document.getElementById('playerID-select');
-let dataset2Sel = document.getElementById('dataset-select2');
+let gameSelHead = document.getElementById('gameID-select-head');
+let gameSelDropdown = document.getElementById('gameID-select-dropdown');
+let datasetSelHead = document.getElementById('dataset-select-head');
+let datasetSelDropdown = document.getElementById('dataset-select-dropdown');
+let playerSelHead = document.getElementById('playerID-select-head');
+let playerSelDropdown = document.getElementById('playerID-select-dropdown');
+let datasetSelHead2 = document.getElementById('dataset-select-head-2');
+let datasetSelDropdown2 = document.getElementById('dataset-select-dropdown-2');
 
 let sankeyGroups1Rad = document.getElementById('sankey-groups1');
 let sankeyGroups2Rad = document.getElementById('sankey-groups2');
@@ -345,7 +461,7 @@ worker.onmessage = function (event) {
 			responsive: true,
 			toImageButtonOptions: {
 				format: 'png', // one of png, svg, jpeg, webp
-				filename: `Game${gameSel.selectedIndex}${datasetSel.options[datasetSel.selectedIndex].text}`,
+				filename: `TODO`,
 				height: 2160,
 				width: 3840,
 				scale: 1 // Multiply title/legend/axis/canvas sizes by this factor
@@ -355,22 +471,37 @@ worker.onmessage = function (event) {
 	}
 	// fill games select
 	else if (id === 1) {
-		for (let i = 0; i < results[0].values.length; i++) {
-			const opt = document.createElement("option");
-			opt.value = results[0].values[i][0];
-			opt.text = `${results[0].values[i][0]}	${results[0].values[i][1]}`;
-			gameSel.add(opt);
-		}
-		for (let i = 0; i < results[1].values.length; i++) {
-			datasetSel.add(new Option(results[1].values[i][1], results[1].values[i][0]));
-			dataset2Sel.add(new Option(results[1].values[i][1], results[1].values[i][0]));
-		}
-		for (let i = 0; i < results[2].values.length; i++) {
-			const opt = document.createElement("option");
-			opt.value = i;
-			opt.text = results[2].values[i][0];
-			playerSel.add(opt);
-		}
+		[gameSelHead, datasetSelHead, playerSelHead, datasetSelHead2].forEach((el, n)=>{
+			n = (n === 3) ? 1 : n;
+			el.innerHTML = `${results[n].values[0][0].replace(/\[([^\]]+)\]/g, (_,a)=>IconMarkups[a]?`<img src="Images/${IconMarkups[a]}"/>`:`[${a}]`)}`;
+			el.value = 1;
+			el.addEventListener('click', (e)=>{
+				el.nextElementSibling.style.visibility = (el.nextElementSibling.style.visibility === 'visible') ? 'hidden' : 'visible';
+			});
+			el.addEventListener('focusout', (e)=>{
+				if (!el.nextElementSibling.contains(e.explicitOriginalTarget))
+					el.nextElementSibling.style.visibility = 'hidden';
+			});
+			for (let i = 0; i < results[n].values.length; i++) {
+				const sp = document.createElement("span");
+				sp.value = results[n].values[i][1];
+				sp.innerHTML = `${results[n].values[i][0].replace(/\[([^\]]+)\]/g, (_,a)=>IconMarkups[a]?`<img src="Images/${IconMarkups[a]}"/>`:`[${a}]`)}`;
+				sp.classList.add('sp', 'dropdownItem');
+				el.nextElementSibling.appendChild(sp);
+			}
+			let temp = el.parentElement.parentElement.style.display;
+			el.parentElement.parentElement.style.display = 'block';
+			el.style.minWidth = el.nextElementSibling.getBoundingClientRect().width + 'px';
+			el.parentElement.parentElement.style.display = temp;
+		});
+		document.querySelectorAll('.dropdownItem').forEach((el)=>{
+			el.addEventListener('click', (e)=>{
+				el.parentElement.parentElement.children[0].innerHTML = el.innerHTML;
+				el.parentElement.parentElement.children[0].value = el.value;
+				el.parentElement.style.visibility = 'hidden';
+				doPlot(e);
+			})
+		})
 	}
 	// fill table
 	else {
@@ -432,12 +563,12 @@ function execute(commands) {
 
 function fillSelects() {
 	worker.postMessage({ action: 'exec', id: 1, sql: `
-		SELECT GameSeeds.GameID, '('||GROUP_CONCAT(Player, ', ')||')' FROM Games
+		SELECT GameSeeds.GameID||'	('||GROUP_CONCAT(Player, ', ')||')', GameSeeds.GameID FROM Games
 		JOIN GameSeeds ON GameSeeds.GameID = Games.GameID
 		WHERE GameSeeds.EndTurn > 0
 		GROUP BY Games.GameID
 		ORDER BY GameSeeds.GameID;
-		SELECT * FROM ReplayDataSetKeys;
+		SELECT ReplayDataSetKey, ReplayDataSetID FROM ReplayDataSetKeys;
 		SELECT Player from GameSeeds JOIN BeliefsChanges ON BeliefsChanges.GameSeed = GameSeeds.GameSeed
 		JOIN Games ON Games.GameID = GameSeeds.GameID
 		GROUP BY Player ORDER BY Player;
@@ -540,10 +671,11 @@ savedbElm.addEventListener("click", savedb, true);
 function doPlot(e) {
 	tic();
 	noerror();
-	let gameID = gameSel.options.length > 0 ? gameSel.options[gameSel.selectedIndex].value : 1;
-	let dataset = datasetSel.options.length > 0 ? datasetSel.options[datasetSel.selectedIndex] : {value:1, text:'Score'};
-	let playerName = playerSel.options.length > 0 ? playerSel.options[playerSel.selectedIndex].text : '12g';
-	let dataset2 = dataset2Sel.options.length > 0 ? dataset2Sel.options[dataset2Sel.selectedIndex] : {value:1, text:'Score'};
+	let gameID = gameSelDropdown.children.length > 0 ? gameSelHead.value : 1;
+	let dataset = datasetSelDropdown.children.length > 0 ? datasetSelHead : {value:1, textContent:'Score'};
+	console.log(datasetSelHead.value,datasetSelHead.textContent);
+	let playerName = playerSelDropdown.children.length > 0 ? playerSelHead.textContent : '12g';
+	let dataset2 = datasetSelDropdown2.children.length > 0 ? datasetSelHead2 : {value:1, textContent:'Score'};
 	let condition1 = `Games.GameID = 1`;
 	let condition2 = `ReplayDataSetKeys.ReplayDataSetID = 1`;
 	let traceName = `Games.Player`;
@@ -552,25 +684,25 @@ function doPlot(e) {
 		condition1 = '';
 		condition2 = `ReplayDataSetKeys.ReplayDataSetID = ${dataset.value}`;
 		traceName = `Games.Player || ' (' || Games.PlayerGameNumber || ')'`;
-		yaxisName = dataset.text;
+		yaxisName = dataset.textContent;
 	}
 	else if (e?.target === plotAllPlayersBtn) {
 		condition1 = '';
 		condition2 = `ReplayDataSetKeys.ReplayDataSetID = ${dataset2.value}`;
 		traceName = `Games.Player || ' ' || Games.PlayerGameNumber || ': ' || Games.Civilization`;
-		yaxisName = dataset2.text;
+		yaxisName = dataset2.textContent;
 	}
 	else if (tab1Rad.checked) {
 		condition1 = `Games.GameID = ${gameID}`;
 		condition2 = `ReplayDataSetKeys.ReplayDataSetID = ${dataset.value}`;
 		traceName = `Games.Player||' ('||Games.Civilization||')'`;
-		yaxisName = dataset.text;
+		yaxisName = dataset.textContent;
 	}
 	else if (tab2Rad.checked) {
 		condition1 = `Games.Player = '${playerName.replace(/'/g, "''")}'`;
 		condition2 = `ReplayDataSetKeys.ReplayDataSetID = ${dataset2.value}`;
 		traceName = `Games.PlayerGameNumber || ': ' || Games.Civilization`;
-		yaxisName = dataset2.text;
+		yaxisName = dataset2.textContent;
 	}
 	else if (tab3Rad.checked) {
 		doBarPlot(e);
@@ -578,37 +710,37 @@ function doPlot(e) {
 	}
 	let msg = `
 		WITH
-  			config(Key,Value) AS (
-    			VALUES('type','scatter'),
-          			('mode', 'lines'),
+			config(Key,Value) AS (
+				VALUES('type','scatter'),
+					('mode', 'lines'),
 					('xaxis','Turn'),
 					('yaxis','${yaxisName}')
-  			)
+			)
 		SELECT * FROM config
 		;
 
 		WITH
-  			gamesData AS (
-    			SELECT GameSeeds.GameID, GameSeeds.EndTurn FROM GameSeeds
+			gamesData AS (
+				SELECT GameSeeds.GameID, GameSeeds.EndTurn FROM GameSeeds
 					JOIN Games ON Games.GameID = GameSeeds.GameID
-    				${condition1 ? `WHERE ${condition1}` : ''}
-    				GROUP BY Games.GameID
-  			)
+					${condition1 ? `WHERE ${condition1}` : ''}
+					GROUP BY Games.GameID
+			)
 		SELECT * FROM gamesData
 		;
 
 		WITH
-  			tracesData AS (
+			tracesData AS (
 				SELECT GameID, Games.rowid, ${traceName} AS TraceName, Standing, Value AS QuitTurn
 				FROM Games
 				LEFT JOIN PlayerQuitTurn ON Games.Player = PlayerQuitTurn.Player AND Games.PlayerGameNumber = PlayerQuitTurn.PlayerGameNumber
 				${condition1 ? `WHERE ${condition1}` : ''}
-  			)
+			)
 		SELECT * FROM tracesData
 		;
 	
 		SELECT Games.rowid, Turn AS x, 
-    	sum(ReplayDataSetsChanges.Value) OVER (PARTITION by Games.GameID, Games.Player ORDER BY Turn) y
+		sum(ReplayDataSetsChanges.Value) OVER (PARTITION by Games.GameID, Games.Player ORDER BY Turn) y
 		
 		FROM DataSets
 		JOIN ReplayDataSetsChanges ON ReplayDataSetsChanges.DataSetID = DataSets.DataSetID
@@ -616,10 +748,11 @@ function doPlot(e) {
 		JOIN CivKeys ON CivKeys.CivID = ReplayDataSetsChanges.CivID
 		JOIN GameSeeds ON GameSeeds.GameSeed = ReplayDataSetsChanges.GameSeed
 		JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
-    	LEFT JOIN PlayerQuitTurn ON Games.Player = PlayerQuitTurn.Player AND Games.PlayerGameNumber = PlayerQuitTurn.PlayerGameNumber
+		LEFT JOIN PlayerQuitTurn ON Games.Player = PlayerQuitTurn.Player AND Games.PlayerGameNumber = PlayerQuitTurn.PlayerGameNumber
 		WHERE ${condition1 ? condition1 : ''} ${condition2 ? (condition1 ? `AND ${condition2}` : condition2) : ''}
 		;
 	`;
+	console.log(msg);
 	worker.postMessage({ action: 'exec', id: 0, sql: msg });
 }
 function doBarPlot(e) {

@@ -1,0 +1,285 @@
+html {
+    background:#222;
+    margin:auto;
+    width:90%;
+}
+
+body{
+    background: linear-gradient(#aaa 0, #ddd 10px, #fff 55px);
+    border: 1px solid black;
+    padding: 10px 20px;
+    box-shadow: 5px 0px 30px #000;
+    border-radius: 8px;
+}
+
+h1 {
+    text-align: center;
+    color: #222;
+    margin: 0 0 30px;
+}
+
+.button {
+    color: #333;
+    background: linear-gradient(#eee, #ddd);
+    border: 1px solid #222;
+    border-radius: 3px;
+    padding: 7px;
+    margin-right: 5px;
+    transition: .3s;
+    font-family: ubuntu, sans-serif;
+    font-size: 1em;
+}
+
+.button:active {
+    background: linear-gradient(#ddd, #eee);
+}
+
+.button:hover, button:focus {
+    box-shadow: 0 0 2px #222;
+}
+
+#execute {
+    margin-top: 5px;;
+    width: 10%;
+    min-width:100px;
+}
+
+.CodeMirror {
+    border: 1px solid #222;
+    height: auto;
+}
+.CodeMirror-scroll {
+    overflow-y: hidden;
+    overflow-x: auto;
+}
+
+.error {
+    color:red;
+    transition:.5s;
+    overflow:hidden;
+    margin: 15px;
+}
+
+#output {
+    overflow: auto;
+}
+
+table {
+    width:auto;
+    margin:auto;
+    border:1px solid black;
+    border-collapse:collapse;
+    margin-bottom:10px;
+}
+
+th, td {
+    border:1px solid #777;
+}
+
+footer {
+    font-size:.8em;
+    color: #222;
+}
+
+p,h1 {
+    font-size: 4rem;
+    font-weight: normal;
+}
+
+.js-plotly-plot, .plot-container {
+    height: 70vh
+}
+
+.btn {
+    position: relative;
+    display: inline-block;
+    margin-top: 10px;
+    margin-left: 7px;
+    background-color: rgb(255, 255, 255);
+    border: 1px solid #DDD;
+    box-sizing: border-box;
+    color: rgb(34, 34, 34);
+    font-family: Circular, -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+    font-size: 17px;
+    line-height: 20px;
+    outline: none;
+    padding: 10px 17px;
+    text-align: center;
+    text-decoration: none;
+    touch-action: manipulation;
+    user-select: none;
+    width: auto;
+}
+
+.btn:hover {
+    box-shadow: #222 0 0 0 2px;
+    transition: box-shadow 0.2s ease 0s;
+    color: #222;
+}
+
+.btn:focus {
+    color: #222;
+}
+
+.btn:active {
+    background-color: rgb(247, 247, 247);
+    border-color: rgb(0, 0, 0);
+    transform: scale(0.96);
+    color: #222;
+}
+
+.sp {
+    position: relative;
+    display: inline-block;
+    margin-top: 10px;
+    margin-left: 7px;
+    box-sizing: border-box;
+    color: rgb(34, 34, 34);
+    font-family: Circular, -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+    font-size: 17px;
+    line-height: 20px;
+    outline: none;
+    padding: 10px 17px;
+    text-align: center;
+    text-decoration: none;
+    touch-action: manipulation;
+    user-select: none;
+    width: auto;
+}
+
+.chk {
+    position: relative;
+    display: inline-block;
+    font-family: Circular, -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+    font-size: 17px;
+    line-height: 20px;
+    accent-color: #222;
+    height: 20px;
+    width: 20px;
+}
+
+.button {
+    margin-top: 7px;
+    font-size: 20px;
+    border-top: 2px solid transparent;
+    border-right: 1px solid transparent;
+    border-left: 1px solid transparent;
+    border-bottom: 1px solid #DDD;
+}
+
+th {
+    cursor: default
+}
+
+.sort-asc:after {
+    content: " ▼";
+}
+
+.sort-desc:after {
+    content: " ▲";
+}
+
+input, section {
+    display: none;
+    clear: both;
+    padding-top: 10px;
+}
+
+.labelTab {
+    display: block;
+    font-size: 20px;
+    float: left;
+    padding: 10px 30px;
+    border-top: 2px solid transparent;
+    border-right: 1px solid transparent;
+    border-left: 1px solid transparent;
+    border-bottom: 1px solid #DDD;
+}
+
+#tab1:checked ~ #content1,
+#tab2:checked ~ #content2,
+#tab3:checked ~ #content3,
+#tab4:checked ~ #content4 {
+    display: block;
+}
+
+#tab4:checked ~ #plotOut {
+    display: none;
+}
+
+#sqlBox {
+    display: none;
+}
+
+#showSql:checked ~ #sqlBox {
+    display: block;
+}
+
+input:checked + label {
+    border-top-color: #222;
+    border-right-color: #DDD;
+    border-left-color: #DDD;
+    border-bottom-color: transparent;
+    text-decoration: none;
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    position: absolute;
+    visibility: hidden;
+    margin-left: 7px;
+    background-color: #f9f9f9;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+    overflow-y: auto;
+    height: calc(80vh - 200px);
+}
+
+.dropdown-content span {
+    position: relative;
+    display: flow-root;
+    white-space: nowrap;
+    margin-left: 0;
+    margin-top: 0;
+    padding: 3px 2em 3px 17px;
+    text-align: left;
+}
+
+.dropdown-content span:hover {
+    background-color: rgb(226, 226, 226)
+}
+
+.dropdown-head {
+    padding-right: 2em;
+    width:100%;
+}
+
+.dropdown-head::before {
+    position: absolute;
+    content: '˅';
+    transform: scaleY(0.5);
+    right: 0.5em;
+    top: 30%;
+}
+
+.dropdown-head:active {
+    background-color: rgb(247, 247, 247);
+    border-color: rgb(0, 0, 0);
+    transform: scale(0.96);
+    color: #222;
+}
+
+.dropdown:hover > .dropdown-head {
+    box-shadow: #222 0 0 0 1px;
+    transition: box-shadow 0.2s ease 0s;
+    color: #222;
+    border-color: rgb(0, 0, 0);
+}
+
+.ico {
+    vertical-align: text-bottom;
+}
