@@ -473,7 +473,7 @@ worker.onmessage = function (event) {
 	else if (id === 1) {
 		[gameSelHead, datasetSelHead, playerSelHead, datasetSelHead2].forEach((el, n)=>{
 			n = (n === 3) ? 1 : n;
-			el.innerHTML = `${results[n].values[0][0].replace(/\[([^\]]+)\]/g, (_,a)=>IconMarkups[a]?`<img src="Images/${IconMarkups[a]}"/>`:`[${a}]`)}`;
+			el.innerHTML = `${results[n].values[0][0].replace(/\[([^\]]+)\]/g, (_,a)=>IconMarkups[a]?`<img src="images/${IconMarkups[a]}"/>`:`[${a}]`)}`;
 			el.value = 1;
 			el.addEventListener('click', (e)=>{
 				el.nextElementSibling.style.visibility = (el.nextElementSibling.style.visibility === 'visible') ? 'hidden' : 'visible';
@@ -485,7 +485,7 @@ worker.onmessage = function (event) {
 			for (let i = 0; i < results[n].values.length; i++) {
 				const sp = document.createElement("span");
 				sp.value = results[n].values[i][1];
-				sp.innerHTML = `${results[n].values[i][0].replace(/\[([^\]]+)\]/g, (_,a)=>IconMarkups[a]?`<img src="Images/${IconMarkups[a]}"/>`:`[${a}]`)}`;
+				sp.innerHTML = `${results[n].values[i][0].replace(/\[([^\]]+)\]/g, (_,a)=>IconMarkups[a]?`<img src="images/${IconMarkups[a]}"/>`:`[${a}]`)}`;
 				sp.classList.add('sp', 'dropdownItem');
 				el.nextElementSibling.appendChild(sp);
 			}
