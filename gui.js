@@ -487,6 +487,12 @@ worker.onmessage = function (event) {
 				sp.value = results[n].values[i][1];
 				sp.innerHTML = `${results[n].values[i][0].replace(/\[([^\]]+)\]/g, (_,a)=>IconMarkups[a]?`<img class="ico" src="images/${IconMarkups[a]}"/>`:`[${a}]`)}`;
 				sp.classList.add('sp', 'dropdownItem');
+				sp.addEventListener('click', (e)=>{
+					sp.parentElement.parentElement.children[0].innerHTML = sp.innerHTML;
+					sp.parentElement.parentElement.children[0].value = sp.value;
+					sp.parentElement.style.visibility = 'hidden';
+					doPlot(e);
+				});
 				el.nextElementSibling.appendChild(sp);
 			}
 			let temp = el.parentElement.parentElement.style.display;
@@ -494,14 +500,6 @@ worker.onmessage = function (event) {
 			el.style.minWidth = el.nextElementSibling.getBoundingClientRect().width + 'px';
 			el.parentElement.parentElement.style.display = temp;
 		});
-		document.querySelectorAll('.dropdownItem').forEach((el)=>{
-			el.addEventListener('click', (e)=>{
-				el.parentElement.parentElement.children[0].innerHTML = el.innerHTML;
-				el.parentElement.parentElement.children[0].value = el.value;
-				el.parentElement.style.visibility = 'hidden';
-				doPlot(e);
-			})
-		})
 	}
 	// fill table
 	else {
