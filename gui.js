@@ -474,7 +474,7 @@ worker.onmessage = function (event) {
 		[gameSelHead, datasetSelHead, playerSelHead, datasetSelHead2].forEach((el, n)=>{
 			n = (n === 3) ? 1 : n;
 			el.innerHTML = `${results[n].values[0][0].replace(/\[([^\]]+)\]/g, (_,a)=>IconMarkups[a]?`<img class="ico" src="images/${IconMarkups[a]}"/>`:`[${a}]`)}`;
-			el.value = 1;
+			el.value = results[n].values[0][1] ?? 1;
 			el.addEventListener('click', (e)=>{
 				el.nextElementSibling.style.visibility = (el.nextElementSibling.style.visibility === 'visible') ? 'hidden' : 'visible';
 			});
@@ -679,7 +679,7 @@ function doPlot(e) {
 	let playerName = playerSelDropdown.children.length > 0 ? playerSelHead.textContent : '12g';
 	let dataset2 = datasetSelDropdown2.children.length > 0 ? datasetSelHead2 : {value:51, textContent:'Born Admirals'};
 	let condition1 = `Games.GameID = 1`;
-	let condition2 = `ReplayDataSetKeys.ReplayDataSetID = 1`;
+	let condition2 = `ReplayDataSetKeys.ReplayDataSetID = 51`;
 	let traceName = `Games.Player`;
 	let yaxisName = ``;
 	if (e?.target === plotAllGamesBtn) {
