@@ -489,8 +489,8 @@ worker.onmessage = function (event) {
 				sp.innerHTML = `${results[n].values[i][0].replace(/\[([^\]]+)\]/g, (_,a)=>IconMarkups[a]?`<img class="ico" src="images/${IconMarkups[a]}"/>`:`[${a}]`)}`;
 				sp.classList.add('sp', 'dropdownItem');
 				sp.addEventListener('mousedown', (e)=>{
-					sp.parentElement.parentElement.children[0].innerHTML = sp.innerHTML;
-					sp.parentElement.parentElement.children[0].value = sp.value;
+					el.innerHTML = sp.innerHTML;
+					el.value = sp.value;
 					sp.parentElement.style.visibility = 'hidden';
 					doPlot(e);
 				});
@@ -499,7 +499,7 @@ worker.onmessage = function (event) {
 			el.addEventListener('click', (e)=>{
 				el.nextElementSibling.style.visibility = (el.nextElementSibling.style.visibility === 'visible') ? 'hidden' : 'visible';
 			});
-			el.addEventListener('focusout', (e)=>{
+			el.parentElement.addEventListener('focusout', (e)=>{
 				if (!el.nextElementSibling.contains(e.explicitOriginalTarget))
 					el.nextElementSibling.style.visibility = 'hidden';
 			});
