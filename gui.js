@@ -475,13 +475,6 @@ worker.onmessage = function (event) {
 			n = (n === 3) ? 1 : n;
 			el.innerHTML = `${results[n].values[0][0].replace(/\[([^\]]+)\]/g, (_,a)=>IconMarkups[a]?`<img class="ico" src="images/${IconMarkups[a]}"/>`:`[${a}]`)}`;
 			el.value = results[n].values[0][1] ?? 1;
-			el.addEventListener('click', (e)=>{
-				el.nextElementSibling.style.visibility = (el.nextElementSibling.style.visibility === 'visible') ? 'hidden' : 'visible';
-			});
-			el.addEventListener('focusout', (e)=>{
-				if (!el.nextElementSibling.contains(e.explicitOriginalTarget))
-					el.nextElementSibling.style.visibility = 'hidden';
-			});
 			for (let i = 0; i < results[n].values.length; i++) {
 				const sp = document.createElement("span");
 				sp.value = results[n].values[i][1];
@@ -495,6 +488,13 @@ worker.onmessage = function (event) {
 				});
 				el.nextElementSibling.appendChild(sp);
 			}
+			el.addEventListener('click', (e)=>{
+				el.nextElementSibling.style.visibility = (el.nextElementSibling.style.visibility === 'visible') ? 'hidden' : 'visible';
+			});
+			el.addEventListener('focusout', (e)=>{
+				if (!el.nextElementSibling.contains(e.explicitOriginalTarget))
+					el.nextElementSibling.style.visibility = 'hidden';
+			});
 			let temp = el.parentElement.parentElement.style.display;
 			el.parentElement.parentElement.style.display = 'block';
 			el.style.minWidth = el.nextElementSibling.getBoundingClientRect().width + 'px';
