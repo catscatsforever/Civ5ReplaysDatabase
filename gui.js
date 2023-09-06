@@ -473,7 +473,7 @@ worker.onmessage = function (event) {
 	else if (id === 1) {
 		[gameSelHead, datasetSelHead, playerSelHead, datasetSelHead2].forEach((el, n)=>{
 			n = (n === 3) ? 1 : n;
-			el.innerHTML = `${results[n].values[0][0].replace(/\[([^\]]+)\]/g, (_,a)=>IconMarkups[a]?`<img src="images/${IconMarkups[a]}"/>`:`[${a}]`)}`;
+			el.innerHTML = `${results[n].values[0][0].replace(/\[([^\]]+)\]/g, (_,a)=>IconMarkups[a]?`<img class="ico" src="images/${IconMarkups[a]}"/>`:`[${a}]`)}`;
 			el.value = 1;
 			el.addEventListener('click', (e)=>{
 				el.nextElementSibling.style.visibility = (el.nextElementSibling.style.visibility === 'visible') ? 'hidden' : 'visible';
@@ -485,7 +485,7 @@ worker.onmessage = function (event) {
 			for (let i = 0; i < results[n].values.length; i++) {
 				const sp = document.createElement("span");
 				sp.value = results[n].values[i][1];
-				sp.innerHTML = `${results[n].values[i][0].replace(/\[([^\]]+)\]/g, (_,a)=>IconMarkups[a]?`<img src="images/${IconMarkups[a]}"/>`:`[${a}]`)}`;
+				sp.innerHTML = `${results[n].values[i][0].replace(/\[([^\]]+)\]/g, (_,a)=>IconMarkups[a]?`<img class="ico" src="images/${IconMarkups[a]}"/>`:`[${a}]`)}`;
 				sp.classList.add('sp', 'dropdownItem');
 				el.nextElementSibling.appendChild(sp);
 			}
@@ -568,7 +568,9 @@ function fillSelects() {
 		WHERE GameSeeds.EndTurn > 0
 		GROUP BY Games.GameID
 		ORDER BY GameSeeds.GameID;
-		SELECT ReplayDataSetKey, ReplayDataSetID FROM ReplayDataSetKeys;
+		SELECT ReplayDataSetKey, ReplayDataSetID FROM ReplayDataSetKeys
+		WHERE ReplayDataSetKey > ''
+		ORDER BY ReplayDataSetKey;
 		SELECT Player from GameSeeds JOIN BeliefsChanges ON BeliefsChanges.GameSeed = GameSeeds.GameSeed
 		JOIN Games ON Games.GameID = GameSeeds.GameID
 		GROUP BY Player ORDER BY Player;
@@ -672,10 +674,10 @@ function doPlot(e) {
 	tic();
 	noerror();
 	let gameID = gameSelDropdown.children.length > 0 ? gameSelHead.value : 1;
-	let dataset = datasetSelDropdown.children.length > 0 ? datasetSelHead : {value:1, textContent:'Score'};
+	let dataset = datasetSelDropdown.children.length > 0 ? datasetSelHead : {value:51, textContent:'Born Admirals'};
 	console.log(datasetSelHead.value,datasetSelHead.textContent);
 	let playerName = playerSelDropdown.children.length > 0 ? playerSelHead.textContent : '12g';
-	let dataset2 = datasetSelDropdown2.children.length > 0 ? datasetSelHead2 : {value:1, textContent:'Score'};
+	let dataset2 = datasetSelDropdown2.children.length > 0 ? datasetSelHead2 : {value:51, textContent:'Born Admirals'};
 	let condition1 = `Games.GameID = 1`;
 	let condition2 = `ReplayDataSetKeys.ReplayDataSetID = 1`;
 	let traceName = `Games.Player`;
