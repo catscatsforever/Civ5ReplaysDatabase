@@ -480,7 +480,7 @@ worker.onmessage = function (event) {
 				sp.value = results[n].values[i][1];
 				sp.innerHTML = `${results[n].values[i][0].replace(/\[([^\]]+)\]/g, (_,a)=>IconMarkups[a]?`<img class="ico" src="images/${IconMarkups[a]}"/>`:`[${a}]`)}`;
 				sp.classList.add('sp', 'dropdownItem');
-				sp.addEventListener('click', (e)=>{
+				sp.addEventListener('mousedown', (e)=>{
 					sp.parentElement.parentElement.children[0].innerHTML = sp.innerHTML;
 					sp.parentElement.parentElement.children[0].value = sp.value;
 					sp.parentElement.style.visibility = 'hidden';
