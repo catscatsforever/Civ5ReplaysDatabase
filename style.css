@@ -199,11 +199,12 @@ input, section {
 #tab1:checked ~ #content1,
 #tab2:checked ~ #content2,
 #tab3:checked ~ #content3,
-#tab4:checked ~ #content4 {
+#tab4:checked ~ #content4,
+#tab5:checked ~ #content5 {
     display: block;
 }
 
-#tab4:checked ~ #plotOut {
+#tab5:checked ~ #plotOut {
     display: none;
 }
 

@@ -147,6 +147,7 @@ let savedbElm = document.getElementById('savedb');
 let tab1Rad = document.getElementById("tab1");
 let tab2Rad = document.getElementById("tab2");
 let tab3Rad = document.getElementById("tab3");
+let tab4Rad = document.getElementById("tab4");
 
 let plotAllGamesBtn = document.getElementById("plotAllGames");
 let plotAllPlayersBtn = document.getElementById("plotAllPlayers");
@@ -170,13 +171,11 @@ let WonderMedianBtn = document.getElementById('WondersMedian');
 let WonderMinimumBtn = document.getElementById('WondersMinimum');
 
 let gameSelHead = document.getElementById('gameID-select-head');
-let gameSelDropdown = document.getElementById('gameID-select-dropdown');
 let datasetSelHead = document.getElementById('dataset-select-head');
-let datasetSelDropdown = document.getElementById('dataset-select-dropdown');
 let playerSelHead = document.getElementById('playerID-select-head');
-let playerSelDropdown = document.getElementById('playerID-select-dropdown');
 let datasetSelHead2 = document.getElementById('dataset-select-head-2');
-let datasetSelDropdown2 = document.getElementById('dataset-select-dropdown-2');
+let compareSelHead = document.getElementById('compare-group-select-head');
+let datasetSelHead3 = document.getElementById('dataset-select-head-3');
 
 let sankeyGroups1Rad = document.getElementById('sankey-groups1');
 let sankeyGroups2Rad = document.getElementById('sankey-groups2');
@@ -386,6 +385,10 @@ worker.onmessage = function (event) {
 					arrY[results[3].values[i][0]].push(results[3].values[i][2]);
 				}
 			}
+			let blob = Array.from({length: 3}, _=>[]);
+			if (conf.aggregate) {
+				conf.aggregate = JSON.parse(conf.aggregate);
+			}
 			Object.keys(tracesData).forEach((i, n) => {
 				// fill data for yet alive players
 				let curX = arrX[i].at(-1), curY = arrY[i].at(-1);
@@ -396,56 +399,102 @@ worker.onmessage = function (event) {
 					arrX[i].push(curX);
 					arrY[i].push(curY);
 				}
-				data.push({
-					x: arrX[i],
-					y: arrY[i],
-					mode: conf.mode,
-					type: conf.type,
-					line: {
-						shape: 'spline',
-						color: colors[n % colors.length]
-					},
-					legendgroup: `group${i}`,
-					showlegend: true,
-					name: tracesData[i].TraceName
-				});
-				if (tracesData[i].Standing) {
-					// mark winner
-					if (tracesData[i].Standing === 1) {
-						data.push({
-							x: [arrX[i].at(-1)],
-							y: [arrY[i].at(-1)],
-							mode: 'markers',
-							type: conf.type,
-							marker: {
-								size: 12,
-								color: colors[n % colors.length],
-								symbol: 'star'
-							},
-							legendgroup: `group${i}`,
-							showlegend: false,
-							hoverinfo: 'skip'
-						})
+				if (conf.aggregate) {
+					let groupId;
+					if (conf.aggregate.group === 'generic') {
+						if (conf.aggregate.id === 0) {
+							conf.aggregate.name = 'Winners';
+							groupId = tracesData[i].Standing === 1 ? 0 : 1;
+						}
 					}
-					// add X marker when player "dies"
-					else {
-						data.push({
-							x: [arrX[i].at(-1)],
-							y: [arrY[i].at(-1)],
-							mode: 'markers',
-							type: conf.type,
-							marker: {
-								size: 12,
-								color: colors[n % colors.length],
-								symbol: 'x-dot'
-							},
-							legendgroup: `group${i}`,
-							showlegend: false,
-							hoverinfo: 'skip'
-						})
+					else if (conf.aggregate.group === 'civs') {
+						conf.aggregate.name = conf.aggregate.id;
+						groupId = tracesData[i].TraceName === conf.aggregate.id ? 0 : 1;
+					}
+					else if (conf.aggregate.group === 'players') {
+						conf.aggregate.name = conf.aggregate.id;
+						groupId = tracesData[i].TraceName === conf.aggregate.id ? 0 : 1;
+					}
+					arrY[i].forEach((j,k)=>{
+						if (blob[groupId][k] === undefined)
+							blob[groupId][k] = [k, 0, 0];
+						blob[groupId][k][1] += j;
+						blob[groupId][k][2]++;
+						if (blob[2][k] === undefined)
+							blob[2][k] = [k, 0, 0];
+						blob[2][k][1] += j;
+						blob[2][k][2]++;
+					})
+				}
+				else {
+					data.push({
+						x: arrX[i],
+						y: arrY[i],
+						mode: conf.mode,
+						type: conf.type,
+						line: {
+							shape: 'spline',
+							color: colors[n % colors.length]
+						},
+						legendgroup: `group${i}`,
+						showlegend: true,
+						name: tracesData[i].TraceName
+					});
+					if (tracesData[i].Standing) {
+						// mark winner
+						if (tracesData[i].Standing === 1) {
+							data.push({
+								x: [arrX[i].at(-1)],
+								y: [arrY[i].at(-1)],
+								mode: 'markers',
+								type: conf.type,
+								marker: {
+									size: 12,
+									color: colors[n % colors.length],
+									symbol: 'star'
+								},
+								legendgroup: `group${i}`,
+								showlegend: false,
+								hoverinfo: 'skip'
+							})
+						}
+						// add X marker when player "dies"
+						else {
+							data.push({
+								x: [arrX[i].at(-1)],
+								y: [arrY[i].at(-1)],
+								mode: 'markers',
+								type: conf.type,
+								marker: {
+									size: 12,
+									color: colors[n % colors.length],
+									symbol: 'x-dot'
+								},
+								legendgroup: `group${i}`,
+								showlegend: false,
+								hoverinfo: 'skip'
+							})
+						}
 					}
 				}
-			})
+			});
+			if (conf.aggregate) {
+				console.log('blob', blob);
+				blob.forEach((group, n)=>{
+					data.push({
+						x: Array.from({length: group.length}, (el, i)=>blob[n][i][0]),
+						y: Array.from({length: group.length}, (el, i)=>blob[n][i][1]/blob[n][i][2]),
+						mode: conf.mode,
+						type: conf.type,
+						line: {
+							shape: 'spline',
+							color: colors[n % colors.length]
+						},
+						showlegend: true,
+						name: Array(`${conf.aggregate.name} average`, `All except ${conf.aggregate.name}`, 'All average')[n]
+					});
+				})
+			}
 		}
 		let layout = {
 			hovermode: "x unified",
@@ -479,27 +528,37 @@ worker.onmessage = function (event) {
 	}
 	// fill games select
 	else if (id === 1) {
-		[gameSelHead, datasetSelHead, playerSelHead, datasetSelHead2].forEach((el, n)=>{
-			n = (n === 3) ? 1 : n;
-			el.innerHTML = `${results[n].values[0][0].replace(/\[([^\]]+)\]/g, (_,a)=>IconMarkups[a]?`<img class="ico" src="images/${IconMarkups[a]}"/>`:`[${a}]`)}`;
-			el.value = results[n].values[0][1] ?? 1;
+		[gameSelHead, playerSelHead, compareSelHead, datasetSelHead, datasetSelHead2, datasetSelHead3].forEach((el, n)=>{
+			n = (n > 2) ? 3 : n;  // all dataset dropdowns utilize the same data
 			for (let i = 0; i < results[n].values.length; i++) {
-				const sp = document.createElement("span");
-				sp.value = results[n].values[i][1];
-				sp.innerHTML = `${results[n].values[i][0].replace(/\[([^\]]+)\]/g, (_,a)=>IconMarkups[a]?`<img class="ico" src="images/${IconMarkups[a]}"/>`:`[${a}]`)}`;
-				sp.classList.add('sp', 'dropdownItem');
-				sp.addEventListener('mousedown', (e)=>{
-					el.innerHTML = sp.innerHTML;
-					el.value = sp.value;
-					sp.parentElement.style.visibility = 'hidden';
-					doPlot(e);
-				});
-				el.nextElementSibling.appendChild(sp);
+				if (results[n].values[i][1] === 'groupSeparator') {
+					const b = document.createElement("b");
+					b.innerHTML = results[n].values[i][0];
+					b.classList.add('sp');
+					b.tabIndex = -1;
+					el.nextElementSibling.appendChild(b);
+				}
+				else {
+					const sp = document.createElement("span");
+					sp.value = results[n].values[i][1];
+					sp.innerHTML = `${results[n].values[i][0].replace(/\[([^\]]+)\]/g, (_, a) => IconMarkups[a] ? `<img class="ico" src="images/${IconMarkups[a]}"/>` : `[${a}]`)}`;
+					sp.classList.add('sp', 'dropdownItem');
+					sp.addEventListener('mousedown', (e) => {
+						el.innerHTML = sp.innerHTML;
+						el.value = sp.value;
+						sp.parentElement.style.visibility = 'hidden';
+						doPlot(e);
+					});
+					el.nextElementSibling.appendChild(sp);
+				}
 			}
+			el.innerHTML = el.nextElementSibling.querySelector('span').innerHTML;
+			el.value = el.nextElementSibling.querySelector('span').value;
 			el.addEventListener('click', (e)=>{
 				el.nextElementSibling.style.visibility = (el.nextElementSibling.style.visibility === 'visible') ? 'hidden' : 'visible';
 			});
 			el.parentElement.addEventListener('focusout', (e)=>{
+				console.log('OUT', e);
 				if (!el.nextElementSibling.contains(e.explicitOriginalTarget))
 					el.nextElementSibling.style.visibility = 'hidden';
 			});
@@ -574,12 +633,28 @@ function fillSelects() {
 		WHERE GameSeeds.EndTurn > 0
 		GROUP BY Games.GameID
 		ORDER BY GameSeeds.GameID;
-		SELECT ReplayDataSetKey, ReplayDataSetID FROM ReplayDataSetKeys
-		WHERE ReplayDataSetKey > ''
-		ORDER BY ReplayDataSetKey;
 		SELECT Player from GameSeeds JOIN BeliefsChanges ON BeliefsChanges.GameSeed = GameSeeds.GameSeed
 		JOIN Games ON Games.GameID = GameSeeds.GameID
 		GROUP BY Player ORDER BY Player;
+		VALUES('Generic', 'groupSeparator'),
+			('Winners', '{"group":"generic","id":0}'),
+			('Civilizations', 'groupSeparator')
+		UNION ALL
+		SELECT * FROM (
+			SELECT CivKey, '{"group":"civs","id":'||CivID||'}' FROM CivKeys
+			ORDER BY CivKey
+		)
+		UNION ALL
+		VALUES('Players', 'groupSeparator')
+		UNION ALL
+		SELECT * FROM (
+			SELECT Player, '{"group":"players","id":"'||Player||'"}' from GameSeeds JOIN BeliefsChanges ON BeliefsChanges.GameSeed = GameSeeds.GameSeed
+			JOIN Games ON Games.GameID = GameSeeds.GameID
+			GROUP BY Player ORDER BY Player
+		);
+		SELECT ReplayDataSetKey, ReplayDataSetID FROM ReplayDataSetKeys
+		WHERE ReplayDataSetKey > ''
+		ORDER BY ReplayDataSetKey;
 	`});
 }
 
@@ -679,15 +754,17 @@ savedbElm.addEventListener("click", savedb, true);
 function doPlot(e) {
 	tic();
 	noerror();
-	let gameID = gameSelDropdown.children.length > 0 ? gameSelHead.value : 1;
-	let dataset = datasetSelDropdown.children.length > 0 ? datasetSelHead : {value:51, textContent:'Born Admirals'};
-	console.log(datasetSelHead.value,datasetSelHead.textContent);
-	let playerName = playerSelDropdown.children.length > 0 ? playerSelHead.textContent : '12g';
-	let dataset2 = datasetSelDropdown2.children.length > 0 ? datasetSelHead2 : {value:51, textContent:'Born Admirals'};
+	let gameID = gameSelHead.value ? gameSelHead.value : 1;
+	let dataset = datasetSelHead.value ? datasetSelHead : {value:51, textContent:'Born Admirals'};
+	let playerName = playerSelHead.value ? playerSelHead.textContent : '12g';
+	let dataset2 = datasetSelHead2.value ? datasetSelHead2 : {value:51, textContent:'Born Admirals'};
+	let compareGroup = compareSelHead.value ? compareSelHead : {value: '{"group":"generic","id":0}', textContent:'Winners'};
+	let dataset3 = datasetSelHead3.value ? datasetSelHead3 : {value:51, textContent:'Born Admirals'};
 	let condition1 = `Games.GameID = 1`;
 	let condition2 = `ReplayDataSetKeys.ReplayDataSetID = 51`;
 	let traceName = `Games.Player`;
 	let yaxisName = ``;
+	let aggregate;
 	if (e?.target === plotAllGamesBtn) {
 		condition1 = '';
 		condition2 = `ReplayDataSetKeys.ReplayDataSetID = ${dataset.value}`;
@@ -700,19 +777,41 @@ function doPlot(e) {
 		traceName = `Games.Player || ' ' || Games.PlayerGameNumber || ': ' || Games.Civilization`;
 		yaxisName = dataset2.textContent;
 	}
+	// Plot by Game
 	else if (tab1Rad.checked) {
 		condition1 = `Games.GameID = ${gameID}`;
 		condition2 = `ReplayDataSetKeys.ReplayDataSetID = ${dataset.value}`;
 		traceName = `Games.Player||' ('||Games.Civilization||')'`;
 		yaxisName = dataset.textContent;
 	}
+	// Plot by Player
 	else if (tab2Rad.checked) {
 		condition1 = `Games.Player = '${playerName.replace(/'/g, "''")}'`;
 		condition2 = `ReplayDataSetKeys.ReplayDataSetID = ${dataset2.value}`;
 		traceName = `Games.PlayerGameNumber || ': ' || Games.Civilization`;
 		yaxisName = dataset2.textContent;
 	}
+	// Compare Average
 	else if (tab3Rad.checked) {
+		let val = JSON.parse(compareGroup.value);
+		if (val.group === 'generic') {
+			traceName = `1`;
+			aggregate = `{"group":"generic","id":${val.id}}`;
+		}
+		else if (val.group === 'civs') {
+			traceName = `CivKeys.CivKey`;
+			aggregate = `{"group":"civs","id":"${compareGroup.textContent}"}`;
+		}
+		else if (val.group === 'players') {
+			traceName = `Games.Player`;
+			aggregate = `{"group":"players","id":"${val.id}"}`;
+		}
+		condition1 = '';
+		condition2 = `ReplayDataSetKeys.ReplayDataSetID = ${dataset3.value}`;
+		yaxisName = dataset3.textContent;
+	}
+	// Plot Distribution
+	else if (tab4Rad.checked) {
 		doBarPlot(e);
 		return;
 	}
@@ -723,6 +822,7 @@ function doPlot(e) {
 					('mode', 'lines'),
 					('xaxis','Turn'),
 					('yaxis','${yaxisName}')
+					${aggregate ? `,('aggregate', '${aggregate}')` : ''}
 			)
 		SELECT * FROM config
 		;
@@ -731,6 +831,7 @@ function doPlot(e) {
 			gamesData AS (
 				SELECT GameSeeds.GameID, GameSeeds.EndTurn FROM GameSeeds
 					JOIN Games ON Games.GameID = GameSeeds.GameID
+					JOIN CivKeys ON CivKeys.CivKey = Games.Civilization
 					${condition1 ? `WHERE ${condition1}` : ''}
 					GROUP BY Games.GameID
 			)
@@ -741,6 +842,7 @@ function doPlot(e) {
 			tracesData AS (
 				SELECT GameID, Games.rowid, ${traceName} AS TraceName, Standing, Value AS QuitTurn
 				FROM Games
+				JOIN CivKeys ON CivKeys.CivKey = Games.Civilization
 				LEFT JOIN PlayerQuitTurn ON Games.Player = PlayerQuitTurn.Player AND Games.PlayerGameNumber = PlayerQuitTurn.PlayerGameNumber
 				${condition1 ? `WHERE ${condition1}` : ''}
 			)
@@ -781,7 +883,7 @@ function doBarPlot(e) {
 		field1 = 'TechnologyID';
 		field2 = 'TechnologyKey';
 	}
-	else if (tab3Rad.checked || e?.target === beliefsTimeBtn) {
+	else if (tab4Rad.checked || e?.target === beliefsTimeBtn) {
 		table1 = 'BeliefsChanges';
 		table2 = 'BeliefKeys';
 		table3 = 'BeliefTypes';

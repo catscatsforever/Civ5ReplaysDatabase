@@ -24,9 +24,11 @@
       <input class="radioTab plot-clk" id="tab2" type="radio" name="tabs">
       <label class="labelTab" for="tab2">Plot by Player</label>
       <input class="radioTab plot-clk" id="tab3" type="radio" name="tabs">
-      <label class="labelTab" for="tab3">Plot Distribution</label>
+      <label class="labelTab" for="tab3">Compare Average</label>
       <input class="radioTab plot-clk" id="tab4" type="radio" name="tabs">
-      <label class="labelTab" for="tab4">Tables</label>
+      <label class="labelTab" for="tab4">Plot Distribution</label>
+      <input class="radioTab plot-clk" id="tab5" type="radio" name="tabs">
+      <label class="labelTab" for="tab5">Tables</label>
       <section id="content1">
         <span class="sp">Choose game:</span>
         <div class="dropdown">
@@ -40,6 +42,7 @@
         </div>
         <br>
         <button id="plotAllGames" class="btn plot-clk">Plot all games</button>
+        <button id="plotCompare" class="btn plot-clk">Compare winners vs losers</button>
       </section>
       <section id="content2">
         <span class="sp">Player:</span>
@@ -54,8 +57,22 @@
         </div>
         <br>
         <button id="plotAllPlayers" class="btn plot-clk">Plot all players</button>
+        <button id="plotCompare2" class="btn plot-clk">Compare winners vs losers</button>
       </section>
       <section id="content3">
+        <span class="sp">Choose group to compare:</span>
+        <div class="dropdown">
+          <button id="compare-group-select-head" class="btn dropdown-head"></button>
+          <div id="compare-group-select-dropdown" class="dropdown-content">
+          </div>
+        </div>
+        <br>
+        <div class="dropdown">
+          <button id="dataset-select-head-3" class="btn dropdown-head"></button>
+          <div id="dataset-select-dropdown-3" class="dropdown-content"></div>
+        </div>
+      </section>
+      <section id="content4">
         <span class="sp">Bar charts:</span>
         <br>
         <button id="beliefs-time" class="btn plot-clk">Beliefs-Time</button>
@@ -92,7 +109,7 @@
         <br>
         <button id="sankey-techs" class="btn sankey-clk">Techs-test</button>
       </section>
-      <section id="content4">
+      <section id="content5">
         <div>
           <button id="BeliefsAverage" class="btn">Average Turn of Belief Adoption</button>
           <button id="BeliefsMedian" class="btn">Median Turn of Belief Adoption</button>
