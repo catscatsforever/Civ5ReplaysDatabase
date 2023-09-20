@@ -127,7 +127,7 @@ const IconMarkups = {
 	ICON_WORKER: 'Civ5Icon.Worker.png',
 	ICON_WTF1: 'Civ5Icon.Wtf1.png',
 	ICON_WTF2: 'Civ5Icon.Wtf2.png',
-	ICON_GREAT_ENGINEER: 'Civ5Icon.GreatEnineer.png',
+	ICON_GREAT_ENGINEER: 'Civ5Icon.GreatEngineer.png',
 	ICON_GREAT_GENERAL: 'Civ5Icon.GreatGeneral.png',
 	ICON_GREAT_SCIENTIST: 'Civ5Icon.GreatScientist.png',
 	ICON_GREAT_MERCHANT: 'Civ5Icon.GreatMerchant.png',
