@@ -136,6 +136,10 @@ const IconMarkups = {
 	ICON_GREAT_WRITER: 'Civ5Icon.GreatWriter.png',
 	ICON_GREAT_ADMIRAL: 'Civ5Icon.GreatAdmiral.png'
 };
+let plotlyUserSettings = {
+	'yaxis.type': 'linear'
+};
+
 let inputsElm = document.getElementById('inputs');
 
 let execBtn = document.getElementById("execute");
@@ -148,12 +152,6 @@ let tab1Rad = document.getElementById("tab1");
 let tab2Rad = document.getElementById("tab2");
 let tab3Rad = document.getElementById("tab3");
 let tab4Rad = document.getElementById("tab4");
-
-let plotAllGamesBtn = document.getElementById("plotAllGames");
-let plotAllPlayersBtn = document.getElementById("plotAllPlayers");
-let beliefsTimeBtn = document.getElementById("beliefs-time");
-let policiesTimeBtn = document.getElementById("policies-time");
-let techsTimeBtn = document.getElementById("techs-time");
 
 let BeliefAverageBtn = document.getElementById('BeliefsAverage');
 let BeliefMedianBtn = document.getElementById('BeliefsMedian');
@@ -176,6 +174,10 @@ let playerSelHead = document.getElementById('playerID-select-head');
 let datasetSelHead2 = document.getElementById('dataset-select-head-2');
 let compareSelHead = document.getElementById('compare-group-select-head');
 let datasetSelHead3 = document.getElementById('dataset-select-head-3');
+
+let compareGroupArithmeticMeanRad = document.getElementById('compare-group-arithmeticMean');
+let compareGroupWinsorizedMeanRad = document.getElementById('compare-group-winsorizedMean');
+let compareGroupMedianRad = document.getElementById('compare-group-median');
 
 let sankeyGroups1Rad = document.getElementById('sankey-groups1');
 let sankeyGroups2Rad = document.getElementById('sankey-groups2');
@@ -406,6 +408,16 @@ worker.onmessage = function (event) {
 							conf.aggregate.name = 'Winners';
 							groupId = tracesData[i].Standing === 1 ? 0 : 1;
 						}
+						else if (conf.aggregate.id === 1) {
+							conf.aggregate.name = 'Playoff Players';
+							groupId = ['4irkasov','A','Achilles','Amchost','An4ouS','Anhel','ArciK','Art','Denchil','FireStorm',
+								'Frimen','Froller','HarleQuin','ImmoS','J_sun','JAGUARRR','Kayle','Limbo','Lumpen','Pashok',
+								'ReddyMisha','Sirius','Solex','Taurus','Unknown'].includes(tracesData[i].TraceName) ? 0 : 1;
+						}
+						else if (conf.aggregate.id === 2) {
+							conf.aggregate.name = 'Final Game Players';
+							groupId = ['Achilles','Denchil','Frimen','J_sun','Lumpen','Solex'].includes(tracesData[i].TraceName) ? 0 : 1;
+						}
 					}
 					else if (conf.aggregate.group === 'civs') {
 						conf.aggregate.name = conf.aggregate.id;
@@ -417,13 +429,11 @@ worker.onmessage = function (event) {
 					}
 					arrY[i].forEach((j,k)=>{
 						if (blob[groupId][k] === undefined)
-							blob[groupId][k] = [k, 0, 0];
-						blob[groupId][k][1] += j;
-						blob[groupId][k][2]++;
+							blob[groupId][k] = [k, []];
+						blob[groupId][k][1].push(j);
 						if (blob[2][k] === undefined)
-							blob[2][k] = [k, 0, 0];
-						blob[2][k][1] += j;
-						blob[2][k][2]++;
+							blob[2][k] = [k, []];
+						blob[2][k][1].push(j);
 					})
 				}
 				else {
@@ -479,11 +489,31 @@ worker.onmessage = function (event) {
 				}
 			});
 			if (conf.aggregate) {
-				console.log('blob', blob);
+				//console.log('blob', blob);
 				blob.forEach((group, n)=>{
+					if (conf.aggregate.method === 0) {  // Arithmetic mean
+						arrY = Array.from({length: group.length}, (el, i)=>blob[n][i][1].reduce((acc,it)=>acc+it,0)/blob[n][i][1].length);
+					}
+					else if (conf.aggregate.method === 1) {  // 20% winsorized mean
+						arrY = Array.from({length: group.length}, (el, i)=> {
+							let s = [...blob[n][i][1]].sort((a,b)=>a-b);
+							let LBound = Math.trunc(s.length * 0.2);
+							let UBound = s.length - LBound - 1;
+							return s.reduce((acc,it,wi,arr)=>{
+								let r = (wi < LBound) ? arr[LBound] : ((wi > UBound) ? arr[UBound] : it);
+								return acc + r;
+							})/s.length;
+						});
+					}
+					else if (conf.aggregate.method === 2) {  // Median
+						arrY = Array.from({length: group.length}, (el, i)=>{
+							let s = [...blob[n][i][1]].sort((a,b)=>a-b);
+							return (s[Math.floor(s.length / 2) - 1] + s[Math.ceil(s.length / 2) - 1]) / 2;
+						});
+					}
 					data.push({
 						x: Array.from({length: group.length}, (el, i)=>blob[n][i][0]),
-						y: Array.from({length: group.length}, (el, i)=>blob[n][i][1]/blob[n][i][2]),
+						y: arrY,
 						mode: conf.mode,
 						type: conf.type,
 						line: {
@@ -493,7 +523,7 @@ worker.onmessage = function (event) {
 						showlegend: true,
 						name: Array(`${conf.aggregate.name} average`, `All except ${conf.aggregate.name}`, 'All average')[n]
 					});
-				})
+				});
 			}
 		}
 		let layout = {
@@ -503,7 +533,8 @@ worker.onmessage = function (event) {
 				title: conf.xaxis
 			},
 			yaxis: {
-				title: conf.yaxis ?? 'TODO'
+				title: conf.yaxis ?? 'TODO',
+				type: plotlyUserSettings['yaxis.type']
 			},
 			legend: {
 				orientation: "v",
@@ -513,6 +544,23 @@ worker.onmessage = function (event) {
 			},
 			//plot_bgcolor: 'black',
 			//paper_bgcolor: 'black'
+			updatemenus: [{
+				y: 1.1,
+				xanchor: 'auto',
+				active: plotlyUserSettings['yaxis.type'] === 'linear' ? 0 : 1,
+				buttons: [
+					{
+						label: 'Linear Scale',
+						method: 'relayout',
+						args: [{'yaxis.type': 'linear'}]
+					},
+					{
+						label: 'Log Scale',
+						method: 'relayout',
+						args: [{'yaxis.type': 'log'}]
+					}
+				]
+			}]
 		};
 		let config = {
 			responsive: true,
@@ -524,7 +572,13 @@ worker.onmessage = function (event) {
 				scale: 1 // Multiply title/legend/axis/canvas sizes by this factor
 			},
 		};
-		Plotly.newPlot('plotOut', data, layout, config);
+		Plotly.newPlot('plotOut', data, layout, config).then(
+			document.querySelector("#plotOut").on('plotly_relayout', (e)=>{
+				if (e['yaxis.type']) {  // save user preference on linear/log scale change
+					plotlyUserSettings['yaxis.type'] = e['yaxis.type'];
+				}
+			})
+		);
 	}
 	// fill games select
 	else if (id === 1) {
@@ -638,6 +692,8 @@ function fillSelects() {
 		GROUP BY Player ORDER BY Player;
 		VALUES('Generic', 'groupSeparator'),
 			('Winners', '{"group":"generic","id":0}'),
+			('Playoff Players', '{"group":"generic","id":1}'),
+			('Final Game Players', '{"group":"generic","id":2}'),
 			('Civilizations', 'groupSeparator')
 		UNION ALL
 		SELECT * FROM (
@@ -751,9 +807,11 @@ function savedb() {
 	worker.postMessage({ action: 'export' });
 }
 savedbElm.addEventListener("click", savedb, true);
+let lastCompareId;
 function doPlot(e) {
 	tic();
 	noerror();
+	let target = e?.target.id;
 	let gameID = gameSelHead.value ? gameSelHead.value : 1;
 	let dataset = datasetSelHead.value ? datasetSelHead : {value:51, textContent:'Born Admirals'};
 	let playerName = playerSelHead.value ? playerSelHead.textContent : '12g';
@@ -764,14 +822,25 @@ function doPlot(e) {
 	let condition2 = `ReplayDataSetKeys.ReplayDataSetID = 51`;
 	let traceName = `Games.Player`;
 	let yaxisName = ``;
-	let aggregate;
-	if (e?.target === plotAllGamesBtn) {
+	let aggregate, aggregateMethod;
+
+	if (compareGroupArithmeticMeanRad.checked) {
+		aggregateMethod = 0;
+	}
+	else if (compareGroupWinsorizedMeanRad.checked) {
+		aggregateMethod = 1;
+	}
+	else if (compareGroupMedianRad.checked) {
+		aggregateMethod = 2;
+	}
+
+	if (target === 'plotAllGames') {
 		condition1 = '';
 		condition2 = `ReplayDataSetKeys.ReplayDataSetID = ${dataset.value}`;
 		traceName = `Games.Player || ' (' || Games.PlayerGameNumber || ')'`;
 		yaxisName = dataset.textContent;
 	}
-	else if (e?.target === plotAllPlayersBtn) {
+	else if (target === 'plotAllPlayers') {
 		condition1 = '';
 		condition2 = `ReplayDataSetKeys.ReplayDataSetID = ${dataset2.value}`;
 		traceName = `Games.Player || ' ' || Games.PlayerGameNumber || ': ' || Games.Civilization`;
@@ -795,16 +864,16 @@ function doPlot(e) {
 	else if (tab3Rad.checked) {
 		let val = JSON.parse(compareGroup.value);
 		if (val.group === 'generic') {
-			traceName = `1`;
-			aggregate = `{"group":"generic","id":${val.id}}`;
+			traceName = `Games.Player`;
+			aggregate = `{"group":"generic","method":${aggregateMethod},"id":${val.id}}`;
 		}
 		else if (val.group === 'civs') {
 			traceName = `CivKeys.CivKey`;
-			aggregate = `{"group":"civs","id":"${compareGroup.textContent}"}`;
+			aggregate = `{"group":"civs","method":${aggregateMethod},"id":"${compareGroup.textContent}"}`;
 		}
 		else if (val.group === 'players') {
 			traceName = `Games.Player`;
-			aggregate = `{"group":"players","id":"${val.id}"}`;
+			aggregate = `{"group":"players","method":${aggregateMethod},"id":"${val.id}"}`;
 		}
 		condition1 = '';
 		condition2 = `ReplayDataSetKeys.ReplayDataSetID = ${dataset3.value}`;
@@ -867,9 +936,10 @@ function doPlot(e) {
 }
 function doBarPlot(e) {
 	noerror();
+	let target = e?.target.id;
 	let traceName = '';
 	let table1, table2, table3, field1, field2, field3;
-	if (e?.target === policiesTimeBtn) {
+	if (target === 'policies-time') {
 		table1 = 'PoliciesChanges';
 		table2 = 'PolicyKeys';
 		table3 = 'PolicyBranches';
@@ -877,13 +947,13 @@ function doBarPlot(e) {
 		field2 = 'BranchID';
 		field3 = 'PolicyBranch';
 	}
-	else if (e?.target === techsTimeBtn) {
+	else if (target === 'techs-time') {
 		table1 = 'TechnologiesChanges';
 		table2 = 'TechnologyKeys';
 		field1 = 'TechnologyID';
 		field2 = 'TechnologyKey';
 	}
-	else if (tab4Rad.checked || e?.target === beliefsTimeBtn) {
+	else if (tab4Rad.checked || target === 'beliefs-time') {
 		table1 = 'BeliefsChanges';
 		table2 = 'BeliefKeys';
 		table3 = 'BeliefTypes';
@@ -931,7 +1001,7 @@ function doSankeyPlot(e) {
 		lastSankeyId = target;
 		lastSankeyTitle = e.target.textContent;
 	}
-	if(e?.target.id === 'sankey-groups1' || e?.target.id === 'sankey-groups2' || e?.target.id === 'sankey-groups3') {
+	if (['sankey-groups1', 'sankey-groups2', 'sankey-groups3'].includes(target)) {
 		if (lastSankeyId === undefined) return;
 		target = lastSankeyId;
 	}
@@ -1106,7 +1176,7 @@ function doSankeyPlot(e) {
 document.querySelectorAll(".plot-sel").forEach(el => {
 	el.addEventListener("change", doPlot, true);
 });
-document.querySelectorAll(".plot-clk").forEach(el => {
+document.querySelectorAll(".plot-clk, .compare-clk").forEach(el => {
 	el.addEventListener("click", doPlot, true);
 });
 document.querySelectorAll(".sankey-clk").forEach(el => {
