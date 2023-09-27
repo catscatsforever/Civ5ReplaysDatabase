@@ -62,6 +62,9 @@ h1 {
 
 #output {
     overflow: auto;
+    display: flex;
+    flex-flow: wrap;
+    justify-content: center;
 }
 
 table {
@@ -167,16 +170,49 @@ p,h1 {
     border-bottom: 1px solid #DDD;
 }
 
-th {
-    cursor: default
+tr {
+    color: #212529;
+}
+
+th, td {
+    cursor: default;
+    padding: 5px 10px;
+    font-family: OpenSans-Regular, sans-serif;
+    font-size:14px;
+}
+
+tbody tr:nth-child(even) {
+     background-color: #f5f5f5
+}
+
+tbody tr:hover {
+    background-color: #e8e8e8;
+}
+
+th:after {
+    content: " ▼";
+    visibility: hidden;
+}
+
+th:hover::after{
+    visibility: visible;
+    color: #888888;
 }
 
 .sort-asc:after {
     content: " ▼";
+    visibility: visible;
 }
 
 .sort-desc:after {
     content: " ▲";
+    visibility: visible;
+}
+
+.table-cont {
+    display: inline-grid;
+    padding: 0 30px;
+    align-content: baseline;
 }
 
 input, section {

@@ -116,37 +116,22 @@
         <button id="sankey-techs" class="btn sankey-clk">Techs-test</button>
       </section>
       <section id="content5">
-        <div>
-          <button id="BeliefsAverage" class="btn">Average Turn of Belief Adoption</button>
-          <button id="BeliefsMedian" class="btn">Median Turn of Belief Adoption</button>
-          <button id="BeliefsMinimum" class="btn">Minimum Turn of Belief Adoption</button>
-          <button id="BeliefsTimes" class="btn">Number Times of Belief Adoption</button>
-        </div>
-        <div>
-          <button id="PoliciesAverage" class="btn">Average Turn of Policy Adoption</button>
-          <button id="PoliciesMedian" class="btn">Median Turn of Policy Adoption</button>
-          <button id="PoliciesMinimum" class="btn">Minimum Turn of Policy Adoption</button>
-          <button id="PoliciesTimes" class="btn">Number Times of Policy Adoption</button>
-        </div>
-        <div>
-          <button id="TechnologiesAverage" class="btn">Average Turn of Technology Research</button>
-          <button id="TechnologiesMedian" class="btn">Median Turn of Technology Research</button>
-          <button id="TechnologiesMinimum" class="btn">Minimum Turn of Technology Research</button>
-        </div>
-        <div>
-          <button id="WondersAverage" class="btn">Average Turn of Wonder Construction</button>
-          <button id="WondersMedian" class="btn">Median Turn of Wonder Construction</button>
-          <button id="WondersMinimum" class="btn">Minimum Turn of Wonder Construction</button>
-        </div>
+        <button id="tableHallOfFame" class="btn">Hall of Fame</button>
+        <button id="tableBeliefAdoption" class="btn">Belief Adoption</button>
+        <button id="tablePolicyAdoption" class="btn">Policy Adoption</button>
+        <button id="tableTechResearch" class="btn">Technology Research</button>
+        <button id="tableWonderConstruction" class="btn">Wonder Construction</button>
         <br>
-        <label for="showSql" class="sp" style="padding: 5px 5px">Show SQL</label>
+        <label for="showSql" class="sp">Show SQL</label>
         <input id="showSql" type="checkbox" class="chk">
         <div id="sqlBox">
           <textarea id="commands"></textarea>
           <button id="execute" class="btn">Execute</button>
           <button id="savedb" class="btn">Save the db</button>
         </div>
-        <pre id="output">Loading...</pre>
+        <span id="loading" class="sp">Loading...</span>
+        <br>
+        <pre id="output"></pre>
       </section>
 
       <div id="error" class="error"></div>

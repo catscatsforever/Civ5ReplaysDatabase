@@ -143,6 +143,7 @@ let plotlyUserSettings = {
 let inputsElm = document.getElementById('inputs');
 
 let execBtn = document.getElementById("execute");
+let loadingElm = document.getElementById('loading');
 let outputElm = document.getElementById('output');
 let errorElm = document.getElementById('error');
 let commandsElm = document.getElementById('commands');
@@ -153,20 +154,11 @@ let tab2Rad = document.getElementById("tab2");
 let tab3Rad = document.getElementById("tab3");
 let tab4Rad = document.getElementById("tab4");
 
-let BeliefAverageBtn = document.getElementById('BeliefsAverage');
-let BeliefMedianBtn = document.getElementById('BeliefsMedian');
-let BeliefMinimumBtn = document.getElementById('BeliefsMinimum');
-let BeliefCountBtn = document.getElementById('BeliefsTimes');
-let PolicyAverageBtn = document.getElementById('PoliciesAverage');
-let PolicyMedianBtn = document.getElementById('PoliciesMedian');
-let PolicyMinimumBtn = document.getElementById('PoliciesMinimum');
-let PolicyCountBtn = document.getElementById('PoliciesTimes');
-let TechnologyAverageBtn = document.getElementById('TechnologiesAverage');
-let TechnologyMedianBtn = document.getElementById('TechnologiesMedian');
-let TechnologyMinimumBtn = document.getElementById('TechnologiesMinimum');
-let WonderAverageBtn = document.getElementById('WondersAverage');
-let WonderMedianBtn = document.getElementById('WondersMedian');
-let WonderMinimumBtn = document.getElementById('WondersMinimum');
+let tableHallOfFameBtn = document.getElementById('tableHallOfFame');
+let tableBeliefAdoptionBtn = document.getElementById('tableBeliefAdoption');
+let tablePolicyAdoptionBtn = document.getElementById('tablePolicyAdoption');
+let tableTechResearchBtn = document.getElementById('tableTechResearch');
+let tableWonderConstructionBtn = document.getElementById('tableWonderConstruction');
 
 let gameSelHead = document.getElementById('gameID-select-head');
 let datasetSelHead = document.getElementById('dataset-select-head');
@@ -195,8 +187,7 @@ worker.onmessage = function (event) {
 	// on db load
 	if (event.data.ready === true) {
 		toc("Loading database from file");
-		editor.setValue(`\tANALYZE main;\n\tSELECT tbl AS Name, stat AS Rows FROM sqlite_stat1 ORDER BY Name;`);
-		execEditorContents();
+		tableHallOfFameBtn.click();
 		fillSelects();
 		doPlot();
 		return;
@@ -612,7 +603,6 @@ worker.onmessage = function (event) {
 				el.nextElementSibling.style.visibility = (el.nextElementSibling.style.visibility === 'visible') ? 'hidden' : 'visible';
 			});
 			el.parentElement.addEventListener('focusout', (e)=>{
-				console.log('OUT', e);
 				if (!el.nextElementSibling.contains(e.explicitOriginalTarget))
 					el.nextElementSibling.style.visibility = 'hidden';
 			});
@@ -625,10 +615,21 @@ worker.onmessage = function (event) {
 	// fill table
 	else {
 		outputElm.innerHTML = "";
+		loadingElm.innerHTML = "";
 		console.log('results:', results);
-		for (let i = 0; i < results.length; i++) {
-			outputElm.appendChild(tableCreate(results[i].columns, results[i].values));
+		let blob = {};
+		// check if first table contains names of other tables
+		if (results[0].columns[0] === 'tableName') {
+			blob = Object.assign(...results.map((t, i) => ({ [results[0].values[i]]: t })));
+			delete blob.config;
 		}
+		else {
+			blob = Object.assign(...results.map((t, i) => ({ [`Table ${i}`]: t })));
+		}
+		console.log('table blob', blob);
+		Object.entries(blob).forEach((t, n)=>{
+			outputElm.appendChild(tableCreate(t[0], t[1].columns, t[1].values));
+		});
 		const allTables = document.querySelectorAll("table");
 
 		for (const table of allTables) {
@@ -677,7 +678,7 @@ function noerror() {
 function execute(commands) {
 	tic();
 	worker.postMessage({ action: 'exec', sql: commands });
-	outputElm.textContent = "Fetching results...";
+	loadingElm.textContent = "Fetching results...";
 }
 
 function fillSelects() {
@@ -721,13 +722,21 @@ let tableCreate = function () {
 		let open = '<' + tagName + '>', close = '</' + tagName + '>';
 		return open + vals.join(close + open) + close;
 	}
-	return function (columns, values) {
+	return function (name, columns, values) {
+		let div = document.createElement('div');
+		div.classList.add('table-cont');
+		let ttl = document.createElement('span');
+		ttl.textContent = name;
+		ttl.classList.add('sp');
+		ttl.style.fontSize = '22px';
+		div.appendChild(ttl);
 		let tbl = document.createElement('table');
 		let html = '<thead>' + valconcat(columns, 'th') + '</thead>';
 		let rows = values.map(function (v) { return valconcat(v, 'td'); });
 		html += '<tbody>' + valconcat(rows, 'tr') + '</tbody>';
 		tbl.innerHTML = html;
-		return tbl;
+		div.appendChild(tbl);
+		return div;
 	}
 }();
 
@@ -1182,7 +1191,80 @@ document.querySelectorAll(".plot-clk, .compare-clk").forEach(el => {
 document.querySelectorAll(".sankey-clk").forEach(el => {
 	el.addEventListener("click", doSankeyPlot, true);
 });
-BeliefAverageBtn.addEventListener("click", () => { noerror(); let r = `
+
+tableHallOfFameBtn.addEventListener("click", () => { noerror(); let r = `
+	WITH config(tableName) AS (
+		VALUES('config'),
+		('Greatest Wonder Builders'),
+		('Demographics Screen Lovers'),
+		('Total Turns Spent In-Game')
+	)
+	SELECT * FROM config;
+	
+	SELECT Player, IFNULL(Wonders, 0) AS 'Wonders Constructed', Games FROM (
+		SELECT *, Count(*) AS Games FROM (SELECT Games.Player FROM Games) AS T1
+		LEFT JOIN (
+			SELECT Player, SUM(Wonders) AS Wonders FROM (
+				SELECT GameID, Player, COUNT(*) AS Wonders FROM (
+					SELECT *, ROW_NUMBER() OVER (PARTITION BY BuildingclassesChanges.GameSeed, BuildingClassKeys.BuildingClassID ORDER BY Turn) AS rn
+					FROM BuildingclassesChanges
+					JOIN BuildingClassKeys on BuildingClassKeys.BuildingClassID = BuildingclassesChanges.BuildingClassID
+					JOIN CivKeys ON CivKeys.CivID = BuildingclassesChanges.CivID
+					JOIN GameSeeds ON GameSeeds.GameSeed = BuildingclassesChanges.GameSeed
+					JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.Civilization = CivKeys.CivKey
+					WHERE TypeID = 2 AND Value = 1
+				) 
+				WHERE rn = 1
+				GROUP BY GameID, Player
+			)
+			GROUP BY Player
+		) AS T2 ON T1.Player = T2.Player
+		GROUP BY T1.Player
+	)
+	ORDER BY IFNULL(Wonders, 0) DESC
+	;
+	
+	SELECT Player, IFNULL(F9, 0) AS 'times F9 pressed', Games FROM (
+		SELECT *, Count(*) AS Games FROM (SELECT Games.Player FROM Games) AS T1
+		LEFT JOIN (
+			SELECT Player, SUM(F9) AS F9, COUNT(*) AS Games FROM (
+				SELECT Games.GameID, Games.Player, sum(ReplayDataSetsChanges.Value) AS F9
+				FROM DataSets
+				JOIN ReplayDataSetsChanges ON ReplayDataSetsChanges.DataSetID = DataSets.DataSetID
+				JOIN ReplayDataSetKeys ON ReplayDataSetKeys.ReplayDataSetID = ReplayDataSetsChanges.ReplayDataSetID
+				JOIN CivKeys ON CivKeys.CivID = ReplayDataSetsChanges.CivID
+				JOIN GameSeeds ON GameSeeds.GameSeed = ReplayDataSetsChanges.GameSeed
+				JOIN Games ON Games.Civilization = CivKeys.CivKey AND Games.GameID = GameSeeds.GameID
+				LEFT JOIN PlayerQuitTurn ON Games.Player = PlayerQuitTurn.Player AND Games.PlayerGameNumber = PlayerQuitTurn.PlayerGameNumber
+				WHERE ReplayDataSetsChanges.ReplayDataSetID = 71 AND ReplayDataSetsChanges.Value > 0
+				GROUP BY Games.GameID, Games.Player
+			)
+			GROUP BY Player
+		) AS T2 ON T1.Player = T2.Player
+		GROUP BY T1.Player
+	)
+	ORDER BY IFNULL(F9, 0) DESC
+	;
+	
+	SELECT Games.Player AS Player, SUM(IFNULL(Value, EndTurn)) AS Turns, COUNT(*) AS Games
+	FROM Games
+	LEFT JOIN GameSeeds ON GameSeeds.GameID = Games.GameID
+	LEFT JOIN PlayerQuitTurn ON PlayerQuitTurn.Player = Games.Player AND PlayerQuitTurn.PlayerGameNumber = Games.PlayerGameNumber
+	GROUP BY Games.Player
+	ORDER BY SUM(IFNULL(Value, EndTurn)) DESC
+	;
+	`; execute(r); editor.setValue(r); }, true);
+
+tableBeliefAdoptionBtn.addEventListener("click", () => { noerror(); let r = `
+	WITH config(tableName) AS (
+		VALUES('config'),
+		('Average Turn of Belief Adoption'),
+		('Median Turn of Belief Adoption'),
+		('Minimum Turn of Belief Adoption'),
+		('Number Times of Belief Adoption')
+	)
+	SELECT * FROM config;
+	
 	with RankedTable as (
 	SELECT *
 	, row_number() OVER (PARTITION by BeliefID order by Turn) as rnk
@@ -1204,8 +1286,7 @@ BeliefAverageBtn.addEventListener("click", () => { noerror(); let r = `
 	GROUP BY RankedTable.BeliefID
 	ORDER BY BeliefKeys.TypeID, "Average Turn"
 	;
-	`; execute(r); editor.setValue(r); }, true);
-BeliefMedianBtn.addEventListener("click", () => { noerror(); let r = `
+	
 	with RankedTable as (
 	SELECT *
 	, row_number() OVER (PARTITION by BeliefID order by Turn) as rnk
@@ -1228,8 +1309,7 @@ BeliefMedianBtn.addEventListener("click", () => { noerror(); let r = `
 	GROUP BY RankedTable.BeliefID
 	ORDER BY BeliefKeys.TypeID, "Median Turn"
 	;
-	`; execute(r); editor.setValue(r); }, true);
-BeliefMinimumBtn.addEventListener("click", () => { noerror(); let r = `
+	
 	with RankedTable as (
 	SELECT *
 	, row_number() OVER (PARTITION by BeliefID order by Turn) as rnk
@@ -1251,8 +1331,7 @@ BeliefMinimumBtn.addEventListener("click", () => { noerror(); let r = `
 	GROUP BY RankedTable.BeliefID
 	ORDER BY BeliefKeys.TypeID, "Minimum Turn"
 	;
-	`; execute(r); editor.setValue(r); }, true);
-BeliefCountBtn.addEventListener("click", () => { noerror(); let r = `
+	
 	with RankedTable as (
 	SELECT *
 	, row_number() OVER (PARTITION by BeliefID order by Turn) as rnk
@@ -1275,7 +1354,17 @@ BeliefCountBtn.addEventListener("click", () => { noerror(); let r = `
 	ORDER BY BeliefKeys.TypeID, "Count" DESC
 	;
 	`; execute(r); editor.setValue(r); }, true);
-PolicyAverageBtn.addEventListener("click", () => { noerror(); let r = `
+
+tablePolicyAdoptionBtn.addEventListener("click", () => { noerror(); let r = `
+	WITH config(tableName) AS (
+		VALUES('config'),
+		('Average Turn of Policy Adoption'),
+		('Median Turn of Policy Adoption'),
+		('Minimum Turn of Policy Adoption'),
+		('Number Times of Policy Adoption')
+	)
+	SELECT * FROM config;
+	
 	with RankedTable as (
 	SELECT *
 	, row_number() OVER (PARTITION by PolicyID order by Turn) as rnk
@@ -1297,8 +1386,7 @@ PolicyAverageBtn.addEventListener("click", () => { noerror(); let r = `
 	GROUP BY RankedTable.PolicyID
 	ORDER BY PolicyKeys.BranchID, "Average Turn"
 	;
-	`; execute(r); editor.setValue(r); }, true);
-PolicyMedianBtn.addEventListener("click", () => { noerror(); let r = `
+	
 	with RankedTable as (
 	SELECT *
 	, row_number() OVER (PARTITION by PolicyID order by Turn) as rnk
@@ -1321,8 +1409,7 @@ PolicyMedianBtn.addEventListener("click", () => { noerror(); let r = `
 	GROUP BY RankedTable.PolicyID
 	ORDER BY PolicyKeys.BranchID, "Median Turn"
 	;
-	`; execute(r); editor.setValue(r); }, true);
-PolicyMinimumBtn.addEventListener("click", () => { noerror(); let r = `
+	
 	with RankedTable as (
 	SELECT *
 	, row_number() OVER (PARTITION by PolicyID order by Turn) as rnk
@@ -1344,8 +1431,7 @@ PolicyMinimumBtn.addEventListener("click", () => { noerror(); let r = `
 	GROUP BY RankedTable.PolicyID
 	ORDER BY PolicyKeys.BranchID, "Minimum Turn"
 	;
-	`; execute(r); editor.setValue(r); }, true);
-PolicyCountBtn.addEventListener("click", () => { noerror(); let r = `
+	
 	with RankedTable as (
 	SELECT *
 	, row_number() OVER (PARTITION by PolicyID order by Turn) as rnk
@@ -1368,7 +1454,16 @@ PolicyCountBtn.addEventListener("click", () => { noerror(); let r = `
 	ORDER BY PolicyKeys.BranchID, "Count" DESC
 	;
 	`; execute(r); editor.setValue(r); }, true);
-TechnologyAverageBtn.addEventListener("click", () => { noerror(); let r = `
+
+tableTechResearchBtn.addEventListener("click", () => { noerror(); let r = `
+	WITH config(tableName) AS (
+		VALUES('config'),
+		('Average Turn of Technology Research'),
+		('Median Turn of Technology Research'),
+		('Minimum Turn of Technology Research')
+	)
+	SELECT * FROM config;
+	
 	with RankedTable as (
 	SELECT *
 	, row_number() OVER (PARTITION by TechnologyID order by Turn) as rnk
@@ -1390,8 +1485,7 @@ TechnologyAverageBtn.addEventListener("click", () => { noerror(); let r = `
 	GROUP BY RankedTable.TechnologyID
 	ORDER BY "Average Turn"
 	;
-	`; execute(r); editor.setValue(r); }, true);
-TechnologyMedianBtn.addEventListener("click", () => { noerror(); let r = `
+	
 	with RankedTable as (
 	SELECT *
 	, row_number() OVER (PARTITION by TechnologyID order by Turn) as rnk
@@ -1414,8 +1508,7 @@ TechnologyMedianBtn.addEventListener("click", () => { noerror(); let r = `
 	GROUP BY RankedTable.TechnologyID
 	ORDER BY "Median Turn"
 	;
-	`; execute(r); editor.setValue(r); }, true);
-TechnologyMinimumBtn.addEventListener("click", () => { noerror(); let r = `
+	
 	with RankedTable as (
 	SELECT *
 	, row_number() OVER (PARTITION by TechnologyID order by Turn) as rnk
@@ -1438,7 +1531,16 @@ TechnologyMinimumBtn.addEventListener("click", () => { noerror(); let r = `
 	ORDER BY "Minimum Turn"
 	;
 	`; execute(r); editor.setValue(r); }, true);
-WonderAverageBtn.addEventListener("click", () => { noerror(); let r = `
+
+tableWonderConstructionBtn.addEventListener("click", () => { noerror(); let r = `
+	WITH config(tableName) AS (
+		VALUES('config'),
+		('Average Turn of Wonder Construction'),
+		('Median Turn of Wonder Construction'),
+		('Minimum Turn of Wonder Construction')
+	)
+	SELECT * FROM config;
+	
 	with RankedTable as (
 	SELECT *
 	, row_number() OVER (PARTITION by BuildingClassID order by Turn) as rnk
@@ -1465,8 +1567,7 @@ WonderAverageBtn.addEventListener("click", () => { noerror(); let r = `
 	HAVING BuildingClassKeys.TypeID in (1,2)
 	ORDER BY BuildingClassKeys.TypeID, "Average Turn"
 	;
-	`; execute(r); editor.setValue(r); }, true);
-WonderMedianBtn.addEventListener("click", () => { noerror(); let r = `
+	
 	with RankedTable as (
 	SELECT *
 	, row_number() OVER (PARTITION by BuildingClassID order by Turn) as rnk
@@ -1494,8 +1595,7 @@ WonderMedianBtn.addEventListener("click", () => { noerror(); let r = `
 	HAVING BuildingClassKeys.TypeID in (1,2)
 	ORDER BY BuildingClassKeys.TypeID, "Median Turn"
 	;
-	`; execute(r); editor.setValue(r); }, true);
-WonderMinimumBtn.addEventListener("click", () => { noerror(); let r = `
+	
 	with RankedTable as (
 	SELECT *
 	, row_number() OVER (PARTITION by BuildingClassID order by Turn) as rnk
