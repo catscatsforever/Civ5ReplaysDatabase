@@ -535,15 +535,31 @@ text {
     text-shadow: var(--bkg-color) 1px 1px 1px, var(--bkg-color) -1px -1px 1px, var(--bkg-color) 1px -1px 1px, var(--bkg-color) -1px 1px 1px !important;
 }
 
-.updatemenu-item-rect.updatemenu-dropdown-button:hover {
+
+.bg, .updatemenu-item-rect {
+    fill: var(--bkg-color) !important;
+    stroke: var(--negative-color) !important;
+    border: 1px solid #DDD;
+    box-sizing: border-box;
+    outline: none;
+    text-align: center;
+    text-decoration: none;
+    touch-action: manipulation;
+    user-select: none;
+
+}
+
+.updatemenu-header:hover .updatemenu-item-rect, .updatemenu-dropdown-button:hover .updatemenu-item-rect {
+    fill: var(--bkg-color) !important;
+    box-shadow: var(--text-color) 0 0 0 2px;
+    transition: box-shadow 0.2s ease 0s;
+}
+
+.updatemenu-header:active .updatemenu-item-rect, .updatemenu-dropdown-button:active .updatemenu-item-rect {
     fill: var(--bkg-color-alt) !important;
+    border-color: var(--negative-color);
+    transform: scale(0.99);
 }
-
-.bg, .updatemenu-item-rect, .updatemenu-dropdown-button {
-    fill: var(--bkg-color-alt2) !important;
-    stroke: none !important;
-}
-
 
 .main-svg {
     background: rgba(0,0,0,0) !important;
