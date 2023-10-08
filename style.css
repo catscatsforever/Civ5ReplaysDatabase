@@ -1,3 +1,4 @@
+
 html {
     background:#222;
     margin:auto;
@@ -6,15 +7,236 @@ html {
 
 body{
     background: linear-gradient(#aaa 0, #ddd 10px, #fff 55px);
-    border: 1px solid black;
     padding: 10px 20px;
     box-shadow: 5px 0px 30px #000;
     border-radius: 8px;
+    --cm-line-number-gutter: rgba(0, 0, 0, 0);
+}
+
+body {
+    --text-color-alpha: rgba(68, 68, 68, 0.3);
+    --text-color-alpha2: rgba(68, 68, 68, 0.7);
+    --text-color: #222;
+    --negative-color: #000;
+    --bkg-color: #fff;
+    --bkg-color-alt: #f5f5f5;
+    --bkg-color-alt2: #e2e2e2;
+
+    /* codemirror-theme-vars */
+
+    --cm-foreground: #393a34;
+    --cm-background: #f8f8f8;
+
+    --cm-atom: #219;
+    --cm-attribute: #00c;
+    --cm-bracket: #997;
+    --cm-builtin: #30a;
+    --cm-class: #2b91af;
+    --cm-comment: #a50;
+    --cm-def: #00f;
+    --cm-deleted: #9a050f;
+    --cm-function: #849145;
+    --cm-header: blue;
+    --cm-hr: #999;
+    --cm-keyword: #708;
+    --cm-link: #00c;
+    --cm-literal: #36acaa;
+    --cm-meta: #555;
+    --cm-namespace: #444444;
+    --cm-negative: #d44;
+    --cm-number: #164;
+    --cm-operator: none;
+    --cm-positive: #292;
+    --cm-property: none;
+    --cm-punctuation: none;
+    --cm-qualifier: #555;
+    --cm-quote: #090;
+    --cm-regex: #ad502b;
+    --cm-s-default: #085;
+    --cm-string: #a11;
+    --cm-string-2: #f50;
+    --cm-tag: #170;
+    --cm-type: #085;
+    --cm-variable: none;
+    --cm-variable-2:#05a;
+    --cm-variable-3: #085;
+}
+body.dark-theme {
+    --text-color-alpha: rgba(197, 197, 197, 0.3);
+    --text-color-alpha2: rgba(197, 197, 197, 0.7);
+    --text-color: #dddddd;
+    --negative-color: #fff;
+    --bkg-color: #333;
+    --bkg-color-alt: #3b3b3b;
+    --bkg-color-alt2: #4b4b4b;
+
+    /* codemirror-theme-vars */
+
+    --cm-foreground: #d4d4d4;
+    --cm-background: #1e1e1e;
+
+    --cm-atom: #ae81ff;
+    --cm-attribute: #97b757;
+    --cm-bracket: #f8f8f2;
+    --cm-builtin: #66d9ef;
+    --cm-class: #2b91af;
+    --cm-comment: #75715e;
+    --cm-def: #fd971f;
+    --cm-deleted: #9a050f;
+    --cm-function: #849145;
+    --cm-header: #ae81ff;
+    --cm-hr: #999;
+    --cm-keyword: #f92672;
+    --cm-link: #ae81ff;
+    --cm-literal: #36acaa;
+    --cm-meta: #555;
+    --cm-namespace: #444444;
+    --cm-negative: #d44;
+    --cm-number: #ae81ff;
+    --cm-operator: none;
+    --cm-positive: #292;
+    --cm-property: #a6e22e;
+    --cm-punctuation: none;
+    --cm-qualifier: #555;
+    --cm-quote: #090;
+    --cm-regex: #ad502b;
+    --cm-s-default: #085;
+    --cm-string: #e6db74;
+    --cm-string-2: #f50;
+    --cm-tag: #f92672;
+    --cm-type: #66d9ef;
+    --cm-variable: #f8f8f2;
+    --cm-variable-2: #9effff;
+    --cm-variable-3: #66d9ef;
+    --cm-error: { background: #f92672; color: #f8f8f0; };
+}
+
+#darkThemeToggleLabel {
+    position: absolute;
+    right: 6%;
+    top: 30px;
+}
+.icon-light { display: initial; }
+.icon-dark { display: none; }
+body.dark-theme .icon-light { display: none; }
+body.dark-theme .icon-dark { display: initial; }
+@media (prefers-color-scheme: dark) {
+    /* defaults to dark theme */
+    .icon-light { display: none; }
+    .icon-dark { display: initial; }
+    body.light-theme .icon-light { display: initial; }
+    body.light-theme .icon-dark { display: none; }
+    body {
+        --text-color-alpha: rgba(197, 197, 197, 0.3);
+        --text-color-alpha2: rgba(197, 197, 197, 0.7);
+        --text-color: #dddddd;
+        --negative-color: #fff;
+        --bkg-color: #333;
+        --bkg-color-alt: #3b3b3b;
+        --bkg-color-alt2: #4b4b4b;
+
+        /* codemirror-theme-vars */
+
+        --cm-foreground: #d4d4d4;
+        --cm-background: #1e1e1e;
+
+        --cm-atom: #ae81ff;
+        --cm-attribute: #97b757;
+        --cm-bracket: #f8f8f2;
+        --cm-builtin: #66d9ef;
+        --cm-class: #2b91af;
+        --cm-comment: #75715e;
+        --cm-def: #fd971f;
+        --cm-deleted: #9a050f;
+        --cm-function: #849145;
+        --cm-header: #ae81ff;
+        --cm-hr: #999;
+        --cm-keyword: #f92672;
+        --cm-link: #ae81ff;
+        --cm-literal: #36acaa;
+        --cm-meta: #555;
+        --cm-namespace: #444444;
+        --cm-negative: #d44;
+        --cm-number: #ae81ff;
+        --cm-operator: none;
+        --cm-positive: #292;
+        --cm-property: #a6e22e;
+        --cm-punctuation: none;
+        --cm-qualifier: #555;
+        --cm-quote: #090;
+        --cm-regex: #ad502b;
+        --cm-s-default: #085;
+        --cm-string: #e6db74;
+        --cm-string-2: #f50;
+        --cm-tag: #f92672;
+        --cm-type: #66d9ef;
+        --cm-variable: #f8f8f2;
+        --cm-variable-2: #9effff;
+        --cm-variable-3: #66d9ef;
+        --cm-error: { background: #f92672; color: #f8f8f0; };
+    }
+    body.light-theme {
+        --text-color-alpha: rgba(68, 68, 68, 0.3);
+        --text-color-alpha2: rgba(68, 68, 68, 0.7);
+        --text-color: #222;
+        --negative-color: #000;
+        --bkg-color: #fff;
+        --bkg-color-alt: #f5f5f5;
+        --bkg-color-alt2: #e2e2e2;
+
+        /* codemirror-theme-vars */
+
+        --cm-foreground: #393a34;
+        --cm-background: #f8f8f8;
+
+        --cm-atom: #219;
+        --cm-attribute: #00c;
+        --cm-bracket: #997;
+        --cm-builtin: #30a;
+        --cm-class: #2b91af;
+        --cm-comment: #a50;
+        --cm-def: #00f;
+        --cm-deleted: #9a050f;
+        --cm-function: #849145;
+        --cm-header: blue;
+        --cm-hr: #999;
+        --cm-keyword: #708;
+        --cm-link: #00c;
+        --cm-literal: #36acaa;
+        --cm-meta: #555;
+        --cm-namespace: #444444;
+        --cm-negative: #d44;
+        --cm-number: #164;
+        --cm-operator: none;
+        --cm-positive: #292;
+        --cm-property: none;
+        --cm-punctuation: none;
+        --cm-qualifier: #555;
+        --cm-quote: #090;
+        --cm-regex: #ad502b;
+        --cm-s-default: #085;
+        --cm-string: #a11;
+        --cm-string-2: #f50;
+        --cm-tag: #170;
+        --cm-type: #085;
+        --cm-variable: none;
+        --cm-variable-2:#05a;
+        --cm-variable-3: #085;
+    }
+}
+
+body {
+    background: var(--bkg-color);
+    color: var(--text-color);
+}
+
+h1, p {
+    color: var(--text-color);
 }
 
 h1 {
     text-align: center;
-    color: #222;
+    color: var(--text-color);
     margin: 0 0 30px;
 }
 
@@ -35,7 +257,7 @@ h1 {
 }
 
 .button:hover, button:focus {
-    box-shadow: 0 0 2px #222;
+    box-shadow: 0 0 2px var(--text-color);
 }
 
 #execute {
@@ -45,7 +267,7 @@ h1 {
 }
 
 .CodeMirror {
-    border: 1px solid #222;
+    border: 1px solid var(--text-color);
     height: auto;
 }
 .CodeMirror-scroll {
@@ -81,7 +303,7 @@ th, td {
 
 footer {
     font-size:.8em;
-    color: #222;
+    color: var(--text-color);
 }
 
 p,h1 {
@@ -98,10 +320,10 @@ p,h1 {
     display: inline-block;
     margin-top: 10px;
     margin-left: 7px;
-    background-color: rgb(255, 255, 255);
+    background-color: var(--bkg-color);
     border: 1px solid #DDD;
     box-sizing: border-box;
-    color: rgb(34, 34, 34);
+    color: var(--text-color);
     font-family: Circular, -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
     font-size: 17px;
     line-height: 20px;
@@ -115,20 +337,14 @@ p,h1 {
 }
 
 .btn:hover {
-    box-shadow: #222 0 0 0 2px;
+    box-shadow: var(--text-color) 0 0 0 2px;
     transition: box-shadow 0.2s ease 0s;
-    color: #222;
-}
-
-.btn:focus {
-    color: #222;
 }
 
 .btn:active {
-    background-color: rgb(247, 247, 247);
-    border-color: rgb(0, 0, 0);
+    background-color: var(--bkg-color-alt);
+    border-color: var(--negative-color);
     transform: scale(0.96);
-    color: #222;
 }
 
 .sp {
@@ -137,7 +353,7 @@ p,h1 {
     margin-top: 10px;
     margin-left: 7px;
     box-sizing: border-box;
-    color: rgb(34, 34, 34);
+    color: var(--text-color);
     font-family: Circular, -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
     font-size: 17px;
     line-height: 30px;
@@ -161,17 +377,8 @@ p,h1 {
     width: 20px;
 }
 
-.button {
-    margin-top: 7px;
-    font-size: 20px;
-    border-top: 2px solid transparent;
-    border-right: 1px solid transparent;
-    border-left: 1px solid transparent;
-    border-bottom: 1px solid #DDD;
-}
-
 tr {
-    color: #212529;
+    color: var(--text-color);
 }
 
 th, td {
@@ -182,11 +389,11 @@ th, td {
 }
 
 tbody tr:nth-child(even) {
-     background-color: #f5f5f5
+     background-color: var(--bkg-color-alt);
 }
 
 tbody tr:hover {
-    background-color: #e8e8e8;
+    background-color: var(--bkg-color-alt2);
 }
 
 th:after {
@@ -223,6 +430,7 @@ input, section {
 
 .labelTab {
     display: block;
+    color: var(--text-color);
     font-size: 20px;
     float: left;
     padding: 10px 30px;
@@ -230,6 +438,7 @@ input, section {
     border-right: 1px solid transparent;
     border-left: 1px solid transparent;
     border-bottom: 1px solid #DDD;
+    margin-right: -1px;
 }
 
 #tab1:checked ~ #content1,
@@ -253,7 +462,7 @@ input, section {
 }
 
 input:checked + label {
-    border-top-color: #222;
+    border-top-color: var(--text-color);
     border-right-color: #DDD;
     border-left-color: #DDD;
     border-bottom-color: transparent;
@@ -271,7 +480,7 @@ input:checked + label {
     flex-direction: column;
     visibility: hidden;
     margin-left: 7px;
-    background-color: #f9f9f9;
+    background-color: var(--bkg-color);
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
     z-index: 1;
     overflow-y: auto;
@@ -289,7 +498,7 @@ input:checked + label {
 }
 
 .dropdown-content span:hover {
-    background-color: rgb(226, 226, 226)
+    background-color: var(--bkg-color-alt2);
 }
 
 .dropdown-head {
@@ -306,19 +515,47 @@ input:checked + label {
 }
 
 .dropdown-head:active {
-    background-color: rgb(247, 247, 247);
-    border-color: rgb(0, 0, 0);
+    background-color: var(--bkg-color-alt);
+    border-color: var(--negative-color);
     transform: scale(0.96);
-    color: #222;
 }
 
 .dropdown:hover > .dropdown-head {
-    box-shadow: #222 0 0 0 1px;
+    box-shadow: var(--text-color) 0 0 0 1px;
     transition: box-shadow 0.2s ease 0s;
-    color: #222;
-    border-color: rgb(0, 0, 0);
+    border-color: var(--negative-color);
 }
 
 .ico {
     vertical-align: text-bottom;
+}
+
+text {
+    fill: var(--text-color) !important;
+    text-shadow: var(--bkg-color) 1px 1px 1px, var(--bkg-color) -1px -1px 1px, var(--bkg-color) 1px -1px 1px, var(--bkg-color) -1px 1px 1px !important;
+}
+
+.updatemenu-item-rect.updatemenu-dropdown-button:hover {
+    fill: var(--bkg-color-alt) !important;
+}
+
+.bg, .updatemenu-item-rect, .updatemenu-dropdown-button {
+    fill: var(--bkg-color-alt2) !important;
+    stroke: none !important;
+}
+
+
+.main-svg {
+    background: rgba(0,0,0,0) !important;
+}
+
+.modebar-group {
+    background-color: initial !important;
+}
+
+svg.icon path {
+    fill: var(--text-color-alpha) !important;
+}
+svg.icon:hover > path, a.modebar-btn.active path {
+    fill: var(--text-color) !important;
 }

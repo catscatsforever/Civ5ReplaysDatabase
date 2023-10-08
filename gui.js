@@ -2,6 +2,7 @@
 		sql.js
 		plotly
 		codemirror
+		codemirror-theme-vars
 		fflate
 */
 
@@ -176,6 +177,32 @@ let sankeyGroups2Rad = document.getElementById('sankey-groups2');
 let sankeyGroups3Rad = document.getElementById('sankey-groups3');
 
 let dbsizeLbl = document.getElementById('dbsize');
+
+const btn = document.querySelector("#darkThemeToggle");
+const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)");
+
+const currentTheme = localStorage.getItem("theme");
+if (currentTheme === "dark") {
+	document.body.classList.toggle("dark-theme");
+} else if (currentTheme === "light") {
+	document.body.classList.toggle("light-theme");
+}
+
+btn.addEventListener("click", function () {
+	if (prefersDarkScheme.matches) {
+		document.body.classList.toggle("light-theme");
+		var theme = document.body.classList.contains("light-theme")
+			? "light"
+			: "dark";
+	}
+	else {
+		document.body.classList.toggle("dark-theme");
+		var theme = document.body.classList.contains("dark-theme")
+			? "dark"
+			: "light";
+	}
+	localStorage.setItem("theme", theme);
+});
 
 // Start the worker in which sql.js will run
 let worker = new Worker("worker.sql-wasm.js");
@@ -533,8 +560,6 @@ worker.onmessage = function (event) {
 				bordercolor: '#FFFFFF',
 				borderwidth: 2
 			},
-			//plot_bgcolor: 'black',
-			//paper_bgcolor: 'black'
 			updatemenus: [{
 				y: 1.1,
 				xanchor: 'auto',
@@ -768,7 +793,8 @@ let editor = CodeMirror.fromTextArea(commandsElm, {
 	extraKeys: {
 		"Ctrl-Enter": execEditorContents,
 		"Ctrl-S": savedb,
-	}
+	},
+	theme: 'vars'
 });
 const resizeWatcher = new ResizeObserver(entries => {
 	for (const entry of entries){
