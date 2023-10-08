@@ -428,13 +428,11 @@ worker.onmessage = function (event) {
 						}
 						else if (conf.aggregate.id === 1) {
 							conf.aggregate.name = 'Playoff Players';
-							groupId = ['4irkasov','A','Achilles','Amchost','An4ouS','Anhel','ArciK','Art','Denchil','FireStorm',
-								'Frimen','Froller','HarleQuin','ImmoS','J_sun','JAGUARRR','Kayle','Limbo','Lumpen','Pashok',
-								'ReddyMisha','Sirius','Solex','Taurus','Unknown'].includes(tracesData[i].TraceName) ? 0 : 1;
+							groupId = [101, 102, 103, 201, 202, 203].includes(tracesData[i].GameID) ? 0 : 1;
 						}
 						else if (conf.aggregate.id === 2) {
 							conf.aggregate.name = 'Final Game Players';
-							groupId = ['Achilles','Denchil','Frimen','J_sun','Lumpen','Solex'].includes(tracesData[i].TraceName) ? 0 : 1;
+							groupId = (tracesData[i].GameID === 301) ? 0 : 1;
 						}
 					}
 					else if (conf.aggregate.group === 'civs') {
