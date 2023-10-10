@@ -444,7 +444,7 @@ worker.onmessage = function (event) {
 						groupId = tracesData[i].TraceName === conf.aggregate.id ? 0 : 1;
 					}
 					else if (conf.aggregate.group === 'wonders') {
-						conf.aggregate.name = conf.aggregate.id;
+						conf.aggregate.name = conf.aggregate.id + ' builders';
 						groupId = tracesData[i].GroupID;
 					}
 					arrY[i].forEach((j,k)=>{
@@ -740,7 +740,7 @@ function fillSelects() {
 		VALUES('Wonder Builders', 'groupSeparator')
 		UNION ALL
 		SELECT * FROM (
-			SELECT BuildingClassKey, '{"group":"wonders","id":"'||BuildingClassID||'"}' FROM BuildingClassKeys WHERE TypeID = 2
+			SELECT BuildingClassKey, '{"group":"wonders","id":"'||BuildingClassKey||'"}' FROM BuildingClassKeys WHERE TypeID = 2
 			ORDER BY BuildingClassKey
 		);
 		SELECT ReplayDataSetKey, ReplayDataSetID FROM ReplayDataSetKeys
@@ -931,7 +931,7 @@ function doPlot(e) {
 						JOIN CivKeys ON CivKeys.CivID = BuildingclassesChanges.CivID
 						JOIN GameSeeds ON GameSeeds.GameSeed = BuildingclassesChanges.GameSeed
 						JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.Civilization = CivKeys.CivKey
-						WHERE TypeID = 2 AND Value = 1 AND BuildingclassesChanges.BuildingClassID = ${val.id}
+						WHERE TypeID = 2 AND Value = 1 AND BuildingClassKeys.BuildingClassKey = '${val.id}'
 					) 
 					WHERE rn = 1
 				) T1 ON T1.GameID = Games.GameID AND T1.CivID = CivKeys.CivID
@@ -1279,7 +1279,7 @@ tableHallOfFameBtn.addEventListener("click", () => { noerror(); let r = `
 	ORDER BY IFNULL(Wonders, 0) DESC
 	;
 	
-	SELECT Player, IFNULL(F9, 0) AS 'times F9 pressed', Games FROM (
+	SELECT Player, IFNULL(F9, 0) AS 'Times F9 Pressed', Games FROM (
 		SELECT *, Count(*) AS Games FROM (SELECT Games.Player FROM Games) AS T1
 		LEFT JOIN (
 			SELECT Player, SUM(F9) AS F9, COUNT(*) AS Games FROM (
