@@ -443,6 +443,10 @@ worker.onmessage = function (event) {
 						conf.aggregate.name = conf.aggregate.id;
 						groupId = tracesData[i].TraceName === conf.aggregate.id ? 0 : 1;
 					}
+					else if (conf.aggregate.group === 'wonders') {
+						conf.aggregate.name = conf.aggregate.id;
+						groupId = tracesData[i].GroupID;
+					}
 					arrY[i].forEach((j,k)=>{
 						if (blob[groupId][k] === undefined)
 							blob[groupId][k] = [k, []];
@@ -731,6 +735,13 @@ function fillSelects() {
 			SELECT Player, '{"group":"players","id":"'||Player||'"}' from GameSeeds JOIN BeliefsChanges ON BeliefsChanges.GameSeed = GameSeeds.GameSeed
 			JOIN Games ON Games.GameID = GameSeeds.GameID
 			GROUP BY Player ORDER BY Player
+		)
+		UNION ALL
+		VALUES('Wonder Builders', 'groupSeparator')
+		UNION ALL
+		SELECT * FROM (
+			SELECT BuildingClassKey, '{"group":"wonders","id":"'||BuildingClassID||'"}' FROM BuildingClassKeys WHERE TypeID = 2
+			ORDER BY BuildingClassKey
 		);
 		SELECT ReplayDataSetKey, ReplayDataSetID FROM ReplayDataSetKeys
 		WHERE ReplayDataSetKey > ''
@@ -855,7 +866,7 @@ function doPlot(e) {
 	let condition2 = `ReplayDataSetKeys.ReplayDataSetID = 51`;
 	let traceName = `Games.Player`;
 	let yaxisName = ``;
-	let aggregate, aggregateMethod;
+	let aggregate, aggregateMethod, supplement, groupID;
 
 	if (compareGroupArithmeticMeanRad.checked) {
 		aggregateMethod = 0;
@@ -908,6 +919,25 @@ function doPlot(e) {
 			traceName = `Games.Player`;
 			aggregate = `{"group":"players","method":${aggregateMethod},"id":"${val.id}"}`;
 		}
+		else if (val.group === 'wonders') {
+			traceName = `Games.Player`;
+			aggregate = `{"group":"wonders","method":${aggregateMethod},"id":"${val.id}"}`;
+			supplement = `
+				LEFT JOIN (
+					SELECT GameID, CivID, 0 AS GroupID FROM (
+						SELECT *, ROW_NUMBER() OVER (PARTITION BY BuildingclassesChanges.GameSeed, BuildingClassKeys.BuildingClassID ORDER BY Turn) AS rn
+						FROM BuildingclassesChanges
+						JOIN BuildingClassKeys on BuildingClassKeys.BuildingClassID = BuildingclassesChanges.BuildingClassID
+						JOIN CivKeys ON CivKeys.CivID = BuildingclassesChanges.CivID
+						JOIN GameSeeds ON GameSeeds.GameSeed = BuildingclassesChanges.GameSeed
+						JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.Civilization = CivKeys.CivKey
+						WHERE TypeID = 2 AND Value = 1 AND BuildingclassesChanges.BuildingClassID = ${val.id}
+					) 
+					WHERE rn = 1
+				) T1 ON T1.GameID = Games.GameID AND T1.CivID = CivKeys.CivID
+			`;
+			groupID = 'IFNULL(GroupID, 1)';
+		}
 		condition1 = '';
 		condition2 = `ReplayDataSetKeys.ReplayDataSetID = ${dataset3.value}`;
 		yaxisName = dataset3.textContent;
@@ -942,10 +972,11 @@ function doPlot(e) {
 
 		WITH
 			tracesData AS (
-				SELECT GameID, Games.rowid, ${traceName} AS TraceName, Standing, Value AS QuitTurn
+				SELECT Games.GameID, Games.rowid, ${traceName} AS TraceName, Standing, Value AS QuitTurn ${groupID ? `, ${groupID} AS GroupID` : ''}
 				FROM Games
 				JOIN CivKeys ON CivKeys.CivKey = Games.Civilization
 				LEFT JOIN PlayerQuitTurn ON Games.Player = PlayerQuitTurn.Player AND Games.PlayerGameNumber = PlayerQuitTurn.PlayerGameNumber
+				${supplement || ''}
 				${condition1 ? `WHERE ${condition1}` : ''}
 			)
 		SELECT * FROM tracesData
