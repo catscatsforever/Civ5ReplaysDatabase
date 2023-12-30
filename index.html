@@ -35,6 +35,7 @@
 
   <main>
     <div id="inputs" style="display: none">
+      <label class="labelTab TabsFiller">!</label>
       <input class="radioTab plot-clk" id="tab1" type="radio" name="tabs" checked>
       <label class="labelTab" for="tab1">Plot by Game</label>
       <input class="radioTab plot-clk" id="tab2" type="radio" name="tabs">
@@ -45,6 +46,7 @@
       <label class="labelTab" for="tab4">Plot Distribution</label>
       <input class="radioTab plot-clk" id="tab5" type="radio" name="tabs">
       <label class="labelTab" for="tab5">Tables</label>
+      <div id="error" class="error"></div>
       <section id="content1">
         <span class="sp">Choose game:</span>
         <div class="dropdown">
@@ -145,14 +147,14 @@
           <button id="execute" class="btn">Execute</button>
           <button id="savedb" class="btn">Save the db</button>
         </div>
-        <span id="loading" class="sp">Loading...</span>
+        <span id="sql-status" class="sp"></span>
         <br>
         <pre id="output"></pre>
       </section>
 
-      <div id="error" class="error"></div>
       <div id="plotOut"><!-- Plotly chart will be drawn inside this DIV --></div>
     </div>
+    <span id="loading" style="font-size: 22px;" class="sp">Loading...</span>
 
   </main>
 

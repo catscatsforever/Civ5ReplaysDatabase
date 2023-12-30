@@ -145,6 +145,7 @@ let inputsElm = document.getElementById('inputs');
 
 let execBtn = document.getElementById("execute");
 let loadingElm = document.getElementById('loading');
+let SQLLoadingElm = document.getElementById('sql-status');
 let outputElm = document.getElementById('output');
 let errorElm = document.getElementById('error');
 let commandsElm = document.getElementById('commands');
@@ -214,6 +215,7 @@ worker.onmessage = function (event) {
 	// on db load
 	if (event.data.ready === true) {
 		toc("Loading database from file");
+		loadingElm.innerHTML = '';
 		tableHallOfFameBtn.click();
 		fillSelects();
 		doPlot();
@@ -236,11 +238,18 @@ worker.onmessage = function (event) {
 		a.click();
 		return;
 	}
+	if (event?.data?.error?.length)
+	{
+		SQLLoadingElm.textContent = `${event.data.error}`;
+		error({message: `${event.data.error}`});
+		return;
+	}
 	if (!results) {
 		error({message: event.data.error || 'No data!'});
 		return;
 	}
 	if (results.length === 0) {
+		SQLLoadingElm.textContent = `No results found!`;
 		error({message: `No results found!`});
 		return;
 	}
@@ -642,7 +651,7 @@ worker.onmessage = function (event) {
 	// fill table
 	else {
 		outputElm.innerHTML = "";
-		loadingElm.innerHTML = "";
+		SQLLoadingElm.innerHTML = "";
 		console.log('results:', results);
 		let blob = {};
 		// check if first table contains names of other tables
@@ -704,8 +713,8 @@ function noerror() {
 // Run a command in the database
 function execute(commands) {
 	tic();
+	SQLLoadingElm.textContent = "Fetching results...";
 	worker.postMessage({ action: 'exec', sql: commands });
-	loadingElm.textContent = "Fetching results...";
 }
 
 function fillSelects() {

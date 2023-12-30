@@ -279,6 +279,7 @@ h1 {
 }
 
 .error {
+    position: absolute;
     color:red;
     transition:.5s;
     overflow:hidden;
@@ -441,6 +442,14 @@ input, section {
     border-top: 2px solid transparent;
     border-bottom: 1px solid #DDD;
     margin: 0 1px;
+}
+
+.TabsFiller {
+    width: 85%;
+    width: -moz-available;          /* WebKit-based browsers will ignore this. */
+    width: -webkit-fill-available;  /* Mozilla-based browsers will ignore this. */
+    width: fill-available;
+    margin-bottom: -100%;
 }
 
 input[name="tabs"]:checked + label {
