@@ -1,8 +1,9 @@
 
 html {
     background:#222;
-    margin:auto;
-    width:90%;
+    width:90vw;
+    margin-left: 5vw;
+    overflow-x: hidden;
 }
 
 body{
@@ -113,8 +114,9 @@ body.dark-theme {
 
 #darkThemeToggleLabel {
     position: absolute;
-    right: 6%;
+    right: calc(100% - 94vw);
     top: 30px;
+    user-select: none;
 }
 .icon-light { display: initial; }
 .icon-dark { display: none; }
@@ -238,6 +240,7 @@ h1 {
     text-align: center;
     color: var(--text-color);
     margin: 0 0 30px;
+    cursor: default;
 }
 
 .button {
@@ -430,15 +433,22 @@ input, section {
 
 .labelTab {
     display: block;
+    background-color: var(--bkg-color);
     color: var(--text-color);
     font-size: 20px;
     float: left;
     padding: 10px 30px;
     border-top: 2px solid transparent;
-    border-right: 1px solid transparent;
-    border-left: 1px solid transparent;
     border-bottom: 1px solid #DDD;
-    margin-right: -1px;
+    margin: 0 1px;
+}
+
+input[name="tabs"]:checked + label {
+    border-top-color: var(--text-color);
+    border-right: 1px #DDD solid;
+    border-left: 1px #DDD solid;
+    border-bottom-color: transparent;
+    margin: 0 0;
 }
 
 #tab1:checked ~ #content1,
@@ -461,13 +471,6 @@ input, section {
     display: block;
 }
 
-input:checked + label {
-    border-top-color: var(--text-color);
-    border-right-color: #DDD;
-    border-left-color: #DDD;
-    border-bottom-color: transparent;
-    text-decoration: none;
-}
 
 .dropdown {
     position: relative;
@@ -484,7 +487,8 @@ input:checked + label {
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
     z-index: 1;
     overflow-y: auto;
-    height: calc(80vh - 200px);
+    height: fit-content;
+    max-height: 65vh;
 }
 
 .dropdown-content span {
