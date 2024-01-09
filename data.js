@@ -260,38 +260,44 @@ const sqlQueries = {
 	)
 	SELECT * FROM config;
 	
-	SELECT DISTINCT T1.Player, IFNULL(T2.Wonders, 0) AS Wonders FROM Games AS T1
+	SELECT DISTINCT T1.Player, IFNULL(T2.Wonders, 0) AS Wonders, Games FROM Games AS T1
 	LEFT JOIN (
 		SELECT Games.Player AS Player, COUNT(*) AS Wonders FROM ReplayEvents
 		JOIN BuildingKeys ON BuildingKeys.BuildingID = Num2
 		JOIN GameSeeds ON GameSeeds.GameSeed = ReplayEvents.GameSeed
 		JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = ReplayEvents.PlayerID
 		WHERE ReplayEvents.ReplayEventType = 78 AND TypeID = 2
-		GROUP BY Games.GameID, Games.Player
+		GROUP BY Games.Player
 	) AS T2 ON T1.Player = T2.Player
+    LEFT JOIN (
+      SELECT COUNT(*) AS Games, Player FROM Games GROUP BY Player
+    ) AS T3 ON T3.Player = T1.Player
 	ORDER BY IFNULL(Wonders, 0) DESC
 	;
 	
-	SELECT Player, IFNULL(F9, 0) AS 'Times F9 Pressed', Games FROM (
-		SELECT *, Count(*) AS Games FROM (SELECT Games.Player FROM Games) AS T1
-		LEFT JOIN (
-			SELECT Player, SUM(F9) AS F9, COUNT(*) AS Games FROM (
-				SELECT Games.GameID, Games.Player, sum(ReplayDataSetsChanges.Value) AS F9
-				FROM ReplayDataSetsChanges
-				JOIN ReplayDataSetKeys ON ReplayDataSetKeys.ReplayDataSetID = ReplayDataSetsChanges.ReplayDataSetID
-				JOIN GameSeeds ON GameSeeds.GameSeed = ReplayDataSetsChanges.GameSeed
-				JOIN Games ON Games.PlayerID = ReplayDataSetsChanges.PlayerID AND Games.GameID = GameSeeds.GameID
-				WHERE ReplayDataSetsChanges.ReplayDataSetID = 71 AND ReplayDataSetsChanges.Value > 0
-				GROUP BY Games.GameID, Games.Player
-			)
-			GROUP BY Player
-		) AS T2 ON T1.Player = T2.Player
-		GROUP BY T1.Player
-	)
-	ORDER BY IFNULL(F9, 0) DESC
-	;
+	SELECT Player, IFNULL(F9, 0) AS 'Times F9 Pressed', IFNULL(Games,0) AS Games FROM (
+      SELECT *, Count(*) AS Games FROM (SELECT Games.Player FROM Games) AS T1
+      LEFT JOIN (
+        SELECT Player, SUM(F9) AS F9 FROM (
+          SELECT Games.GameID, Games.Player, sum(ReplayDataSetsChanges.Value) AS F9
+          FROM ReplayDataSetsChanges
+          JOIN ReplayDataSetKeys ON ReplayDataSetKeys.ReplayDataSetID = ReplayDataSetsChanges.ReplayDataSetID
+          JOIN GameSeeds ON GameSeeds.GameSeed = ReplayDataSetsChanges.GameSeed
+          JOIN Games ON Games.PlayerID = ReplayDataSetsChanges.PlayerID AND Games.GameID = GameSeeds.GameID
+          WHERE ReplayDataSetsChanges.ReplayDataSetID = 68 AND ReplayDataSetsChanges.Value > 0
+          GROUP BY Games.Player
+        )
+        GROUP BY Player
+      ) AS T2 ON T1.Player = T2.Player
+    LEFT JOIN (
+      SELECT COUNT(*) AS Games, Player FROM Games GROUP BY Player
+    ) AS T3 ON T3.Player = T1.Player
+      GROUP BY T1.Player
+    )
+    ORDER BY IFNULL(F9, 0) DESC
+    ;
 	
-	SELECT Games.Player AS Player, SUM(IFNULL(PlayerQuitTurn, EndTurn)) AS Turns, COUNT(*) AS Games
+	SELECT Games.Player AS Player, IFNULL(SUM(IFNULL(PlayerQuitTurn, EndTurn)), 0) AS Turns, COUNT(*) AS Games
 	FROM Games
 	LEFT JOIN GameSeeds ON GameSeeds.GameID = Games.GameID
 	GROUP BY Games.Player
