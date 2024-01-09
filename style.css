@@ -280,6 +280,7 @@ h1 {
 
 .error {
     position: absolute;
+    top: 0;
     color:red;
     transition:.5s;
     overflow:hidden;
@@ -464,11 +465,13 @@ input[name="tabs"]:checked + label {
 #tab2:checked ~ #content2,
 #tab3:checked ~ #content3,
 #tab4:checked ~ #content4,
-#tab5:checked ~ #content5 {
+#tab5:checked ~ #content5,
+#tab6:checked ~ #content6 {
     display: block;
 }
 
-#tab5:checked ~ #plotOut {
+#tab5:checked ~ #plotOut,
+#tab6:checked ~ #plotOut {
     display: none;
 }
 
@@ -479,7 +482,6 @@ input[name="tabs"]:checked + label {
 #showSql:checked ~ #sqlBox {
     display: block;
 }
-
 
 .dropdown {
     position: relative;

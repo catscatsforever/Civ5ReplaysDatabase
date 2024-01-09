@@ -5,138 +5,6 @@
 		codemirror-theme-vars
 		fflate
 */
-
-const colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf",
-	"#fffe35", "#a83651", "#d53aff", "#6ec388", "#d6a989"];
-const winColors = {
-	anyWin: 'rgba(223,207,36,0.5)',
-	0: 'rgba(0,0,0,0.2)',
-	1: 'rgba(132,87,45,0.5)',
-	2: 'rgba(0,137,173,0.5)',
-	3: 'rgba(190,22,0,0.5)',
-	4: 'rgba(173,0,123,0.5)',
-	5: 'rgba(126,115,211,0.5)',
-};
-const IconMarkups = {
-	ICON_ALPHA: 'Civ5Icon.Alpha.png',
-	ICON_BLOCKADED: 'Civ5Icon.Blockaded.png',
-	ICON_BULLET: 'Civ5Icon.Bullet.png',
-	ICON_CAPITAL: 'Civ5Icon.Capital.png',
-	ICON_CITIZEN: 'Civ5Icon.Citizen.png',
-	ICON_CITY_STATE: 'Civ5Icon.CityState.png',
-	ICON_CONNECTED: 'Civ5Icon.Connected.png',
-	ICON_CULTURE: 'Civ5Icon.Culture.png',
-	ICON_DENOUNCE: 'Civ5Icon.Denounce.png',
-	ICON_FLOWER: 'Civ5Icon.Flower.png',
-	ICON_FOOD: 'Civ5Icon.Food.png',
-	ICON_GOLD: 'Civ5Icon.Gold.png',
-	ICON_GOLDEN_AGE: 'Civ5Icon.GoldenAge.png',
-	ICON_GREAT_PEOPLE: 'Civ5Icon.GreatPeople.png',
-	ICON_HAPPINESS_1: 'Civ5Icon.Happiness1.png',
-	ICON_HAPPINESS_2: 'Civ5Icon.Happiness2.png',
-	ICON_HAPPINESS_3: 'Civ5Icon.Happiness3.png',
-	ICON_HAPPINESS_4: 'Civ5Icon.Happiness4.png',
-	ICON_INFLUENCE: 'Civ5Icon.Influence.png',
-	ICON_INQUISITOR: 'Civ5Icon.Inquisitor.png',
-	ICON_INVEST: 'Civ5Icon.Invest.png',
-	ICON_LOCKED: 'Civ5Icon.Locked.png',
-	ICON_MINUS: 'Civ5Icon.Minus.png',
-	ICON_MISSIONARY: 'Civ5Icon.Missionary.png',
-	ICON_MOVES: 'Civ5Icon.Moves.png',
-	ICON_MUSHROOM: 'Civ5Icon.Mushroom.png',
-	ICON_OCCUPIED: 'Civ5Icon.Occupied.png',
-	ICON_OMEGA: 'Civ5Icon.Omega.png',
-	ICON_PEACE: 'Civ5Icon.Peace.png',
-	ICON_PIRATE: 'Civ5Icon.Pirate.png',
-	ICON_PLUS: 'Civ5Icon.Plus.png',
-	ICON_PRODUCTION: 'Civ5Icon.Production.png',
-	ICON_PROPHET: 'Civ5Icon.Prophet.png',
-	ICON_PUPPET: 'Civ5Icon.Puppet.png',
-	ICON_RANGE_STRENGTH: 'Civ5Icon.RangeStrength.png',
-	ICON_RAZING: 'Civ5Icon.Razing.png',
-	ICON_RELIGION: 'Civ5Icon.Religion.png',
-	ICON_RELIGION_BUDDHISM: 'Civ5Icon.ReligionBuddhism.png',
-	ICON_RELIGION_CHRISTIANITY: 'Civ5Icon.ReligionChristianity.png',
-	ICON_RELIGION_CONFUCIANISM: 'Civ5Icon.ReligionConfucianism.png',
-	ICON_RELIGION_HINDUISM: 'Civ5Icon.ReligionHinduism.png',
-	ICON_RELIGION_ISLAM: 'Civ5Icon.ReligionIslam.png',
-	ICON_RELIGION_JUDAISM: 'Civ5Icon.ReligionJudaism.png',
-	ICON_RELIGION_ORTHODOX: 'Civ5Icon.ReligionOrthodox.png',
-	ICON_RELIGION_PANTHEON: 'Civ5Icon.ReligionPantheon.png',
-	ICON_RELIGION_PROTESTANT: 'Civ5Icon.ReligionProtestant.png',
-	ICON_RELIGION_SHINTO: 'Civ5Icon.ReligionShinto.png',
-	ICON_RELIGION_SIKHISM: 'Civ5Icon.ReligionSikhism.png',
-	ICON_RELIGION_TAOISM: 'Civ5Icon.ReligionTaoism.png',
-	ICON_RELIGION_TENGRIISM: 'Civ5Icon.ReligionTengriism.png',
-	ICON_RELIGION_ZOROASTRIANISM: 'Civ5Icon.ReligionZoroastrianism.png',
-	ICON_RES_ALUMINUM: 'Civ5Icon.ResAluminum.png',
-	ICON_RES_BANANA: 'Civ5Icon.ResBanana.png',
-	ICON_RES_CITRUS: 'Civ5Icon.ResCitrus.png',
-	ICON_RES_COAL: 'Civ5Icon.ResCoal.png',
-	ICON_RES_COPPER: 'Civ5Icon.ResCopper.png',
-	ICON_RES_COTTON: 'Civ5Icon.ResCotton.png',
-	ICON_RES_COW: 'Civ5Icon.ResCow.png',
-	ICON_RES_CRAB: 'Civ5Icon.ResCrab.png',
-	ICON_RES_DEER: 'Civ5Icon.ResDeer.png',
-	ICON_RES_DYE: 'Civ5Icon.ResDye.png',
-	ICON_RES_FISH: 'Civ5Icon.ResFish.png',
-	ICON_RES_FUR: 'Civ5Icon.ResFur.png',
-	ICON_RES_GEMS: 'Civ5Icon.ResGems.png',
-	ICON_RES_GOLD: 'Civ5Icon.ResGold.png',
-	ICON_RES_HORSE: 'Civ5Icon.ResHorse.png',
-	ICON_RES_INCENSE: 'Civ5Icon.ResIncense.png',
-	ICON_RES_IRON: 'Civ5Icon.ResIron.png',
-	ICON_RES_IVORY: 'Civ5Icon.ResIvory.png',
-	ICON_RES_JEWELRY: 'Civ5Icon.ResJewelry.png',
-	ICON_RES_MARBLE: 'Civ5Icon.ResMarble.png',
-	ICON_RES_OIL: 'Civ5Icon.ResOil.png',
-	ICON_RES_PEARLS: 'Civ5Icon.ResPearls.png',
-	ICON_RES_PORCELAIN: 'Civ5Icon.ResPorcelain.png',
-	ICON_RES_SALT: 'Civ5Icon.ResSalt.png',
-	ICON_RES_SHEEP: 'Civ5Icon.ResSheep.png',
-	ICON_RES_SILK: 'Civ5Icon.ResSilk.png',
-	ICON_RES_SILVER: 'Civ5Icon.ResSilver.png',
-	ICON_RES_SPICES: 'Civ5Icon.ResSpices.png',
-	ICON_RES_STONE: 'Civ5Icon.ResStone.png',
-	ICON_RES_SUGAR: 'Civ5Icon.ResSugar.png',
-	ICON_RES_TRUFFLES: 'Civ5Icon.ResTruffles.png',
-	ICON_RES_URANIUM: 'Civ5Icon.ResUranium.png',
-	ICON_RES_WHALE: 'Civ5Icon.ResWhale.png',
-	ICON_RES_WHEAT: 'Civ5Icon.ResWheat.png',
-	ICON_RES_WINE: 'Civ5Icon.ResWine.png',
-	ICON_RESEARCH: 'Civ5Icon.Research.png',
-	ICON_RESISTANCE: 'Civ5Icon.Resistance.png',
-	ICON_SPY: 'Civ5Icon.Spy.png',
-	ICON_STAR: 'Civ5Icon.Star.png',
-	ICON_STRENGTH: 'Civ5Icon.Strength.png',
-	ICON_TEAM_1: 'Civ5Icon.Team1.png',
-	ICON_TEAM_10: 'Civ5Icon.Team10.png',
-	ICON_TEAM_11: 'Civ5Icon.Team11.png',
-	ICON_TEAM_2: 'Civ5Icon.Team2.png',
-	ICON_TEAM_3: 'Civ5Icon.Team3.png',
-	ICON_TEAM_4: 'Civ5Icon.Team4.png',
-	ICON_TEAM_5: 'Civ5Icon.Team5.png',
-	ICON_TEAM_6: 'Civ5Icon.Team6.png',
-	ICON_TEAM_7: 'Civ5Icon.Team7.png',
-	ICON_TEAM_8: 'Civ5Icon.Team8.png',
-	ICON_TEAM_9: 'Civ5Icon.Team9.png',
-	ICON_TEAM_USA: 'Civ5Icon.TeamUsa.png',
-	ICON_TRADE: 'Civ5Icon.Trade.png',
-	ICON_TRADE_WHITE: 'Civ5Icon.TradeWhite.png',
-	ICON_VIEW_CITY: 'Civ5Icon.ViewCity.png',
-	ICON_WAR: 'Civ5Icon.War.png',
-	ICON_WORKER: 'Civ5Icon.Worker.png',
-	ICON_WTF1: 'Civ5Icon.Wtf1.png',
-	ICON_WTF2: 'Civ5Icon.Wtf2.png',
-	ICON_GREAT_ENGINEER: 'Civ5Icon.GreatEngineer.png',
-	ICON_GREAT_GENERAL: 'Civ5Icon.GreatGeneral.png',
-	ICON_GREAT_SCIENTIST: 'Civ5Icon.GreatScientist.png',
-	ICON_GREAT_MERCHANT: 'Civ5Icon.GreatMerchant.png',
-	ICON_GREAT_ARTIST: 'Civ5Icon.GreatArtist.png',
-	ICON_GREAT_MUSICIAN: 'Civ5Icon.GreatMusician.png',
-	ICON_GREAT_WRITER: 'Civ5Icon.GreatWriter.png',
-	ICON_GREAT_ADMIRAL: 'Civ5Icon.GreatAdmiral.png'
-};
 let plotlyUserSettings = {
 	'yaxis.type': 'linear'
 };
@@ -156,6 +24,7 @@ let tab1Rad = document.getElementById("tab1");
 let tab2Rad = document.getElementById("tab2");
 let tab3Rad = document.getElementById("tab3");
 let tab4Rad = document.getElementById("tab4");
+let tab5Rad = document.getElementById("tab5");
 
 let tableHallOfFameBtn = document.getElementById('tableHallOfFame');
 let tableBeliefAdoptionBtn = document.getElementById('tableBeliefAdoption');
@@ -719,44 +588,7 @@ function execute(commands) {
 }
 
 function fillSelects() {
-	worker.postMessage({ action: 'exec', id: 1, sql: `
-		SELECT GameSeeds.GameID||'	('||GROUP_CONCAT(Player, ', ')||')', GameSeeds.GameID FROM Games
-		JOIN GameSeeds ON GameSeeds.GameID = Games.GameID
-		WHERE GameSeeds.EndTurn > 0
-		GROUP BY Games.GameID
-		ORDER BY GameSeeds.GameID;
-		SELECT Player from GameSeeds JOIN BeliefsChanges ON BeliefsChanges.GameSeed = GameSeeds.GameSeed
-		JOIN Games ON Games.GameID = GameSeeds.GameID
-		GROUP BY Player ORDER BY Player;
-		VALUES('Generic', 'groupSeparator'),
-			('Winners', '{"group":"generic","id":0}'),
-			('Playoff Players', '{"group":"generic","id":1}'),
-			('Final Game Players', '{"group":"generic","id":2}'),
-			('Civilizations', 'groupSeparator')
-		UNION ALL
-		SELECT * FROM (
-			SELECT CivKey, '{"group":"civs","id":'||CivID||'}' FROM CivKeys
-			ORDER BY CivKey
-		)
-		UNION ALL
-		VALUES('Players', 'groupSeparator')
-		UNION ALL
-		SELECT * FROM (
-			SELECT Player, '{"group":"players","id":"'||Player||'"}' from GameSeeds JOIN BeliefsChanges ON BeliefsChanges.GameSeed = GameSeeds.GameSeed
-			JOIN Games ON Games.GameID = GameSeeds.GameID
-			GROUP BY Player ORDER BY Player
-		)
-		UNION ALL
-		VALUES('Wonder Builders', 'groupSeparator')
-		UNION ALL
-		SELECT * FROM (
-			SELECT BuildingClassKey, '{"group":"wonders","id":"'||BuildingClassKey||'"}' FROM BuildingClassKeys WHERE TypeID = 2
-			ORDER BY BuildingClassKey
-		);
-		SELECT ReplayDataSetKey, ReplayDataSetID FROM ReplayDataSetKeys
-		WHERE ReplayDataSetKey > ''
-		ORDER BY ReplayDataSetKey;
-	`});
+	worker.postMessage({ action: 'exec', id: 1, sql: sqlQueries.fillSelects });
 }
 
 // Create an HTML table
@@ -863,19 +695,22 @@ function savedb() {
 	worker.postMessage({ action: 'export' });
 }
 savedbElm.addEventListener("click", savedb, true);
-let lastCompareId;
+
 function doPlot(e) {
+	Plotly.purge('plotOut');
+	if (tab5Rad.checked)
+		return;
 	tic();
 	noerror();
 	let target = e?.target.id;
 	let gameID = gameSelHead.value ? gameSelHead.value : 1;
-	let dataset = datasetSelHead.value ? datasetSelHead : {value:51, textContent:'Born Admirals'};
-	let playerName = playerSelHead.value ? playerSelHead.textContent : '12g';
-	let dataset2 = datasetSelHead2.value ? datasetSelHead2 : {value:51, textContent:'Born Admirals'};
-	let compareGroup = compareSelHead.value ? compareSelHead : {value: '{"group":"generic","id":0}', textContent:'Winners'};
-	let dataset3 = datasetSelHead3.value ? datasetSelHead3 : {value:51, textContent:'Born Admirals'};
+	let dataset = datasetSelHead.value ? datasetSelHead : {value: DBConfig.DefaultDatasetID, textContent: DBConfig.DefaultDatasetKey};
+	let playerName = playerSelHead.value ? playerSelHead.textContent : DBConfig.DefaultPlayer;
+	let dataset2 = datasetSelHead2.value ? datasetSelHead2 : {value: DBConfig.DefaultDatasetID, textContent: DBConfig.DefaultDatasetKey};
+	let compareGroup = compareSelHead.value ? compareSelHead : {value: JSON.stringify(DBConfig.DefaultCompareGroup), textContent: DBConfig.DefaultCompareGroupKey};
+	let dataset3 = datasetSelHead3.value ? datasetSelHead3 : {value: DBConfig.DefaultDatasetID, textContent: DBConfig.DefaultDatasetKey};
 	let condition1 = `Games.GameID = 1`;
-	let condition2 = `ReplayDataSetKeys.ReplayDataSetID = 51`;
+	let condition2 = `ReplayDataSetKeys.ReplayDataSetID = ${DBConfig.DefaultDatasetID}`;
 	let traceName = `Games.Player`;
 	let yaxisName = ``;
 	let aggregate, aggregateMethod, supplement, groupID;
@@ -892,27 +727,27 @@ function doPlot(e) {
 
 	if (target === 'plotAllGames') {
 		condition1 = '';
-		condition2 = `ReplayDataSetKeys.ReplayDataSetID = ${dataset.value}`;
+		condition2 = `ReplayDataSetsChanges.ReplayDataSetID = ${dataset.value}`;
 		traceName = `Games.Player || ' (' || Games.PlayerGameNumber || ')'`;
 		yaxisName = dataset.textContent;
 	}
 	else if (target === 'plotAllPlayers') {
 		condition1 = '';
-		condition2 = `ReplayDataSetKeys.ReplayDataSetID = ${dataset2.value}`;
+		condition2 = `ReplayDataSetsChanges.ReplayDataSetID = ${dataset2.value}`;
 		traceName = `Games.Player || ' ' || Games.PlayerGameNumber || ': ' || CivKeys.CivKey`;
 		yaxisName = dataset2.textContent;
 	}
 	// Plot by Game
 	else if (tab1Rad.checked) {
 		condition1 = `Games.GameID = ${gameID}`;
-		condition2 = `ReplayDataSetKeys.ReplayDataSetID = ${dataset.value}`;
+		condition2 = `ReplayDataSetsChanges.ReplayDataSetID = ${dataset.value}`;
 		traceName = `Games.Player||' ('||CivKeys.CivKey||')'`;
 		yaxisName = dataset.textContent;
 	}
 	// Plot by Player
 	else if (tab2Rad.checked) {
 		condition1 = `Games.Player = '${playerName.replace(/'/g, "''")}'`;
-		condition2 = `ReplayDataSetKeys.ReplayDataSetID = ${dataset2.value}`;
+		condition2 = `ReplayDataSetsChanges.ReplayDataSetID = ${dataset2.value}`;
 		traceName = `Games.PlayerGameNumber || ': ' || CivKeys.CivKey`;
 		yaxisName = dataset2.textContent;
 	}
@@ -951,7 +786,7 @@ function doPlot(e) {
 			groupID = 'IFNULL(GroupID, 1)';
 		}
 		condition1 = '';
-		condition2 = `ReplayDataSetKeys.ReplayDataSetID = ${dataset3.value}`;
+		condition2 = `ReplayDataSetsChanges.ReplayDataSetID = ${dataset3.value}`;
 		yaxisName = dataset3.textContent;
 	}
 	// Plot Distribution
@@ -965,7 +800,7 @@ function doPlot(e) {
 				VALUES('type','scatter'),
 					('mode', 'lines'),
 					('xaxis','Turn'),
-					('yaxis','${yaxisName}')
+					('yaxis',"${yaxisName}")
 					${aggregate ? `,('aggregate', '${aggregate}')` : ''}
 			)
 		SELECT * FROM config
@@ -975,7 +810,6 @@ function doPlot(e) {
 			gamesData AS (
 				SELECT GameSeeds.GameID, GameSeeds.EndTurn FROM GameSeeds
 					JOIN Games ON Games.GameID = GameSeeds.GameID
-					JOIN CivKeys ON CivKeys.CivID = Games.CivID
 					${condition1 ? `WHERE ${condition1}` : ''}
 					GROUP BY Games.GameID
 			)
@@ -984,85 +818,42 @@ function doPlot(e) {
 
 		WITH
 			tracesData AS (
-				SELECT Games.GameID, Games.rowid, ${traceName} AS TraceName, Standing, Value AS QuitTurn ${groupID ? `, ${groupID} AS GroupID` : ''}
+				SELECT Games.GameID, Games.rowid, ${traceName} AS TraceName, Standing, PlayerQuitTurn AS QuitTurn ${groupID ? `, ${groupID} AS GroupID` : ''}
 				FROM Games
-				JOIN CivKeys ON CivKeys.CivID = Games.CivID
-				LEFT JOIN PlayerQuitTurn ON Games.Player = PlayerQuitTurn.Player AND Games.PlayerGameNumber = PlayerQuitTurn.PlayerGameNumber
+				JOIN GameSeeds ON GameSeeds.GameID = Games.GameID
+        		JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = Games.PlayerID
+				JOIN CivKeys ON CivKeys.CivID = Players.CivID
 				${supplement || ''}
 				${condition1 ? `WHERE ${condition1}` : ''}
 			)
 		SELECT * FROM tracesData
 		;
-	
-		SELECT Games.rowid, Turn AS x, 
-		sum(ReplayDataSetsChanges.Value) OVER (PARTITION by Games.GameID, Games.Player ORDER BY Turn) y
 		
-		FROM DataSets
-		JOIN ReplayDataSetsChanges ON ReplayDataSetsChanges.DataSetID = DataSets.DataSetID
-		JOIN ReplayDataSetKeys ON ReplayDataSetKeys.ReplayDataSetID = ReplayDataSetsChanges.ReplayDataSetID
-		JOIN CivKeys ON CivKeys.CivID = ReplayDataSetsChanges.CivID
+		SELECT Games.rowid, Turn AS x, 
+		SUM(ReplayDataSetsChanges.Value) OVER (PARTITION by Games.GameID, Games.Player ORDER BY Turn) y
+		FROM ReplayDataSetsChanges
 		JOIN GameSeeds ON GameSeeds.GameSeed = ReplayDataSetsChanges.GameSeed
-		JOIN Games ON Games.CivID = CivKeys.CivID AND Games.GameID = GameSeeds.GameID
-		LEFT JOIN PlayerQuitTurn ON Games.Player = PlayerQuitTurn.Player AND Games.PlayerGameNumber = PlayerQuitTurn.PlayerGameNumber
+		JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = ReplayDataSetsChanges.PlayerID
 		WHERE ${condition1 ? condition1 : ''} ${condition2 ? (condition1 ? `AND ${condition2}` : condition2) : ''}
 		;
 	`;
 	console.log(msg);
 	worker.postMessage({ action: 'exec', id: 0, sql: msg });
 }
+
 function doBarPlot(e) {
 	noerror();
 	let target = e?.target.id;
-	let traceName = '';
-	let table1, table2, table3, field1, field2, field3;
+	let msg;
 	if (target === 'policies-time') {
-		table1 = 'PoliciesChanges';
-		table2 = 'PolicyKeys';
-		table3 = 'PolicyBranches';
-		field1 = 'PolicyID';
-		field2 = 'BranchID';
-		field3 = 'PolicyBranch';
+		msg = sqlQueries["plot-bar-policies-time"];
 	}
 	else if (target === 'techs-time') {
-		table1 = 'TechnologiesChanges';
-		table2 = 'TechnologyKeys';
-		field1 = 'TechnologyID';
-		field2 = 'TechnologyKey';
+		msg = sqlQueries["plot-bar-techs-time"];
 	}
 	else if (tab4Rad.checked || target === 'beliefs-time') {
-		table1 = 'BeliefsChanges';
-		table2 = 'BeliefKeys';
-		table3 = 'BeliefTypes';
-		field1 = 'BeliefID';
-		field2 = 'TypeID';
-		field3 = 'BeliefType';
+		msg = sqlQueries["plot-bar-beliefs-time"];
 	}
-	msg = `
-		WITH
-  			config(Key,Value) AS (
-    			VALUES('type','bar'),
-          			('mode', 'lines'),
-					('xaxis','Turn'),
-					('yaxis','Occurrences')
-  			)
-		SELECT * FROM config
-		;
-		
-		SELECT ${field3 ? `${field3} FROM ${table3}` : `${field2} FROM ${table2}`}
-		;
-		
-		SELECT ${table3 ? `${table3}.${field3}` : `${table2}.${field2}`}, Turn,
-		sum(${table1}.Value) AS Value
-		
-		FROM DataSets
-		JOIN ${table1} ON ${table1}.DataSetID = DataSets.DataSetID
-		JOIN ${table2} ON ${table2}.${field1} = ${table1}.${field1}
-		${table3 ? `JOIN ${table3} ON ${table3}.${field2} = ${table2}.${field2}` : ''}
-		WHERE ${table1}.Value = 1
-		GROUP BY Turn, ${table2}.${field2}
-		ORDER BY Turn
-		;
-	`;
 	console.log('msg', msg);
 	worker.postMessage({ action: 'exec', id: 0, sql: msg });
 }
@@ -1259,68 +1050,7 @@ document.querySelectorAll(".sankey-clk").forEach(el => {
 	el.addEventListener("click", doSankeyPlot, true);
 });
 
-tableHallOfFameBtn.addEventListener("click", () => { noerror(); let r = `
-	WITH config(tableName) AS (
-		VALUES('config'),
-		('Greatest Wonder Builders'),
-		('Demographics Screen Lovers'),
-		('Total Turns Spent In-Game')
-	)
-	SELECT * FROM config;
-	
-	SELECT Player, IFNULL(Wonders, 0) AS 'Wonders Constructed', Games FROM (
-		SELECT *, Count(*) AS Games FROM (SELECT Games.Player FROM Games) AS T1
-		LEFT JOIN (
-			SELECT Player, SUM(Wonders) AS Wonders FROM (
-				SELECT GameID, Player, COUNT(*) AS Wonders FROM (
-					SELECT *, ROW_NUMBER() OVER (PARTITION BY BuildingclassesChanges.GameSeed, BuildingClassKeys.BuildingClassID ORDER BY Turn) AS rn
-					FROM BuildingclassesChanges
-					JOIN BuildingClassKeys on BuildingClassKeys.BuildingClassID = BuildingclassesChanges.BuildingClassID
-					JOIN CivKeys ON CivKeys.CivID = BuildingclassesChanges.CivID
-					JOIN GameSeeds ON GameSeeds.GameSeed = BuildingclassesChanges.GameSeed
-					JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.CivID = CivKeys.CivID
-					WHERE TypeID = 2 AND Value = 1
-				) 
-				WHERE rn = 1
-				GROUP BY GameID, Player
-			)
-			GROUP BY Player
-		) AS T2 ON T1.Player = T2.Player
-		GROUP BY T1.Player
-	)
-	ORDER BY IFNULL(Wonders, 0) DESC
-	;
-	
-	SELECT Player, IFNULL(F9, 0) AS 'Times F9 Pressed', Games FROM (
-		SELECT *, Count(*) AS Games FROM (SELECT Games.Player FROM Games) AS T1
-		LEFT JOIN (
-			SELECT Player, SUM(F9) AS F9, COUNT(*) AS Games FROM (
-				SELECT Games.GameID, Games.Player, sum(ReplayDataSetsChanges.Value) AS F9
-				FROM DataSets
-				JOIN ReplayDataSetsChanges ON ReplayDataSetsChanges.DataSetID = DataSets.DataSetID
-				JOIN ReplayDataSetKeys ON ReplayDataSetKeys.ReplayDataSetID = ReplayDataSetsChanges.ReplayDataSetID
-				JOIN CivKeys ON CivKeys.CivID = ReplayDataSetsChanges.CivID
-				JOIN GameSeeds ON GameSeeds.GameSeed = ReplayDataSetsChanges.GameSeed
-				JOIN Games ON Games.CivID = CivKeys.CivID AND Games.GameID = GameSeeds.GameID
-				LEFT JOIN PlayerQuitTurn ON Games.Player = PlayerQuitTurn.Player AND Games.PlayerGameNumber = PlayerQuitTurn.PlayerGameNumber
-				WHERE ReplayDataSetsChanges.ReplayDataSetID = 71 AND ReplayDataSetsChanges.Value > 0
-				GROUP BY Games.GameID, Games.Player
-			)
-			GROUP BY Player
-		) AS T2 ON T1.Player = T2.Player
-		GROUP BY T1.Player
-	)
-	ORDER BY IFNULL(F9, 0) DESC
-	;
-	
-	SELECT Games.Player AS Player, SUM(IFNULL(Value, EndTurn)) AS Turns, COUNT(*) AS Games
-	FROM Games
-	LEFT JOIN GameSeeds ON GameSeeds.GameID = Games.GameID
-	LEFT JOIN PlayerQuitTurn ON PlayerQuitTurn.Player = Games.Player AND PlayerQuitTurn.PlayerGameNumber = Games.PlayerGameNumber
-	GROUP BY Games.Player
-	ORDER BY SUM(IFNULL(Value, EndTurn)) DESC
-	;
-	`; execute(r); editor.setValue(r); }, true);
+tableHallOfFameBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-hall-of-fame"]; execute(r); editor.setValue(r); }, true);
 
 tableBeliefAdoptionBtn.addEventListener("click", () => { noerror(); let r = `
 	WITH config(tableName) AS (

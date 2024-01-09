@@ -34,8 +34,9 @@
   </label>
 
   <main>
+    <div id="error" class="error"></div>
     <div id="inputs" style="display: none">
-      <label class="labelTab TabsFiller">!</label>
+      <label class="labelTab TabsFiller"> </label>
       <input class="radioTab plot-clk" id="tab1" type="radio" name="tabs" checked>
       <label class="labelTab" for="tab1">Plot by Game</label>
       <input class="radioTab plot-clk" id="tab2" type="radio" name="tabs">
@@ -44,9 +45,10 @@
       <label class="labelTab" for="tab3">Compare Average</label>
       <input class="radioTab plot-clk" id="tab4" type="radio" name="tabs">
       <label class="labelTab" for="tab4">Plot Distribution</label>
-      <input class="radioTab plot-clk" id="tab5" type="radio" name="tabs">
+      <input class="radioTab" id="tab5" type="radio" name="tabs">
       <label class="labelTab" for="tab5">Tables</label>
-      <div id="error" class="error"></div>
+      <input class="radioTab" id="tab6" type="radio" name="tabs">
+      <label class="labelTab" for="tab6">Events</label>
       <section id="content1">
         <span class="sp">Choose game:</span>
         <div class="dropdown">
@@ -151,6 +153,8 @@
         <br>
         <pre id="output"></pre>
       </section>
+      <section id="content6">
+      </section>
 
       <div id="plotOut"><!-- Plotly chart will be drawn inside this DIV --></div>
     </div>
@@ -164,6 +168,7 @@
     <label id="dbsize"></label>
   </footer>
 
+  <script type="text/javascript" src="data.js"></script>
   <script type="text/javascript" src="gui-dev.js"></script>
 </body>
 
