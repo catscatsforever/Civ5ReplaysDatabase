@@ -668,7 +668,6 @@ function fetchdb() {
 		tic();
 		const unzipped = fflate.unzipSync(uInt8Array)['sample2.db'];
 		DBConfig = JSON.parse(String.fromCharCode.apply(null, fflate.unzipSync(uInt8Array)['config.json']));
-		console.log('congif', DBConfig);
 		toc('decompression finished');
 		let b = uInt8Array.length;
 		let b2 = unzipped.length;
@@ -771,17 +770,12 @@ function doPlot(e) {
 			aggregate = `{"group":"wonders","method":${aggregateMethod},"id":"${val.id}"}`;
 			supplement = `
 				LEFT JOIN (
-					SELECT GameID, CivID, 0 AS GroupID FROM (
-						SELECT *, ROW_NUMBER() OVER (PARTITION BY BuildingclassesChanges.GameSeed, BuildingClassKeys.BuildingClassID ORDER BY Turn) AS rn
-						FROM BuildingclassesChanges
-						JOIN BuildingClassKeys on BuildingClassKeys.BuildingClassID = BuildingclassesChanges.BuildingClassID
-						JOIN CivKeys ON CivKeys.CivID = BuildingclassesChanges.CivID
-						JOIN GameSeeds ON GameSeeds.GameSeed = BuildingclassesChanges.GameSeed
-						JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.CivID = CivKeys.CivID
-						WHERE TypeID = 2 AND Value = 1 AND BuildingClassKeys.BuildingClassKey = '${val.id}'
-					) 
-					WHERE rn = 1
-				) T1 ON T1.GameID = Games.GameID AND T1.CivID = CivKeys.CivID
+					SELECT GameID, PlayerID, 0 AS GroupID FROM ReplayEvents
+					JOIN BuildingKeys ON BuildingKeys.BuildingID = Num2
+					JOIN BuildingClassKeys ON BuildingClassKeys.BuildingClassID = BuildingKeys.BuildingClassID
+					JOIN GameSeeds ON GameSeeds.GameSeed = ReplayEvents.GameSeed
+					WHERE ReplayEventType = 78 AND BuildingClassKeys.TypeID = 2 AND BuildingClassKeys.BuildingClassKey = "${val.id}"
+				) T1 ON T1.GameID = Games.GameID AND T1.PlayerID = Games.PlayerID
 			`;
 			groupID = 'IFNULL(GroupID, 1)';
 		}
@@ -1340,25 +1334,20 @@ tableWonderConstructionBtn.addEventListener("click", () => { noerror(); let r = 
 	SELECT * FROM config;
 	
 
-	SELECT T1.Wonder, IFNULL(Winrate, '0')||'%' AS Winrate FROM (SELECT BuildingClassKey AS Wonder FROM BuildingClassKeys WHERE TypeID = 2) AS T1
-	LEFT JOIN (
-		WITH tmp AS (
-			SELECT COUNT(*) AS ngames FROM GameSeeds
-		)
-		SELECT BuildingClassKey AS Wonder, ROUND(COUNT(*)*100.0/ngames, 2) AS Winrate FROM (
-			SELECT *, ROW_NUMBER() OVER (PARTITION BY BuildingclassesChanges.GameSeed, BuildingClassKeys.BuildingClassID ORDER BY Turn) AS rn
-			FROM BuildingclassesChanges
-			JOIN BuildingClassKeys on BuildingClassKeys.BuildingClassID = BuildingclassesChanges.BuildingClassID
-			JOIN CivKeys ON CivKeys.CivID = BuildingclassesChanges.CivID
-			JOIN GameSeeds ON GameSeeds.GameSeed = BuildingclassesChanges.GameSeed
-			JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.CivID = CivKeys.CivID
-			JOIN tmp 
-			WHERE Value = 1 AND TypeID = 2
-		)
-		WHERE rn = 1 AND Standing = 1
-		GROUP BY BuildingClassID
-	) AS T2 ON T1.Wonder = T2.Wonder
-	ORDER BY Winrate DESC
+	WITH tmp AS (
+		SELECT COUNT(*) AS ngames FROM GameSeeds
+	)
+	SELECT BuildingKey AS Wonder, IFNULL(ROUND(COUNT(*)*100.0/ngames, 2), 0)||'%' AS Winrate
+	FROM ReplayEvents
+	JOIN BuildingKeys on BuildingKeys.BuildingID = ReplayEvents.Num2
+	JOIN GameSeeds ON GameSeeds.GameSeed = ReplayEvents.GameSeed
+	JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = ReplayEvents.PlayerID
+	JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = Games.PlayerID
+	JOIN CivKeys ON CivKeys.CivID = Players.CivID
+	JOIN tmp 
+	WHERE ReplayEventType = 78 AND Standing = 1 AND TypeID = 2
+	GROUP BY BuildingID
+	ORDER BY ROUND(COUNT(*)*100.0/ngames, 2) DESC
 	;
 	
 	with RankedTable as (

@@ -1599,11 +1599,33 @@ tableTechResearchBtn.addEventListener("click", () => { noerror(); let r = `
 tableWonderConstructionBtn.addEventListener("click", () => { noerror(); let r = `
 	WITH config(tableName) AS (
 		VALUES('config'),
+		('Wonders Winrate'),
 		('Average Turn of Wonder Construction'),
 		('Median Turn of Wonder Construction'),
 		('Minimum Turn of Wonder Construction')
 	)
 	SELECT * FROM config;
+	
+	SELECT T1.Wonder, IFNULL(Winrate, '0')||'%' AS Winrate FROM (SELECT BuildingClassKey AS Wonder FROM BuildingClassKeys WHERE TypeID = 2) AS T1
+	LEFT JOIN (
+		WITH tmp AS (
+			SELECT COUNT(*) AS ngames FROM GameSeeds
+		)
+		SELECT BuildingClassKey AS Wonder, ROUND(COUNT(*)*100.0/ngames, 2) AS Winrate FROM (
+			SELECT *, ROW_NUMBER() OVER (PARTITION BY BuildingclassesChanges.GameSeed, BuildingClassKeys.BuildingClassID ORDER BY Turn) AS rn
+			FROM BuildingclassesChanges
+			JOIN BuildingClassKeys on BuildingClassKeys.BuildingClassID = BuildingclassesChanges.BuildingClassID
+			JOIN CivKeys ON CivKeys.CivID = BuildingclassesChanges.CivID
+			JOIN GameSeeds ON GameSeeds.GameSeed = BuildingclassesChanges.GameSeed
+			JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.Civilization = CivKeys.CivKey
+			JOIN tmp 
+			WHERE Value = 1 AND TypeID = 2
+		)
+		WHERE rn = 1 AND Standing = 1
+		GROUP BY BuildingClassID
+	) AS T2 ON T1.Wonder = T2.Wonder
+	ORDER BY T2.Winrate DESC
+	;
 	
 	with RankedTable as (
 	SELECT *

@@ -256,6 +256,7 @@ const sqlQueries = {
 		VALUES('config'),
 		('Greatest Wonder Builders'),
 		('Demographics Screen Lovers'),
+        ('Prominent City Governors'),
 		('Total Turns Spent In-Game')
 	)
 	SELECT * FROM config;
@@ -295,6 +296,28 @@ const sqlQueries = {
       GROUP BY T1.Player
     )
     ORDER BY IFNULL(F9, 0) DESC
+    ;
+    
+    SELECT Player, IFNULL(CS, 0) AS 'Times Entered City', IFNULL(Games,0) AS Games FROM (
+      SELECT *, Count(*) AS Games FROM (SELECT Games.Player FROM Games) AS T1
+      LEFT JOIN (
+        SELECT Player, SUM(CS) AS CS FROM (
+          SELECT Games.GameID, Games.Player, sum(ReplayDataSetsChanges.Value) AS CS
+          FROM ReplayDataSetsChanges
+          JOIN ReplayDataSetKeys ON ReplayDataSetKeys.ReplayDataSetID = ReplayDataSetsChanges.ReplayDataSetID
+          JOIN GameSeeds ON GameSeeds.GameSeed = ReplayDataSetsChanges.GameSeed
+          JOIN Games ON Games.PlayerID = ReplayDataSetsChanges.PlayerID AND Games.GameID = GameSeeds.GameID
+          WHERE ReplayDataSetsChanges.ReplayDataSetID = 79 AND ReplayDataSetsChanges.Value > 0
+          GROUP BY Games.Player
+        )
+        GROUP BY Player
+      ) AS T2 ON T1.Player = T2.Player
+    LEFT JOIN (
+      SELECT COUNT(*) AS Games, Player FROM Games GROUP BY Player
+    ) AS T3 ON T3.Player = T1.Player
+      GROUP BY T1.Player
+    )
+    ORDER BY IFNULL(CS, 0) DESC
     ;
 	
 	SELECT Games.Player AS Player, IFNULL(SUM(IFNULL(PlayerQuitTurn, EndTurn)), 0) AS Turns, COUNT(*) AS Games
