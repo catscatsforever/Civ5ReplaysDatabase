@@ -327,4 +327,190 @@ const sqlQueries = {
 	ORDER BY SUM(IFNULL(PlayerQuitTurn, EndTurn)) DESC
 	;
   `,
+  ["table-belief-adoption"]: `
+	WITH config(tableName) AS (
+		VALUES('config'),
+		('Belief Adoption')
+	)
+	SELECT * FROM config;
+	
+	WITH T2 AS (
+		SELECT *,
+        ROW_NUMBER() OVER (PARTITION BY Value ORDER BY Turn) AS Rnk,
+        COUNT(*) OVER (PARTITION BY BeliefID) AS Cnt
+    	FROM (
+    	    SELECT *, Num1 AS Value FROM ReplayEvents
+    	    WHERE ReplayEventType = 17
+    	    UNION
+    	    SELECT *, Num2 FROM ReplayEvents
+    	    WHERE ReplayEventType = 18
+    	    UNION
+    	    SELECT *, Num3 FROM ReplayEvents
+    	    WHERE ReplayEventType = 18
+    	    UNION
+    	    SELECT *, Num4 FROM ReplayEvents
+    	    WHERE ReplayEventType = 18
+    	    UNION
+    	    SELECT *, Num5 FROM ReplayEvents
+    	    WHERE ReplayEventType = 18
+    	    UNION
+    	    SELECT *, Num2 FROM ReplayEvents
+    	    WHERE ReplayEventType = 19
+    	    UNION
+    	    SELECT *, Num3 FROM ReplayEvents
+    	    WHERE ReplayEventType = 19
+    	) AS T1
+    	JOIN BeliefKeys ON BeliefID = Value
+    	JOIN BeliefTypes ON BeliefTypes.TypeID = BeliefKeys.TypeID
+    	JOIN GameSeeds ON GameSeeds.GameSeed = T1.GameSeed
+    	JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = T1.PlayerID
+    	JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = T1.PlayerID
+    	JOIN CivKeys ON CivKeys.CivID = Players.CivID
+	)
+	SELECT BeliefType AS "Belief Type", BeliefKey AS "Belief",
+	ROUND(AVG(Turn), 1) AS "Average Turn",
+    Median AS "Median Turn",
+    MIN(Turn)||' ('||Player||', '||CivKey||')' AS "Minimum Turn",
+	COUNT(*) AS "Total Times Adopted"
+	FROM T2
+	JOIN (
+	  	SELECT BeliefID AS BID, Turn AS Median
+		FROM T2
+		WHERE T2.Rnk = T2.Cnt / 2 + 1
+	) AS T3 ON T3.BID = BeliefID
+    GROUP BY BeliefID
+    ORDER BY COUNT(*) DESC
+    ;
+  `,
+  ["table-policy-adoption"]: `
+	WITH config(tableName) AS (
+		VALUES('config'),
+		('Policy Adoption')
+	)
+	SELECT * FROM config;
+	
+	WITH T2 AS (
+		SELECT *,
+        ROW_NUMBER() OVER (PARTITION BY Value ORDER BY Turn) AS Rnk,
+        COUNT(*) OVER (PARTITION BY PolicyID) AS Cnt
+    	FROM (
+        	SELECT *, Num2 AS Value FROM ReplayEvents
+        	WHERE ReplayEventType = 61
+    	) AS T1
+	  	JOIN PolicyKeys ON PolicyID = Value
+	  	JOIN PolicyBranches ON PolicyBranches.BranchID = PolicyKeys.BranchID
+    	JOIN GameSeeds ON GameSeeds.GameSeed = T1.GameSeed
+    	JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = T1.PlayerID
+    	JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = T1.PlayerID
+    	JOIN CivKeys ON CivKeys.CivID = Players.CivID
+	)
+	SELECT PolicyBranch AS "Policy Branch", PolicyKey AS "Policy",
+	ROUND(AVG(Turn), 1) AS "Average Turn",
+    Median AS "Median Turn",
+    MIN(Turn)||' ('||Player||', '||CivKey||')' AS "Minimum Turn",
+	COUNT(*) AS "Total Times Adopted"
+	FROM T2
+	JOIN (
+	  	SELECT PolicyID AS PID, Turn AS Median
+		FROM T2
+		WHERE T2.Rnk = T2.Cnt / 2 + 1
+	) AS T3 ON T3.PID = PolicyID
+    GROUP BY PolicyID
+    ORDER BY BranchID
+    ;
+  `,
+  ["table-tech-research"]: `
+	WITH config(tableName) AS (
+		VALUES('config'),
+		('Technology Research')
+	)
+	SELECT * FROM config;
+	
+	WITH T2 AS (
+		SELECT *,
+        ROW_NUMBER() OVER (PARTITION BY Value ORDER BY Turn) AS Rnk,
+        COUNT(*) OVER (PARTITION BY TechnologyID) AS Cnt
+    	FROM (
+        	SELECT *, Num2 AS Value FROM ReplayEvents
+        	WHERE ReplayEventType = 91
+    	) AS T1
+		JOIN TechnologyKeys ON TechnologyID = Value
+		JOIN TechnologyEras ON TechnologyEras.EraID = TechnologyKeys.EraID
+    	JOIN GameSeeds ON GameSeeds.GameSeed = T1.GameSeed
+    	JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = T1.PlayerID
+    	JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = T1.PlayerID
+    	JOIN CivKeys ON CivKeys.CivID = Players.CivID
+	)
+	SELECT EraKey AS "Era", TechnologyKey AS "Technology",
+	ROUND(AVG(Turn), 1) AS "Average Turn",
+    Median AS "Median Turn",
+    MIN(Turn)||' ('||Player||', '||CivKey||')' AS "Minimum Turn",
+	COUNT(*) AS "Total Times Researched"
+	FROM T2
+	JOIN (
+	  	SELECT TechnologyID AS TID, Turn AS Median
+		FROM T2
+		WHERE T2.Rnk = T2.Cnt / 2 + 1
+	) AS T3 ON T3.TID = TechnologyID
+    GROUP BY TechnologyID
+    ORDER BY EraID
+    ;
+  `,
+  ["table-wonder-construction"]: `
+	WITH config(tableName) AS (
+		VALUES('config'),
+		('Wonder Winrate'),
+		('Wonder Construction')
+	)
+	SELECT * FROM config;
+	
+	WITH tmp AS (
+		SELECT COUNT(*) AS ngames FROM GameSeeds
+        WHERE GameSeed NOT NULL
+	)
+	SELECT BuildingKey AS Wonder, IFNULL(ROUND(COUNT(*)*100.0/ngames, 2), 0)||'%' AS Winrate
+	FROM BuildingKeys
+	LEFT JOIN ReplayEvents ON ReplayEvents.Num2 = BuildingKeys.BuildingID
+	JOIN GameSeeds ON GameSeeds.GameSeed = ReplayEvents.GameSeed
+	JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = ReplayEvents.PlayerID
+	JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = Games.PlayerID
+	JOIN CivKeys ON CivKeys.CivID = Players.CivID
+	JOIN tmp 
+	WHERE ReplayEventType = 78 AND Standing = 1 AND TypeID = 2
+	GROUP BY BuildingID
+	ORDER BY ROUND(COUNT(*)*100.0/ngames, 2) DESC
+	;
+	
+	WITH T2 AS (
+		SELECT *,
+        ROW_NUMBER() OVER (PARTITION BY Value ORDER BY Turn) AS Rnk,
+        COUNT(*) OVER (PARTITION BY BuildingClassKeys.BuildingClassID) AS Cnt
+    	FROM (
+        	SELECT *, Num2 AS Value FROM ReplayEvents
+        	WHERE ReplayEventType = 78
+    	) AS T1
+		JOIN BuildingKeys ON BuildingID = Value
+		JOIN BuildingClassKeys ON BuildingClassKeys.BuildingClassID = BuildingKeys.BuildingClassID
+	  	JOIN BuildingClassTypes ON BuildingClassTypes.TypeID = BuildingKeys.TypeID
+    	JOIN GameSeeds ON GameSeeds.GameSeed = T1.GameSeed
+    	JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = T1.PlayerID
+    	JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = T1.PlayerID
+    	JOIN CivKeys ON CivKeys.CivID = Players.CivID
+	)
+	SELECT BuildingClassType AS "Wonder Type", BuildingClassKey AS "Building",
+	ROUND(AVG(Turn), 1) AS "Average Turn",
+    Median AS "Median Turn",
+    MIN(Turn)||' ('||Player||', '||CivKey||')' AS "Minimum Turn",
+	COUNT(*) AS "Total Times Constructed"
+	FROM T2
+	JOIN (
+	  	SELECT BuildingID AS BID, Turn AS Median
+		FROM T2
+		WHERE T2.Rnk = T2.Cnt / 2 + 1
+	) AS T3 ON T3.BID = BuildingID
+	WHERE TypeID IN (1,2)
+    GROUP BY BuildingClassID
+    ORDER BY TypeID, Median
+    ;
+  `,
 };

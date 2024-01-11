@@ -874,7 +874,7 @@ function doSankeyPlot(e) {
 	}
 	else if (sankeyGroups2Rad.checked) {
 		numGroups = 2;
-		groupSelector = 'WinID > 1';
+		groupSelector = 'WinID > 0';
 		groupLabels = '["Losers","Winners"]';
 	}
 	else if (sankeyGroups3Rad.checked) {
@@ -897,26 +897,24 @@ function doSankeyPlot(e) {
 			;
 			SELECT * FROM PolicyBranches
 			;
-			WITH
-				data AS (
-					SELECT *
-					FROM PoliciesChanges
-					JOIN PolicyKeys ON PolicyKeys.PolicyID = PoliciesChanges.PolicyID
-        			JOIN GameSeeds ON GameSeeds.GameSeed = PoliciesChanges.GameSeed
-        			JOIN CivKeys ON CivKeys.CivID = PoliciesChanges.CivID
-        			JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.CivID = CivKeys.CivID
-					WHERE ((PoliciesChanges.PolicyID IN (0,6,12,18,24,30,36,49,56)) OR (PoliciesChanges.PolicyID > 62)) AND value = 1
-					GROUP BY PoliciesChanges.GameSeed, PoliciesChanges.CivID, BranchID
-					ORDER BY PoliciesChanges.GameSeed, PoliciesChanges.CivID
-     		)
-     		SELECT '['||Arr||']', ${groupSelector} AS seq FROM (
-     			SELECT *, GROUP_CONCAT(BranchID)
-     			OVER (PARTITION BY GameSeed,CivID ORDER BY Turn ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS Arr
-     			FROM data
-     		)
-     		GROUP BY GameSeed, CivID
-     		HAVING COUNT(*) > 1
-			;
+            SELECT '['||Arr||']', ${groupSelector} AS seq FROM (
+                SELECT *, GROUP_CONCAT(BranchID)
+                OVER (PARTITION BY GameSeed, PlayerID ORDER BY Turn, TimeStamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS Arr
+                FROM (
+                    SELECT *
+                    FROM ReplayEvents
+                    JOIN PolicyKeys ON PolicyID = Num2
+                    JOIN GameSeeds ON GameSeeds.GameSeed = ReplayEvents.GameSeed
+                    JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = ReplayEvents.PlayerID
+                    JOIN CivKeys ON CivKeys.CivID = Players.CivID
+                    JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = ReplayEvents.PlayerID
+                    WHERE ReplayEventType = 61
+                    GROUP BY ReplayEvents.GameSeed, Players.PlayerID, BranchID
+                )
+            )
+            GROUP BY GameSeed, CivID
+            HAVING COUNT(*) > 1
+            ;
 
 		`;
 		worker.postMessage({ action: 'exec', id: 0, sql: msg });
@@ -936,25 +934,22 @@ function doSankeyPlot(e) {
 			;
 			SELECT * FROM TechnologyKeys
 			;
-			WITH
-				data AS (
-					SELECT *
-					FROM TechnologiesChanges
-        			JOIN GameSeeds ON GameSeeds.GameSeed = TechnologiesChanges.GameSeed
-        			JOIN CivKeys ON CivKeys.CivID = TechnologiesChanges.CivID
-        			JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.CivID = CivKeys.CivID
-					WHERE TechnologyID IN (0,24,26,32,33,34,42,43,45,47,53,54,62) AND value = 1
-					GROUP BY TechnologiesChanges.GameSeed, TechnologiesChanges.CivID, Turn
-					ORDER BY TechnologiesChanges.GameSeed, TechnologiesChanges.CivID
-			)
 			SELECT '['||Arr||']', ${groupSelector} AS seq FROM (
-				SELECT *, GROUP_CONCAT(TechnologyID)
-				OVER (PARTITION BY GameSeed,CivID ORDER BY Turn ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS Arr
-				FROM data
-			)
-			GROUP BY GameSeed, CivID
-			HAVING COUNT(*) > 1
-			;
+                SELECT *, GROUP_CONCAT(Num2)
+                OVER (PARTITION BY GameSeed, PlayerID ORDER BY Turn, TimeStamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS Arr
+                FROM (
+                    SELECT *
+                    FROM ReplayEvents
+                    JOIN GameSeeds ON GameSeeds.GameSeed = ReplayEvents.GameSeed
+                    JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = ReplayEvents.PlayerID
+                    JOIN CivKeys ON CivKeys.CivID = Players.CivID
+                    JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = ReplayEvents.PlayerID
+                    WHERE ReplayEventType = 91 AND Num2 IN (0,24,26,32,33,34,42,43,45,47,53,54,62)
+                )
+            )
+            GROUP BY GameSeed, CivID
+            HAVING COUNT(*) > 1
+            ;
 		`;
 		worker.postMessage({ action: 'exec', id: 0, sql: msg });
 		return;
@@ -1012,25 +1007,24 @@ function doSankeyPlot(e) {
 		;
 		SELECT * FROM PolicyKeys
 		;
-		WITH
-			data AS (
-				SELECT *
-				FROM PoliciesChanges
-        		JOIN GameSeeds ON GameSeeds.GameSeed = PoliciesChanges.GameSeed
-        		JOIN CivKeys ON CivKeys.CivID = PoliciesChanges.CivID
-        		JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.CivID = CivKeys.CivID
-				WHERE PolicyID IN (${pols}) AND value = 1
-				GROUP BY PoliciesChanges.GameSeed, PoliciesChanges.CivID, Turn, PolicyID
-				ORDER BY PoliciesChanges.GameSeed, PoliciesChanges.CivID
-		)
-		SELECT '['||Arr||']' AS seq, ${groupSelector} FROM (
-			SELECT *, GROUP_CONCAT(PolicyID)
-			OVER (PARTITION BY GameSeed,CivID ORDER BY Turn ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS Arr
-			FROM data
-		)
-		GROUP BY GameSeed, CivID
-		HAVING COUNT(*) > 1
-		;
+		SELECT '['||Arr||']', ${groupSelector} AS seq FROM (
+            SELECT *, GROUP_CONCAT(PolicyID)
+            OVER (PARTITION BY GameSeed, PlayerID ORDER BY Turn, TimeStamp ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS Arr
+            FROM (
+                SELECT *
+                FROM ReplayEvents
+                JOIN PolicyKeys ON PolicyID = Num2
+                JOIN GameSeeds ON GameSeeds.GameSeed = ReplayEvents.GameSeed
+                JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = ReplayEvents.PlayerID
+                JOIN CivKeys ON CivKeys.CivID = Players.CivID
+                JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = ReplayEvents.PlayerID
+                WHERE ReplayEventType = 61 AND PolicyID IN (${pols})
+                GROUP BY ReplayEvents.GameSeed, Players.PlayerID, PolicyID
+            )
+        )
+        GROUP BY GameSeed, CivID
+        HAVING COUNT(*) > 1
+        ;
 	`;
 	worker.postMessage({ action: 'exec', id: 0, sql: msg });
 }
@@ -1046,389 +1040,10 @@ document.querySelectorAll(".sankey-clk").forEach(el => {
 
 tableHallOfFameBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-hall-of-fame"]; execute(r); editor.setValue(r); }, true);
 
-tableBeliefAdoptionBtn.addEventListener("click", () => { noerror(); let r = `
-	WITH config(tableName) AS (
-		VALUES('config'),
-		('Average Turn of Belief Adoption'),
-		('Median Turn of Belief Adoption'),
-		('Minimum Turn of Belief Adoption'),
-		('Number Times of Belief Adoption')
-	)
-	SELECT * FROM config;
-	
-	with RankedTable as (
-	SELECT *
-	, row_number() OVER (PARTITION by BeliefID order by Turn) as rnk
-	, count(*) over (PARTITION by BeliefID) as cnt
-	
-	FROM BeliefsChanges
-	WHERE Value = 1
-	)
+tableBeliefAdoptionBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-belief-adoption"]; execute(r); editor.setValue(r); }, true);
 
-	SELECT BeliefType as "Belief Type", BeliefKey AS Belief, round(avg(Turn), 1) as "Average Turn"
+tablePolicyAdoptionBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-policy-adoption"]; execute(r); editor.setValue(r); }, true);
 
-	FROM DataSets
-	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
-	JOIN BeliefKeys ON BeliefKeys.BeliefID = RankedTable.BeliefID
-	JOIN CivKeys ON CivKeys.CivID = RankedTable.CivID
-	JOIN GameSeeds ON GameSeeds.GameSeed = RankedTable.GameSeed
-	JOIN Games ON Games.CivID = CivKeys.CivID AND Games.GameID = GameSeeds.GameID
-	JOIN BeliefTypes ON BeliefTypes.TypeID = BeliefKeys.TypeID
-	GROUP BY RankedTable.BeliefID
-	ORDER BY BeliefKeys.TypeID, "Average Turn"
-	;
-	
-	with RankedTable as (
-	SELECT *
-	, row_number() OVER (PARTITION by BeliefID order by Turn) as rnk
-	, count(*) over (PARTITION by BeliefID) as cnt
-	
-	FROM BeliefsChanges
-	WHERE Value = 1
-	)
-	
-	SELECT BeliefType as "Belief Type", BeliefKey AS Belief, avg(Turn) OVER (PARTITION by BeliefKeys.BeliefID) as "Median Turn"
-	
-	FROM DataSets
-	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
-	JOIN BeliefKeys ON BeliefKeys.BeliefID = RankedTable.BeliefID
-	JOIN CivKeys ON CivKeys.CivID = RankedTable.CivID
-	JOIN GameSeeds ON GameSeeds.GameSeed = RankedTable.GameSeed
-	JOIN Games ON Games.CivID = CivKeys.CivID AND Games.GameID = GameSeeds.GameID
-	JOIN BeliefTypes ON BeliefTypes.TypeID = BeliefKeys.TypeID
-	WHERE Value = 1 and 2*rnk - 1 = cnt or 2*rnk = cnt or 2*rnk - 2 = cnt
-	GROUP BY RankedTable.BeliefID
-	ORDER BY BeliefKeys.TypeID, "Median Turn"
-	;
-	
-	with RankedTable as (
-	SELECT *
-	, row_number() OVER (PARTITION by BeliefID order by Turn) as rnk
-	, count(*) over (PARTITION by BeliefID) as cnt
-	
-	FROM BeliefsChanges
-	WHERE Value = 1
-	)
-	
-	SELECT BeliefType as "Belief Type", BeliefKey AS Belief, min(Turn) as "Minimum Turn", Player, CivKey
+tableTechResearchBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-tech-research"]; execute(r); editor.setValue(r); }, true);
 
-	FROM DataSets
-	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
-	JOIN BeliefKeys ON BeliefKeys.BeliefID = RankedTable.BeliefID
-	JOIN CivKeys ON CivKeys.CivID = RankedTable.CivID
-	JOIN GameSeeds ON GameSeeds.GameSeed = RankedTable.GameSeed
-	JOIN Games ON Games.CivID = CivKeys.CivID AND Games.GameID = GameSeeds.GameID
-	JOIN BeliefTypes ON BeliefTypes.TypeID = BeliefKeys.TypeID
-	GROUP BY RankedTable.BeliefID
-	ORDER BY BeliefKeys.TypeID, "Minimum Turn"
-	;
-	
-	with RankedTable as (
-	SELECT *
-	, row_number() OVER (PARTITION by BeliefID order by Turn) as rnk
-	, count(*) over (PARTITION by BeliefID) as cnt
-	
-	FROM BeliefsChanges
-	WHERE Value = 1
-	)
-	
-	SELECT BeliefType as "Belief Type", BeliefKey AS Belief, count(Turn) as "Count"
-	
-	FROM DataSets
-	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
-	JOIN BeliefKeys ON BeliefKeys.BeliefID = RankedTable.BeliefID
-	JOIN CivKeys ON CivKeys.CivID = RankedTable.CivID
-	JOIN GameSeeds ON GameSeeds.GameSeed = RankedTable.GameSeed
-	JOIN Games ON Games.CivID = CivKeys.CivID AND Games.GameID = GameSeeds.GameID
-	JOIN BeliefTypes ON BeliefTypes.TypeID = BeliefKeys.TypeID
-	GROUP BY RankedTable.BeliefID
-	ORDER BY BeliefKeys.TypeID, "Count" DESC
-	;
-	`; execute(r); editor.setValue(r); }, true);
-
-tablePolicyAdoptionBtn.addEventListener("click", () => { noerror(); let r = `
-	WITH config(tableName) AS (
-		VALUES('config'),
-		('Average Turn of Policy Adoption'),
-		('Median Turn of Policy Adoption'),
-		('Minimum Turn of Policy Adoption'),
-		('Number Times of Policy Adoption')
-	)
-	SELECT * FROM config;
-	
-	with RankedTable as (
-	SELECT *
-	, row_number() OVER (PARTITION by PolicyID order by Turn) as rnk
-	, count(*) over (PARTITION by PolicyID) as cnt
-	
-	FROM PoliciesChanges
-	WHERE Value = 1
-	)
-	
-	SELECT PolicyBranch as "Policy Branch", PolicyKey AS Policy, Round(avg(Turn), 1) as "Average Turn"
-	
-	FROM DataSets
-	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
-	JOIN PolicyKeys ON PolicyKeys.PolicyID = RankedTable.PolicyID
-	JOIN CivKeys ON CivKeys.CivID = RankedTable.CivID
-	JOIN GameSeeds ON GameSeeds.GameSeed = RankedTable.GameSeed
-	JOIN Games ON Games.CivID = CivKeys.CivID AND Games.GameID = GameSeeds.GameID
-	JOIN PolicyBranches ON PolicyBranches.BranchID = PolicyKeys.BranchID
-	GROUP BY RankedTable.PolicyID
-	ORDER BY PolicyKeys.BranchID, "Average Turn"
-	;
-	
-	with RankedTable as (
-	SELECT *
-	, row_number() OVER (PARTITION by PolicyID order by Turn) as rnk
-	, count(*) over (PARTITION by PolicyID) as cnt
-	
-	FROM PoliciesChanges
-	WHERE Value = 1
-	)
-	
-	SELECT PolicyBranch as "Policy Branch", PolicyKey AS Policy, avg(Turn) OVER (PARTITION by PolicyKeys.PolicyID) as "Median Turn"
-	
-	FROM DataSets
-	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
-	JOIN PolicyKeys ON PolicyKeys.PolicyID = RankedTable.PolicyID
-	JOIN CivKeys ON CivKeys.CivID = RankedTable.CivID
-	JOIN GameSeeds ON GameSeeds.GameSeed = RankedTable.GameSeed
-	JOIN Games ON Games.CivID = CivKeys.CivID AND Games.GameID = GameSeeds.GameID
-	JOIN PolicyBranches ON PolicyBranches.BranchID = PolicyKeys.BranchID
-	WHERE Value = 1 and 2*rnk - 1 = cnt or 2*rnk = cnt or 2*rnk - 2 = cnt
-	GROUP BY RankedTable.PolicyID
-	ORDER BY PolicyKeys.BranchID, "Median Turn"
-	;
-	
-	with RankedTable as (
-	SELECT *
-	, row_number() OVER (PARTITION by PolicyID order by Turn) as rnk
-	, count(*) over (PARTITION by PolicyID) as cnt
-	
-	FROM PoliciesChanges
-	WHERE Value = 1
-	)
-	
-	SELECT PolicyBranch as "Policy Branch", PolicyKey AS Policy, min(Turn) as "Minimum Turn", Player, CivKey
-
-	FROM DataSets
-	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
-	JOIN PolicyKeys ON PolicyKeys.PolicyID = RankedTable.PolicyID
-	JOIN CivKeys ON CivKeys.CivID = RankedTable.CivID
-	JOIN GameSeeds ON GameSeeds.GameSeed = RankedTable.GameSeed
-	JOIN Games ON Games.CivID = CivKeys.CivID AND Games.GameID = GameSeeds.GameID
-	JOIN PolicyBranches ON PolicyBranches.BranchID = PolicyKeys.BranchID
-	GROUP BY RankedTable.PolicyID
-	ORDER BY PolicyKeys.BranchID, "Minimum Turn"
-	;
-	
-	with RankedTable as (
-	SELECT *
-	, row_number() OVER (PARTITION by PolicyID order by Turn) as rnk
-	, count(*) over (PARTITION by PolicyID) as cnt
-	
-	FROM PoliciesChanges
-	WHERE Value = 1
-	)
-	
-	SELECT PolicyBranch as "Policy Branch", PolicyKey AS Policy, count(Turn) as "Count"
-	
-	FROM DataSets
-	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
-	JOIN PolicyKeys ON PolicyKeys.PolicyID = RankedTable.PolicyID
-	JOIN CivKeys ON CivKeys.CivID = RankedTable.CivID
-	JOIN GameSeeds ON GameSeeds.GameSeed = RankedTable.GameSeed
-	JOIN Games ON Games.CivID = CivKeys.CivID AND Games.GameID = GameSeeds.GameID
-	JOIN PolicyBranches ON PolicyBranches.BranchID = PolicyKeys.BranchID
-	GROUP BY RankedTable.PolicyID
-	ORDER BY PolicyKeys.BranchID, "Count" DESC
-	;
-	`; execute(r); editor.setValue(r); }, true);
-
-tableTechResearchBtn.addEventListener("click", () => { noerror(); let r = `
-	WITH config(tableName) AS (
-		VALUES('config'),
-		('Average Turn of Technology Research'),
-		('Median Turn of Technology Research'),
-		('Minimum Turn of Technology Research')
-	)
-	SELECT * FROM config;
-	
-	with RankedTable as (
-	SELECT *
-	, row_number() OVER (PARTITION by TechnologyID order by Turn) as rnk
-	, count(*) over (PARTITION by TechnologyID) as cnt
-	
-	FROM TechnologiesChanges
-	WHERE TechnologyID != 0 and Value = 1
-	)
-	
-	SELECT EraKey as "Era", TechnologyKey AS Technology, round(avg(Turn), 1) as "Average Turn"
-	
-	FROM DataSets
-	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
-	JOIN TechnologyKeys ON TechnologyKeys.TechnologyID = RankedTable.TechnologyID
-	JOIN CivKeys ON CivKeys.CivID = RankedTable.CivID
-	JOIN GameSeeds ON GameSeeds.GameSeed = RankedTable.GameSeed
-	JOIN Games ON Games.CivID = CivKeys.CivID AND Games.GameID = GameSeeds.GameID
-	JOIN TechnologyEras ON TechnologyEras.EraID = TechnologyKeys.EraID
-	GROUP BY RankedTable.TechnologyID
-	ORDER BY "Average Turn"
-	;
-	
-	with RankedTable as (
-	SELECT *
-	, row_number() OVER (PARTITION by TechnologyID order by Turn) as rnk
-	, count(*) over (PARTITION by TechnologyID) as cnt
-	
-	FROM TechnologiesChanges
-	WHERE TechnologyID != 0 and Value = 1
-	)
-	
-	SELECT EraKey as "Era", TechnologyKey AS Technology, avg(Turn) OVER (PARTITION by TechnologyKeys.TechnologyID) as "Median Turn"
-	
-	FROM DataSets
-	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
-	JOIN TechnologyKeys ON TechnologyKeys.TechnologyID = RankedTable.TechnologyID
-	JOIN CivKeys ON CivKeys.CivID = RankedTable.CivID
-	JOIN GameSeeds ON GameSeeds.GameSeed = RankedTable.GameSeed
-	JOIN Games ON Games.CivID = CivKeys.CivID AND Games.GameID = GameSeeds.GameID
-	JOIN TechnologyEras ON TechnologyEras.EraID = TechnologyKeys.EraID
-	WHERE Value = 1 and 2*rnk - 1 = cnt or 2*rnk = cnt or 2*rnk - 2 = cnt
-	GROUP BY RankedTable.TechnologyID
-	ORDER BY "Median Turn"
-	;
-	
-	with RankedTable as (
-	SELECT *
-	, row_number() OVER (PARTITION by TechnologyID order by Turn) as rnk
-	, count(*) over (PARTITION by TechnologyID) as cnt
-	
-	FROM TechnologiesChanges
-	WHERE TechnologyID != 0 and Value = 1
-	)
-	
-	SELECT EraKey as "Era", TechnologyKey AS Technology, min(Turn) as "Minimum Turn", Player, CivKey
-	
-	FROM DataSets
-	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
-	JOIN TechnologyKeys ON TechnologyKeys.TechnologyID = RankedTable.TechnologyID
-	JOIN CivKeys ON CivKeys.CivID = RankedTable.CivID
-	JOIN GameSeeds ON GameSeeds.GameSeed = RankedTable.GameSeed
-	JOIN Games ON Games.CivID = CivKeys.CivID AND Games.GameID = GameSeeds.GameID
-	JOIN TechnologyEras ON TechnologyEras.EraID = TechnologyKeys.EraID
-	GROUP BY RankedTable.TechnologyID
-	ORDER BY "Minimum Turn"
-	;
-	`; execute(r); editor.setValue(r); }, true);
-
-tableWonderConstructionBtn.addEventListener("click", () => { noerror(); let r = `
-	WITH config(tableName) AS (
-		VALUES('config'),
-		('Wonder Winrate'),
-		('Average Turn of Wonder Construction'),
-		('Median Turn of Wonder Construction'),
-		('Minimum Turn of Wonder Construction')
-	)
-	SELECT * FROM config;
-	
-
-	WITH tmp AS (
-		SELECT COUNT(*) AS ngames FROM GameSeeds
-	)
-	SELECT BuildingKey AS Wonder, IFNULL(ROUND(COUNT(*)*100.0/ngames, 2), 0)||'%' AS Winrate
-	FROM ReplayEvents
-	JOIN BuildingKeys on BuildingKeys.BuildingID = ReplayEvents.Num2
-	JOIN GameSeeds ON GameSeeds.GameSeed = ReplayEvents.GameSeed
-	JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = ReplayEvents.PlayerID
-	JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = Games.PlayerID
-	JOIN CivKeys ON CivKeys.CivID = Players.CivID
-	JOIN tmp 
-	WHERE ReplayEventType = 78 AND Standing = 1 AND TypeID = 2
-	GROUP BY BuildingID
-	ORDER BY ROUND(COUNT(*)*100.0/ngames, 2) DESC
-	;
-	
-	with RankedTable as (
-	SELECT *
-	, row_number() OVER (PARTITION by BuildingClassID order by Turn) as rnk
-	, count(*) over (PARTITION by BuildingClassID) as cnt
-	 
-	FROM BuildingClassesChanges as BuildingClassesChangesOut
-	WHERE BuildingClassID != 46 and Value = 1 and Turn = (
-		SELECT min(sub.Turn)
-		FROM BuildingClassesChanges as sub
-		WHERE sub.Value = 1 and BuildingClassesChangesOut.BuildingClassID = sub.BuildingClassID and BuildingClassesChangesOut.GameSeed = sub.GameSeed
-		)
-	)
-
-	SELECT BuildingClassType AS "Wonder Type", BuildingClassKey AS Building, round(avg(Turn),1) as "Average Turn"
-
-	FROM DataSets
-	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
-	JOIN BuildingClassKeys ON BuildingClassKeys.BuildingClassID = RankedTable.BuildingClassID
-	JOIN CivKeys ON CivKeys.CivID = RankedTable.CivID
-	JOIN GameSeeds ON GameSeeds.GameSeed = RankedTable.GameSeed
-	JOIN Games ON Games.CivID = CivKeys.CivID AND Games.GameID = GameSeeds.GameID
-	JOIN BuildingClassTypes ON BuildingClassTypes.TypeID = BuildingClassKeys.TypeID
-	GROUP BY RankedTable.BuildingClassID
-	HAVING BuildingClassKeys.TypeID in (1,2)
-	ORDER BY BuildingClassKeys.TypeID, "Average Turn"
-	;
-	
-	with RankedTable as (
-	SELECT *
-	, row_number() OVER (PARTITION by BuildingClassID order by Turn) as rnk
-	, count(*) over (PARTITION by BuildingClassID) as cnt
-	 
-	FROM BuildingClassesChanges as BuildingClassesChangesOut
-	WHERE BuildingClassID != 46 and Value = 1 and Turn = (
-		SELECT min(sub.Turn)
-		FROM BuildingClassesChanges as sub
-		WHERE sub.Value = 1 and BuildingClassesChangesOut.BuildingClassID = sub.BuildingClassID and BuildingClassesChangesOut.GameSeed = sub.GameSeed
-		)
-	)
-
-	SELECT BuildingClassType AS "Wonder Type", BuildingClassKey AS Building, avg(Turn) as "Median Turn"
-
-	FROM DataSets
-	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
-	JOIN BuildingClassKeys ON BuildingClassKeys.BuildingClassID = RankedTable.BuildingClassID
-	JOIN CivKeys ON CivKeys.CivID = RankedTable.CivID
-	JOIN GameSeeds ON GameSeeds.GameSeed = RankedTable.GameSeed
-	JOIN Games ON Games.CivID = CivKeys.CivID AND Games.GameID = GameSeeds.GameID
-	JOIN BuildingClassTypes ON BuildingClassTypes.TypeID = BuildingClassKeys.TypeID
-	WHERE 2*rnk - 1 = cnt or 2*rnk = cnt or 2*rnk - 2 = cnt
-	GROUP BY RankedTable.BuildingClassID
-	HAVING BuildingClassKeys.TypeID in (1,2)
-	ORDER BY BuildingClassKeys.TypeID, "Median Turn"
-	;
-	
-	with RankedTable as (
-	SELECT *
-	, row_number() OVER (PARTITION by BuildingClassID order by Turn) as rnk
-	, count(*) over (PARTITION by BuildingClassID) as cnt
-	 
-	FROM BuildingClassesChanges as BuildingClassesChangesOut
-	WHERE BuildingClassID != 46 and Value = 1 and Turn = (
-		SELECT min(sub.Turn)
-		FROM BuildingClassesChanges as sub
-		WHERE sub.Value = 1 and BuildingClassesChangesOut.BuildingClassID = sub.BuildingClassID and BuildingClassesChangesOut.GameSeed = sub.GameSeed
-		)
-	)
-
-	SELECT BuildingClassType AS "Wonder Type", BuildingClassKey AS Building, min(Turn) as "Minimum Turn", Player, CivKey
-
-	FROM DataSets
-	JOIN RankedTable ON RankedTable.DataSetID = DataSets.DataSetID
-	JOIN BuildingClassKeys ON BuildingClassKeys.BuildingClassID = RankedTable.BuildingClassID
-	JOIN CivKeys ON CivKeys.CivID = RankedTable.CivID
-	JOIN GameSeeds ON GameSeeds.GameSeed = RankedTable.GameSeed
-	JOIN Games ON Games.CivID = CivKeys.CivID AND Games.GameID = GameSeeds.GameID
-	JOIN BuildingClassTypes ON BuildingClassTypes.TypeID = BuildingClassKeys.TypeID
-	GROUP BY RankedTable.BuildingClassID
-	HAVING BuildingClassKeys.TypeID in (1,2)
-	ORDER BY BuildingClassKeys.TypeID, "Minimum Turn"
-	;
-	`; execute(r); editor.setValue(r); }, true);
+tableWonderConstructionBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-wonder-construction"]; execute(r); editor.setValue(r); }, true);

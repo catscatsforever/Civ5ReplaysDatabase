@@ -1086,7 +1086,7 @@ function doSankeyPlot(e) {
 	}
 	else if (sankeyGroups2Rad.checked) {
 		numGroups = 2;
-		groupSelector = 'WinID > 1';
+		groupSelector = 'WinID > 0';
 		groupLabels = '["Losers","Winners"]';
 	}
 	else if (sankeyGroups3Rad.checked) {
