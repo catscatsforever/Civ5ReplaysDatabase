@@ -224,10 +224,11 @@ const sqlQueries = {
 	
 	SELECT PolicyBranch, Turn, COUNT(*) FROM (
 	SELECT Turn, ReplayEventType, Num2 AS Value FROM ReplayEvents
-	WHERE ReplayEventType = 75
+	WHERE ReplayEventType = 61
 	)
-	JOIN PolicyBranches ON BranchID = Value
-	GROUP BY Turn, BranchID
+    JOIN PolicyKeys ON PolicyID = Value
+    JOIN PolicyBranches ON PolicyBranches.BranchID = PolicyKeys.BranchID
+    GROUP BY Turn, PolicyBranches.BranchID
 	;
   `,
   ["plot-bar-techs-time"]: `
