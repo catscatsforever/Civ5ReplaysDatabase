@@ -309,6 +309,7 @@ th, td {
 footer {
     font-size:.8em;
     color: var(--text-color);
+    margin: 5px 10px;
 }
 
 p,h1 {
@@ -597,5 +598,10 @@ svg.icon:hover > path, a.modebar-btn.active path {
 .sref {
     font-size: 2em;
     margin: 5px 10px;
-    color: var(--text-color);
+    color: var(--text-color-alpha2);
 }
+.sttl {
+     font-size: 2em;
+     margin: 5px 10px;
+     color: var(--text-color);
+ }

@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf8">
-  <title>CIV 5 Replays Database (Dev)</title>
+  <title>CIV 5 Replays Database</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.css" type="text/css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror-theme-vars/base.css" type="text/css">
   <link rel="stylesheet" href="style.css" type="text/css">
@@ -15,7 +15,7 @@
 
 <body>
 
-  <h1>CIV 5 Replays Database (Dev)</h1>
+  <h1>CIV 5 Replays Database</h1>
   <input type="checkbox" id="darkThemeToggle"/>
   <label for="darkThemeToggle" id="darkThemeToggleLabel">
     <svg class="icon-light" width="40px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
@@ -34,9 +34,8 @@
   </label>
 
   <main>
-    <div id="error" class="error"></div>
     <div id="inputs" style="display: none">
-      <label class="labelTab TabsFiller"> </label>
+      <label class="labelTab TabsFiller">!</label>
       <input class="radioTab plot-clk" id="tab1" type="radio" name="tabs" checked>
       <label class="labelTab" for="tab1">Plot by Game</label>
       <input class="radioTab plot-clk" id="tab2" type="radio" name="tabs">
@@ -45,10 +44,9 @@
       <label class="labelTab" for="tab3">Compare Average</label>
       <input class="radioTab plot-clk" id="tab4" type="radio" name="tabs">
       <label class="labelTab" for="tab4">Plot Distribution</label>
-      <input class="radioTab" id="tab5" type="radio" name="tabs">
+      <input class="radioTab plot-clk" id="tab5" type="radio" name="tabs">
       <label class="labelTab" for="tab5">Tables</label>
-      <input class="radioTab" id="tab6" type="radio" name="tabs">
-      <label class="labelTab" for="tab6">Events</label>
+      <div id="error" class="error"></div>
       <section id="content1">
         <span class="sp">Choose game:</span>
         <div class="dropdown">
@@ -153,8 +151,6 @@
         <br>
         <pre id="output"></pre>
       </section>
-      <section id="content6">
-      </section>
 
       <div id="plotOut"><!-- Plotly chart will be drawn inside this DIV --></div>
     </div>
@@ -166,11 +162,11 @@
 
   <footer>
     <label id="dbsize"></label>
-    <a href='index.html' class="sref">Summer 2023 Tournament</a>
+    <a href='index.html' class="sref">Winter 2024 Tournament</a>
+    <span class="sttl">Summer 2023 Tournament</span>
   </footer>
 
-  <script type="text/javascript" src="data.js"></script>
-  <script type="text/javascript" src="gui-dev.js"></script>
+  <script type="text/javascript" src="gui.js"></script>
 </body>
 
 </html>
