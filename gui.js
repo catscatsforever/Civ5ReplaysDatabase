@@ -135,7 +135,8 @@ const IconMarkups = {
 	ICON_GREAT_ARTIST: 'Civ5Icon.GreatArtist.png',
 	ICON_GREAT_MUSICIAN: 'Civ5Icon.GreatMusician.png',
 	ICON_GREAT_WRITER: 'Civ5Icon.GreatWriter.png',
-	ICON_GREAT_ADMIRAL: 'Civ5Icon.GreatAdmiral.png'
+	ICON_GREAT_ADMIRAL: 'Civ5Icon.GreatAdmiral.png',
+	ICON_TOURISM: 'Civ5Icon.Tourism.png'
 };
 let plotlyUserSettings = {
 	'yaxis.type': 'linear'
