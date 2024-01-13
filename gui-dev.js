@@ -596,7 +596,7 @@ let tableCreate = function () {
 	function valconcat(vals, tagName) {
 		if (vals.length === 0) return '';
 		let open = '<' + tagName + '>', close = '</' + tagName + '>';
-		return open + vals.join(close + open) + close;
+		return open + vals.join(close + open).replace(/\[([^\]]+)\]/g, (_, a) => IconMarkups[a] ? `<img class="ico" src="images/${IconMarkups[a]}"/>` : `[${a}]`) + close;
 	}
 	return function (name, columns, values) {
 		let div = document.createElement('div');
