@@ -415,30 +415,50 @@ const sqlQueries = {
 		('Number Times of Policy Adoption')
 	)
 	SELECT * FROM config;
-	
-	DROP TABLE IF EXISTS T2;
-	
-	CREATE TEMPORARY TABLE T2 AS SELECT * FROM (
-		SELECT *,
+  
+  DROP TABLE IF EXISTS T2;
+  DROP TABLE IF EXISTS T3;
+  
+  CREATE TEMPORARY TABLE T2 AS SELECT * FROM (
+    SELECT *,
         ROW_NUMBER() OVER (PARTITION BY Value ORDER BY Turn) AS Rnk,
         COUNT(*) OVER (PARTITION BY PolicyID) AS Cnt
-    	FROM (
-        	SELECT *, Num2 AS Value FROM ReplayEvents
-        	WHERE ReplayEventType = 61
-    	) AS T1
-	  	JOIN PolicyKeys ON PolicyID = Value
-	  	JOIN PolicyBranches ON PolicyBranches.BranchID = PolicyKeys.BranchID
-    	JOIN GameSeeds ON GameSeeds.GameSeed = T1.GameSeed
-    	JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = T1.PlayerID
-    	JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = T1.PlayerID
-    	JOIN CivKeys ON CivKeys.CivID = Players.CivID
-	);
-	
-	SELECT PolicyBranch AS "Policy Branch", PolicyKey AS "Policy",
-	ROUND(AVG(Turn), 1) AS "Average Turn"
-	FROM T2
+        FROM (
+            SELECT *, Num2 AS Value FROM ReplayEvents
+            WHERE ReplayEventType = 61
+        ) AS T1
+        JOIN PolicyKeys ON PolicyID = Value
+        JOIN PolicyBranches ON PolicyBranches.BranchID = PolicyKeys.BranchID
+        JOIN GameSeeds ON GameSeeds.GameSeed = T1.GameSeed
+        JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = T1.PlayerID
+        JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = T1.PlayerID
+        JOIN CivKeys ON CivKeys.CivID = Players.CivID
+  );
+  CREATE TEMPORARY TABLE T3 AS SELECT * FROM (
+    SELECT *,
+        ROW_NUMBER() OVER (PARTITION BY Value ORDER BY Turn) AS Rnk,
+        COUNT(*) OVER (PARTITION BY BranchID) AS Cnt
+        FROM (
+            SELECT *, Num2 AS Value FROM ReplayEvents
+            WHERE ReplayEventType = 75
+        ) AS T1
+        JOIN PolicyBranches ON BranchID = Value
+        JOIN GameSeeds ON GameSeeds.GameSeed = T1.GameSeed
+        JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = T1.PlayerID
+        JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = T1.PlayerID
+        JOIN CivKeys ON CivKeys.CivID = Players.CivID
+  );
+  
+  SELECT PolicyBranch AS "Policy Branch", PolicyKey AS "Policy",
+  ROUND(AVG(Turn), 1) AS "Average Turn"
+  FROM T2
     GROUP BY PolicyID
-    ORDER BY BranchID;
+  UNION
+  SELECT PolicyBranch AS "Policy Branch", PolicyBranch AS "Policy",
+  ROUND(AVG(Turn), 1) AS "Average Turn"
+  FROM T3
+    GROUP BY BranchID
+    ORDER BY PolicyBranch;
 	
 	SELECT PolicyBranch AS "Policy Branch", PolicyKey AS "Policy",
     Median AS "Median Turn"
@@ -447,21 +467,41 @@ const sqlQueries = {
 	  	SELECT PolicyID AS PID, Turn AS Median
 		FROM T2
 		WHERE T2.Rnk = T2.Cnt / 2 + 1
-	) AS T3 ON T3.PID = PolicyID
+	) AS T4 ON T4.PID = PolicyID
     GROUP BY PolicyID
-    ORDER BY BranchID;
+  UNION
+  SELECT PolicyBranch AS "Policy Branch", PolicyBranch AS "Policy",
+    Median AS "Median Turn"
+  FROM T2
+  JOIN (
+      SELECT BranchID AS PID, Turn AS Median
+    FROM T3
+    WHERE T3.Rnk = T3.Cnt / 2 + 1
+  ) AS T5 ON T5.PID = BranchID
+    GROUP BY BranchID
+    ORDER BY PolicyBranch;
 	
 	SELECT PolicyBranch AS "Policy Branch", PolicyKey AS "Policy",
     MIN(Turn)||' ('||Player||', '||CivKey||')' AS "Minimum Turn"
 	FROM T2
     GROUP BY PolicyID
-    ORDER BY BranchID;
+  UNION
+  SELECT PolicyBranch AS "Policy Branch", PolicyBranch AS "Policy",
+    MIN(Turn)||' ('||Player||', '||CivKey||')' AS "Minimum Turn"
+  FROM T3
+    GROUP BY BranchID
+    ORDER BY PolicyBranch;
 	
 	SELECT PolicyBranch AS "Policy Branch", PolicyKey AS "Policy",
 	COUNT(*) AS "Total Times Adopted"
 	FROM T2
     GROUP BY PolicyID
-    ORDER BY BranchID;
+  UNION
+  SELECT PolicyBranch AS "Policy Branch", PolicyBranch AS "Policy",
+  COUNT(*) AS "Total Times Adopted"
+  FROM T3
+    GROUP BY BranchID
+    ORDER BY PolicyBranch;
   `,
   ["table-tech-research"]: `
 	WITH config(tableName) AS (
