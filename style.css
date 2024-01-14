@@ -291,7 +291,6 @@ h1 {
     overflow: auto;
     display: flex;
     flex-flow: wrap;
-    justify-content: center;
 }
 
 table {
@@ -426,6 +425,7 @@ th:hover::after{
     display: inline-grid;
     padding: 0 30px;
     align-content: baseline;
+    flex-grow: 1;
 }
 
 input, section {

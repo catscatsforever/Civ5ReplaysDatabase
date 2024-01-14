@@ -259,7 +259,9 @@ const sqlQueries = {
 		('Greatest Wonder Builders'),
 		('Demographics Screen Lovers'),
         ('Prominent City Governors'),
-		('Total Turns Spent In-Game')
+		('Total Turns Spent In-Game'),
+		('Global Replay Records'),
+		('Single Turn Replay Records')
 	)
 	SELECT * FROM config;
 	
@@ -328,6 +330,32 @@ const sqlQueries = {
 	GROUP BY Games.Player
 	ORDER BY SUM(IFNULL(PlayerQuitTurn, EndTurn)) DESC
 	;
+	
+	DROP TABLE IF EXISTS T2;
+	
+	CREATE TEMPORARY TABLE T2 AS SELECT * FROM (
+		SELECT *,
+		SUM(ReplayDataSetsChanges.Value) OVER (PARTITION BY DataSetID, GameSeed, PlayerID ORDER BY Turn) AS rsum
+		FROM ReplayDataSetsChanges
+	);
+	
+	SELECT ReplayDataSetKey AS "Replay Category",
+  	MAX(rsum)||' ('||Player||', Game #'||GameSeeds.GameID||', Turn '||Turn||')' AS "Highest Value ever recorded"
+	FROM T2
+	JOIN ReplayDataSetKeys ON ReplayDataSetKeys.ReplayDataSetID = T2.ReplayDataSetID
+	JOIN GameSeeds ON GameSeeds.GameSeed = T2.GameSeed
+	JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = T2.PlayerID
+	GROUP BY ReplayDataSetKeys.ReplayDataSetID;
+	
+	SELECT ReplayDataSetKey AS "Replay Category",
+	MAX(Value)||' ('||Player||', Game #'||GameSeeds.GameID||', Turn '||Turn||')' AS "Max Change per Turn"
+	FROM T2
+	JOIN ReplayDataSetKeys ON ReplayDataSetKeys.ReplayDataSetID = T2.ReplayDataSetID
+	JOIN GameSeeds ON GameSeeds.GameSeed = T2.GameSeed
+	JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = T2.PlayerID
+	GROUP BY ReplayDataSetKeys.ReplayDataSetID;
+	
+	DROP TABLE T2;
   `,
   ["table-belief-adoption"]: `
     WITH config(tableName) AS (
