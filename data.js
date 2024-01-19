@@ -446,6 +446,7 @@ const sqlQueries = {
   
   DROP TABLE IF EXISTS T2;
   DROP TABLE IF EXISTS T3;
+  DROP TABLE IF EXISTS T4;
   
   CREATE TEMPORARY TABLE T2 AS SELECT * FROM (
     SELECT *,
@@ -476,6 +477,15 @@ const sqlQueries = {
         JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = T1.PlayerID
         JOIN CivKeys ON CivKeys.CivID = Players.CivID
   );
+  CREATE TEMPORARY TABLE T4 AS SELECT * FROM (
+  		SELECT *
+  		FROM (
+			SELECT *, COUNT(Num2) AS "Cnt_2", MAX(Turn)
+			FROM T2
+			GROUP BY Gameseed, PlayerID, BranchID
+		)
+  		WHERE Cnt_2 = 5 AND BranchID < 9
+  );
   
   SELECT "Policy Branch", "Policy", "Average Turn"
   FROM (
@@ -484,9 +494,14 @@ const sqlQueries = {
   	FROM T2
     	GROUP BY PolicyID
   	UNION
-  	SELECT BranchID, -1, PolicyBranch AS "Policy Branch", PolicyBranch AS "Policy",
+  	SELECT BranchID, -1 AS "PolicyID", PolicyBranch AS "Policy Branch", PolicyBranch AS "Policy",
   	ROUND(AVG(Turn), 1) AS "Average Turn"
   	FROM T3
+    	GROUP BY BranchID
+  	UNION
+  	SELECT BranchID, 111 AS "PolicyID", PolicyBranch AS "Policy Branch", PolicyBranch||' Finisher' AS "Policy",
+  	ROUND(AVG(Turn), 1) AS "Average Turn"
+  	FROM T4
     	GROUP BY BranchID
     	ORDER BY BranchID
 	);
@@ -500,16 +515,26 @@ const sqlQueries = {
 	  		SELECT PolicyID AS PID, Turn AS Median
 			FROM T2
 			WHERE T2.Rnk = T2.Cnt / 2 + 1
-		) AS T4 ON T4.PID = PolicyID
+		) AS T5 ON T5.PID = PolicyID
     	GROUP BY PolicyID
   	UNION
-  	SELECT BranchID, -1, PolicyBranch AS "Policy Branch", PolicyBranch AS "Policy",
+  	SELECT BranchID, -1 AS "PolicyID", PolicyBranch AS "Policy Branch", PolicyBranch AS "Policy",
     	Median AS "Median Turn"
-  	FROM T2
+  	FROM T3
   	JOIN (
     	  SELECT BranchID AS PID, Turn AS Median
     	FROM T3
     	WHERE T3.Rnk = T3.Cnt / 2 + 1
+  	) AS T5 ON T5.PID = BranchID
+    	GROUP BY BranchID
+  	UNION
+  	SELECT BranchID, 111 AS "PolicyID", PolicyBranch AS "Policy Branch", PolicyBranch||' Finisher' AS "Policy",
+  		Median AS "Median Turn"
+  	FROM T4
+  	JOIN (
+    	  SELECT BranchID AS PID, Turn AS Median
+    	FROM T4
+    	WHERE T4.Rnk = T4.Cnt / 2 + 1
   	) AS T5 ON T5.PID = BranchID
     	GROUP BY BranchID
     	ORDER BY BranchID
@@ -522,10 +547,15 @@ const sqlQueries = {
 		FROM T2
     	GROUP BY PolicyID
   	UNION
-  	SELECT BranchID, -1, PolicyBranch AS "Policy Branch", PolicyBranch AS "Policy",
+  	SELECT BranchID, -1 AS "PolicyID", PolicyBranch AS "Policy Branch", PolicyBranch AS "Policy",
     	MIN(Turn)||' ('||Player||', '||CivKey||')' AS "Minimum Turn"
 	  FROM T3
   	  GROUP BY BranchID
+  	UNION
+  	SELECT BranchID, 111 AS "PolicyID", PolicyBranch AS "Policy Branch", PolicyBranch||' Finisher' AS "Policy",
+  		MIN(Turn)||' ('||Player||', '||CivKey||')' AS "Minimum Turn"
+  	FROM T4
+    	GROUP BY BranchID
     	ORDER BY BranchID
   );
 	
@@ -536,9 +566,14 @@ const sqlQueries = {
 		FROM T2
     	GROUP BY PolicyID
   	UNION
-  	SELECT BranchID, -1, PolicyBranch AS "Policy Branch", PolicyBranch AS "Policy",
+  	SELECT BranchID, -1 AS "PolicyID", PolicyBranch AS "Policy Branch", PolicyBranch AS "Policy",
   	COUNT(*) AS "Total Times Adopted"
   	FROM T3
+    	GROUP BY BranchID
+  	UNION
+  	SELECT BranchID, 111 AS "PolicyID", PolicyBranch AS "Policy Branch", PolicyBranch||' Finisher' AS "Policy",
+  	COUNT(*) AS "Total Times Adopted"
+  	FROM T4
     	GROUP BY BranchID
     	ORDER BY BranchID
   );
