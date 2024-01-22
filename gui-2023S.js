@@ -5,139 +5,6 @@
 		codemirror-theme-vars
 		fflate
 */
-
-const colors = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f", "#bcbd22", "#17becf",
-	"#fffe35", "#a83651", "#d53aff", "#6ec388", "#d6a989"];
-const winColors = {
-	anyWin: 'rgba(223,207,36,0.5)',
-	0: 'rgba(0,0,0,0.2)',
-	1: 'rgba(132,87,45,0.5)',
-	2: 'rgba(0,137,173,0.5)',
-	3: 'rgba(190,22,0,0.5)',
-	4: 'rgba(173,0,123,0.5)',
-	5: 'rgba(126,115,211,0.5)',
-};
-const IconMarkups = {
-	ICON_ALPHA: 'Civ5Icon.Alpha.png',
-	ICON_BLOCKADED: 'Civ5Icon.Blockaded.png',
-	ICON_BULLET: 'Civ5Icon.Bullet.png',
-	ICON_CAPITAL: 'Civ5Icon.Capital.png',
-	ICON_CITIZEN: 'Civ5Icon.Citizen.png',
-	ICON_CITY_STATE: 'Civ5Icon.CityState.png',
-	ICON_CONNECTED: 'Civ5Icon.Connected.png',
-	ICON_CULTURE: 'Civ5Icon.Culture.png',
-	ICON_DENOUNCE: 'Civ5Icon.Denounce.png',
-	ICON_FLOWER: 'Civ5Icon.Flower.png',
-	ICON_FOOD: 'Civ5Icon.Food.png',
-	ICON_GOLD: 'Civ5Icon.Gold.png',
-	ICON_GOLDEN_AGE: 'Civ5Icon.GoldenAge.png',
-	ICON_GREAT_PEOPLE: 'Civ5Icon.GreatPeople.png',
-	ICON_HAPPINESS_1: 'Civ5Icon.Happiness1.png',
-	ICON_HAPPINESS_2: 'Civ5Icon.Happiness2.png',
-	ICON_HAPPINESS_3: 'Civ5Icon.Happiness3.png',
-	ICON_HAPPINESS_4: 'Civ5Icon.Happiness4.png',
-	ICON_INFLUENCE: 'Civ5Icon.Influence.png',
-	ICON_INQUISITOR: 'Civ5Icon.Inquisitor.png',
-	ICON_INVEST: 'Civ5Icon.Invest.png',
-	ICON_LOCKED: 'Civ5Icon.Locked.png',
-	ICON_MINUS: 'Civ5Icon.Minus.png',
-	ICON_MISSIONARY: 'Civ5Icon.Missionary.png',
-	ICON_MOVES: 'Civ5Icon.Moves.png',
-	ICON_MUSHROOM: 'Civ5Icon.Mushroom.png',
-	ICON_OCCUPIED: 'Civ5Icon.Occupied.png',
-	ICON_OMEGA: 'Civ5Icon.Omega.png',
-	ICON_PEACE: 'Civ5Icon.Peace.png',
-	ICON_PIRATE: 'Civ5Icon.Pirate.png',
-	ICON_PLUS: 'Civ5Icon.Plus.png',
-	ICON_PRODUCTION: 'Civ5Icon.Production.png',
-	ICON_PROPHET: 'Civ5Icon.Prophet.png',
-	ICON_PUPPET: 'Civ5Icon.Puppet.png',
-	ICON_RANGE_STRENGTH: 'Civ5Icon.RangeStrength.png',
-	ICON_RAZING: 'Civ5Icon.Razing.png',
-	ICON_RELIGION: 'Civ5Icon.Religion.png',
-	ICON_RELIGION_BUDDHISM: 'Civ5Icon.ReligionBuddhism.png',
-	ICON_RELIGION_CHRISTIANITY: 'Civ5Icon.ReligionChristianity.png',
-	ICON_RELIGION_CONFUCIANISM: 'Civ5Icon.ReligionConfucianism.png',
-	ICON_RELIGION_HINDUISM: 'Civ5Icon.ReligionHinduism.png',
-	ICON_RELIGION_ISLAM: 'Civ5Icon.ReligionIslam.png',
-	ICON_RELIGION_JUDAISM: 'Civ5Icon.ReligionJudaism.png',
-	ICON_RELIGION_ORTHODOX: 'Civ5Icon.ReligionOrthodox.png',
-	ICON_RELIGION_PANTHEON: 'Civ5Icon.ReligionPantheon.png',
-	ICON_RELIGION_PROTESTANT: 'Civ5Icon.ReligionProtestant.png',
-	ICON_RELIGION_SHINTO: 'Civ5Icon.ReligionShinto.png',
-	ICON_RELIGION_SIKHISM: 'Civ5Icon.ReligionSikhism.png',
-	ICON_RELIGION_TAOISM: 'Civ5Icon.ReligionTaoism.png',
-	ICON_RELIGION_TENGRIISM: 'Civ5Icon.ReligionTengriism.png',
-	ICON_RELIGION_ZOROASTRIANISM: 'Civ5Icon.ReligionZoroastrianism.png',
-	ICON_RES_ALUMINUM: 'Civ5Icon.ResAluminum.png',
-	ICON_RES_BANANA: 'Civ5Icon.ResBanana.png',
-	ICON_RES_CITRUS: 'Civ5Icon.ResCitrus.png',
-	ICON_RES_COAL: 'Civ5Icon.ResCoal.png',
-	ICON_RES_COPPER: 'Civ5Icon.ResCopper.png',
-	ICON_RES_COTTON: 'Civ5Icon.ResCotton.png',
-	ICON_RES_COW: 'Civ5Icon.ResCow.png',
-	ICON_RES_CRAB: 'Civ5Icon.ResCrab.png',
-	ICON_RES_DEER: 'Civ5Icon.ResDeer.png',
-	ICON_RES_DYE: 'Civ5Icon.ResDye.png',
-	ICON_RES_FISH: 'Civ5Icon.ResFish.png',
-	ICON_RES_FUR: 'Civ5Icon.ResFur.png',
-	ICON_RES_GEMS: 'Civ5Icon.ResGems.png',
-	ICON_RES_GOLD: 'Civ5Icon.ResGold.png',
-	ICON_RES_HORSE: 'Civ5Icon.ResHorse.png',
-	ICON_RES_INCENSE: 'Civ5Icon.ResIncense.png',
-	ICON_RES_IRON: 'Civ5Icon.ResIron.png',
-	ICON_RES_IVORY: 'Civ5Icon.ResIvory.png',
-	ICON_RES_JEWELRY: 'Civ5Icon.ResJewelry.png',
-	ICON_RES_MARBLE: 'Civ5Icon.ResMarble.png',
-	ICON_RES_OIL: 'Civ5Icon.ResOil.png',
-	ICON_RES_PEARLS: 'Civ5Icon.ResPearls.png',
-	ICON_RES_PORCELAIN: 'Civ5Icon.ResPorcelain.png',
-	ICON_RES_SALT: 'Civ5Icon.ResSalt.png',
-	ICON_RES_SHEEP: 'Civ5Icon.ResSheep.png',
-	ICON_RES_SILK: 'Civ5Icon.ResSilk.png',
-	ICON_RES_SILVER: 'Civ5Icon.ResSilver.png',
-	ICON_RES_SPICES: 'Civ5Icon.ResSpices.png',
-	ICON_RES_STONE: 'Civ5Icon.ResStone.png',
-	ICON_RES_SUGAR: 'Civ5Icon.ResSugar.png',
-	ICON_RES_TRUFFLES: 'Civ5Icon.ResTruffles.png',
-	ICON_RES_URANIUM: 'Civ5Icon.ResUranium.png',
-	ICON_RES_WHALE: 'Civ5Icon.ResWhale.png',
-	ICON_RES_WHEAT: 'Civ5Icon.ResWheat.png',
-	ICON_RES_WINE: 'Civ5Icon.ResWine.png',
-	ICON_RESEARCH: 'Civ5Icon.Research.png',
-	ICON_RESISTANCE: 'Civ5Icon.Resistance.png',
-	ICON_SPY: 'Civ5Icon.Spy.png',
-	ICON_STAR: 'Civ5Icon.Star.png',
-	ICON_STRENGTH: 'Civ5Icon.Strength.png',
-	ICON_TEAM_1: 'Civ5Icon.Team1.png',
-	ICON_TEAM_10: 'Civ5Icon.Team10.png',
-	ICON_TEAM_11: 'Civ5Icon.Team11.png',
-	ICON_TEAM_2: 'Civ5Icon.Team2.png',
-	ICON_TEAM_3: 'Civ5Icon.Team3.png',
-	ICON_TEAM_4: 'Civ5Icon.Team4.png',
-	ICON_TEAM_5: 'Civ5Icon.Team5.png',
-	ICON_TEAM_6: 'Civ5Icon.Team6.png',
-	ICON_TEAM_7: 'Civ5Icon.Team7.png',
-	ICON_TEAM_8: 'Civ5Icon.Team8.png',
-	ICON_TEAM_9: 'Civ5Icon.Team9.png',
-	ICON_TEAM_USA: 'Civ5Icon.TeamUsa.png',
-	ICON_TRADE: 'Civ5Icon.Trade.png',
-	ICON_TRADE_WHITE: 'Civ5Icon.TradeWhite.png',
-	ICON_VIEW_CITY: 'Civ5Icon.ViewCity.png',
-	ICON_WAR: 'Civ5Icon.War.png',
-	ICON_WORKER: 'Civ5Icon.Worker.png',
-	ICON_WTF1: 'Civ5Icon.Wtf1.png',
-	ICON_WTF2: 'Civ5Icon.Wtf2.png',
-	ICON_GREAT_ENGINEER: 'Civ5Icon.GreatEngineer.png',
-	ICON_GREAT_GENERAL: 'Civ5Icon.GreatGeneral.png',
-	ICON_GREAT_SCIENTIST: 'Civ5Icon.GreatScientist.png',
-	ICON_GREAT_MERCHANT: 'Civ5Icon.GreatMerchant.png',
-	ICON_GREAT_ARTIST: 'Civ5Icon.GreatArtist.png',
-	ICON_GREAT_MUSICIAN: 'Civ5Icon.GreatMusician.png',
-	ICON_GREAT_WRITER: 'Civ5Icon.GreatWriter.png',
-	ICON_GREAT_ADMIRAL: 'Civ5Icon.GreatAdmiral.png',
-	ICON_TOURISM: 'Civ5Icon.Tourism.png'
-};
 let plotlyUserSettings = {
 	'yaxis.type': 'linear'
 };
@@ -152,6 +19,7 @@ let errorElm = document.getElementById('error');
 let commandsElm = document.getElementById('commands');
 let savedbElm = document.getElementById('savedb');
 
+let tab0Rad = document.getElementById("tab0");
 let tab1Rad = document.getElementById("tab1");
 let tab2Rad = document.getElementById("tab2");
 let tab3Rad = document.getElementById("tab3");
@@ -649,6 +517,129 @@ worker.onmessage = function (event) {
 			el.parentElement.parentElement.style.display = temp;
 		});
 	}
+	// fill Games front tab
+	else if (id === "plot-games-victories") {
+		console.log('results:', results);
+
+		let annotations = [
+			{
+				text: 'Civilization Standings',
+				font: { size: 20 },
+				showarrow: false,
+				x: 0.27, //position in x domain
+				y: 1.05, // position in y domain
+				xref: 'paper',
+				yref: 'paper',
+			},
+			{
+				text: 'Victory Types and Ideologies',
+				font: { size: 20 },
+				showarrow: false,
+				x: 0.87, //position in x domain
+				y: 1.05, // position in y domain
+				xref: 'paper',
+				yref: 'paper',
+			},
+			{
+				text: '% of Qualification Games Played',
+				font: { size: 20 },
+				showarrow: false,
+				x: 0.87, //position in x domain
+				y: 0.45, //position in y domain
+				xref: 'paper',
+				yref: 'paper',
+			},
+		];
+		let data = [
+			Object.assign({}, ...results[0].columns.map((n, index) => ({[n]: JSON.parse(results[0].values[0][index])}))),
+			{
+				x: results[2].values.map(a => a[0]),
+				y: results[2].values.map(a => a[1]),
+				type: 'bar',
+				showlegend: false,
+				offsetgroup: '1',
+				legendgroup: '1',
+			},
+		];
+		Object.assign(data[0], {
+			branchvalues: "total",
+			texttemplate: `%{label}<br>%{value} (%{percentEntry})`,
+			hovertemplate: '%{label}<br>%{value} (%{percentRoot:%})<extra></extra>',
+			hoverlabel: { align: 'left' },
+			type: 'sunburst',
+			domain: { x: [0.6, 1], y: [0.5, 1] },
+		});
+		results[1].columns.slice(3).forEach((name, i) => {
+			data.push({
+				x: results[1].values.map(a => a[i + 3] / a[1]),
+				y: results[1].values.map(a => a[0]),
+				type: 'bar',
+				name: name,
+				hovertext: results[1].values.map(a => `${a[i + 3]} games`),
+				showlegend: false,
+				orientation: 'h',
+				offsetgroup: '0',
+				xaxis: 'x2',
+				yaxis: 'y2',
+				marker: { color: cororscaleViridis[i] },
+			});
+		});
+		results[1].values.forEach((a, i) => {
+			annotations.push({
+					x: -0.01,
+					y: i,
+					text: a[0],
+					xref: 'x2',
+					yref: 'y2',
+					xanchor: 'right',
+					showarrow: false,
+					yshift: 0
+				},
+				{
+					x: 1.01,
+					y: i,
+					text: a[2],
+					xref: 'x2',
+					yref: 'y2',
+					xanchor: 'left',
+					showarrow: false,
+					yshift: 0
+				})
+		});
+		console.log('data:', data);
+		console.log('annotations:', annotations);
+		let layout = {
+			barmode: 'stack',
+			yaxis: {
+				domain: [0.1, 0.4],
+				anchor: 'x'
+			},
+			xaxis: {
+				domain: [0.7, 0.9],
+				anchor: 'y'
+			},
+			yaxis2: {
+				domain: [0, 1],
+				showticklabels: false,
+				showgrid: false
+			},
+			xaxis2: {
+				domain: [0, 0.6],
+				anchor: 'y',
+				showticklabels: false,
+				showgrid: false
+			},
+			annotations: annotations,
+			legend: [{
+				orientation: "h",
+				yanchor: "bottom",
+				y: 1.02,
+				xanchor: "right",
+				x: 1
+			}]
+		};
+		Plotly.newPlot('plotOut', data, layout);
+	}
 	// fill table
 	else {
 		outputElm.innerHTML = "";
@@ -865,6 +856,11 @@ let lastCompareId;
 function doPlot(e) {
 	tic();
 	noerror();
+	Plotly.purge('plotOut');
+	if (tab0Rad.checked) {
+		worker.postMessage({ action: 'exec', sql: sqlQueries.v1["plot-games-victories"], id: "plot-games-victories" });
+		return;
+	}
 	let target = e?.target.id;
 	let gameID = gameSelHead.value ? gameSelHead.value : 1;
 	let dataset = datasetSelHead.value ? datasetSelHead : {value:51, textContent:'Born Admirals'};

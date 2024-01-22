@@ -35,8 +35,10 @@
 
   <main>
     <div id="inputs" style="display: none">
-      <label class="labelTab TabsFiller">!</label>
-      <input class="radioTab plot-clk" id="tab1" type="radio" name="tabs" checked>
+      <label class="labelTab TabsFiller"> </label>
+      <input class="radioTab plot-clk" id="tab0" type="radio" name="tabs" checked>
+      <label class="labelTab" for="tab0">Games</label>
+      <input class="radioTab plot-clk" id="tab1" type="radio" name="tabs">
       <label class="labelTab" for="tab1">Plot by Game</label>
       <input class="radioTab plot-clk" id="tab2" type="radio" name="tabs">
       <label class="labelTab" for="tab2">Plot by Player</label>
@@ -47,6 +49,8 @@
       <input class="radioTab plot-clk" id="tab5" type="radio" name="tabs">
       <label class="labelTab" for="tab5">Tables</label>
       <div id="error" class="error"></div>
+      <section id="content0">
+      </section>
       <section id="content1">
         <span class="sp">Choose game:</span>
         <div class="dropdown">
@@ -166,6 +170,7 @@
     <span class="sttl">Summer 2023 Tournament</span>
   </footer>
 
+  <script type="text/javascript" src="data.js"></script>
   <script type="text/javascript" src="gui-2023S.js"></script>
 </body>
 

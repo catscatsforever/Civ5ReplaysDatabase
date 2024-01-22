@@ -134,6 +134,72 @@ const IconMarkups = {
   ICON_TOURISM: 'Civ5Icon.Tourism.png'
 };
 const sqlQueries = {
+    v1: {
+        ["plot-games-victories"]: `
+            WITH T2 AS (
+                SELECT WinID, IFNULL(BranchID, -1) AS BranchID
+                FROM Games
+                JOIN GameSeeds USING(GameID)
+                LEFT JOIN (
+                    SELECT GameID AS gid, Player AS plr, MAX(Turn) AS mt, BranchID
+                    FROM PoliciesChanges
+                    JOIN GameSeeds USING(GameSeed)
+                    JOIN Games USING(GameID)
+                    JOIN PolicyKeys USING(PolicyID)
+                    WHERE BranchID IN (9,10,11) AND WinID > 0
+                    GROUP BY gid, plr
+                ) ON gid = GameID AND plr = Player
+                WHERE WinID > 0
+                GROUP BY GameID
+            )
+            SELECT
+            REPLACE(PRINTF("[%s,%s]", wt, GROUP_CONCAT(QUOTE(PolicyBranch))), '''', '"') AS "labels",
+            REPLACE(PRINTF("[%s,%s]", wt, GROUP_CONCAT(QUOTE(id))), '''', '"') AS "ids",
+            REPLACE(PRINTF("[%s,%s]", root, GROUP_CONCAT(QUOTE(WinType))), '''', '"') AS "parents",
+            PRINTF("[%s,%s]", gsum, GROUP_CONCAT(QUOTE("sum"))) AS "values"
+            FROM (
+                SELECT PRINTF("%s-%s", WinType, IIF(BranchID != -1, PolicyBranch, "No Ideology")) AS id, WinType,
+                IIF(BranchID != -1, PolicyBranch, "No Ideology") AS PolicyBranch, COUNT(WinID) AS "sum"
+                FROM T2
+                JOIN WinTypes USING(WinID)
+                LEFT JOIN PolicyBranches USING (BranchID)
+                GROUP BY WinID, BranchID
+            )
+            LEFT JOIN (
+                SELECT GROUP_CONCAT(QUOTE('')) AS root, GROUP_CONCAT(QUOTE(wintype)) AS wt, GROUP_CONCAT(wsum) AS gsum FROM (
+                    SELECT WinType, COUNT(BranchID) AS wsum
+                    FROM T2
+                    JOIN WinTypes USING(WinID)
+                    GROUP BY WinID
+                )
+            );
+            
+            SELECT Civilization,
+            COUNT(*),
+            ROUND(AVG(Standing), 2),
+            COUNT(CASE WHEN Standing = 1 THEN Civilization END) AS '1st Place',
+            COUNT(CASE WHEN Standing = 2 THEN Civilization END) AS '2nd Place',
+            COUNT(CASE WHEN Standing = 3 THEN Civilization END) AS '3rd Place',
+            COUNT(CASE WHEN Standing = 4 THEN Civilization END) AS '4th Place',
+            COUNT(CASE WHEN Standing = 5 THEN Civilization END) AS '5th Place',
+            COUNT(CASE WHEN Standing = 6 THEN Civilization END) AS '6th Place'
+            FROM Games
+            JOIN GameSeeds USING(GameID)
+            GROUP BY Civilization
+            ORDER BY "1st Place"*1.0/COUNT(*), "2nd Place"*1.0/COUNT(*), "3rd Place"*1.0/COUNT(*),
+            "4th Place"*1.0/COUNT(*), "5th Place"*1.0/COUNT(*), "6th Place"*1.0/COUNT(*);
+            
+            WITH ngames AS (
+                SELECT COUNT(DISTINCT Player) AS ng FROM Games
+            )
+            SELECT 'Game '||PlayerGameNumber,
+            ROUND(COUNT(*) * 100.0 / ng, 2) || '%' AS "% Games Played"
+            FROM Games
+            JOIN ngames
+            WHERE PlayerGameNumber <= 5
+            GROUP BY PlayerGameNumber;
+        `,
+    },
   ["plot-games-victories"]: `
     WITH T2 AS (
       SELECT WinID, IFNULL(BranchID, -1) AS BranchID
