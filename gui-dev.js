@@ -20,6 +20,7 @@ let errorElm = document.getElementById('error');
 let commandsElm = document.getElementById('commands');
 let savedbElm = document.getElementById('savedb');
 
+let tab0Rad = document.getElementById("tab0");
 let tab1Rad = document.getElementById("tab1");
 let tab2Rad = document.getElementById("tab2");
 let tab3Rad = document.getElementById("tab3");
@@ -86,9 +87,9 @@ worker.onmessage = function (event) {
 	if (event.data.ready === true) {
 		toc("Loading database from file");
 		loadingElm.innerHTML = '';
-		tableHallOfFameBtn.click();
 		fillSelects();
 		doPlot();
+		tableHallOfFameBtn.click();
 		return;
 	}
 	// export db
@@ -518,6 +519,129 @@ worker.onmessage = function (event) {
 			el.parentElement.parentElement.style.display = temp;
 		});
 	}
+	// fill Games front tab
+	else if (id === "plot-games-victories") {
+		console.log('results:', results);
+
+		let annotations = [
+			{
+				text: 'Civilization Standings',
+				font: { size: 20 },
+				showarrow: false,
+				x: 0.27, //position in x domain
+				y: 1.05, // position in y domain
+				xref: 'paper',
+				yref: 'paper',
+			},
+			{
+				text: 'Victory Types and Ideologies',
+				font: { size: 20 },
+				showarrow: false,
+				x: 0.87, //position in x domain
+				y: 1.05, // position in y domain
+				xref: 'paper',
+				yref: 'paper',
+			},
+			{
+				text: '% of Qualification Games Played',
+				font: { size: 20 },
+				showarrow: false,
+				x: 0.87, //position in x domain
+				y: 0.45, //position in y domain
+				xref: 'paper',
+				yref: 'paper',
+			},
+		];
+		let data = [
+			Object.assign({}, ...results[0].columns.map((n, index) => ({[n]: JSON.parse(results[0].values[0][index])}))),
+			{
+				x: results[2].values.map(a => a[0]),
+				y: results[2].values.map(a => a[1]),
+				type: 'bar',
+				showlegend: false,
+				offsetgroup: '1',
+				legendgroup: '1',
+			},
+		];
+		Object.assign(data[0], {
+			branchvalues: "total",
+			texttemplate: `%{label}<br>%{value} (%{percentEntry})`,
+			hovertemplate: '%{label}<br>%{value} (%{percentRoot:%})<extra></extra>',
+			hoverlabel: { align: 'left' },
+			type: 'sunburst',
+			domain: { x: [0.6, 1], y: [0.5, 1] },
+		});
+		results[1].columns.slice(3).forEach((name, i) => {
+			data.push({
+				x: results[1].values.map(a => a[i + 3] / a[1]),
+				y: results[1].values.map(a => a[0]),
+				type: 'bar',
+				name: name,
+				hovertext: results[1].values.map(a => `${a[i + 3]} games`),
+				showlegend: false,
+				orientation: 'h',
+				offsetgroup: '0',
+				xaxis: 'x2',
+				yaxis: 'y2',
+				marker: { color: cororscaleViridis[i] },
+			});
+		});
+		results[1].values.forEach((a, i) => {
+			annotations.push({
+				x: -0.01,
+				y: i,
+				text: a[0],
+				xref: 'x2',
+				yref: 'y2',
+				xanchor: 'right',
+				showarrow: false,
+				yshift: 0
+			},
+			{
+				x: 1.01,
+				y: i,
+				text: a[2],
+				xref: 'x2',
+				yref: 'y2',
+				xanchor: 'left',
+				showarrow: false,
+				yshift: 0
+			})
+		});
+		console.log('data:', data);
+		console.log('annotations:', annotations);
+		let layout = {
+			barmode: 'stack',
+			yaxis: {
+				domain: [0.1, 0.4],
+				anchor: 'x'
+			},
+			xaxis: {
+				domain: [0.7, 0.9],
+				anchor: 'y'
+			},
+			yaxis2: {
+				domain: [0, 1],
+				showticklabels: false,
+				showgrid: false
+			},
+			xaxis2: {
+				domain: [0, 0.6],
+				anchor: 'y',
+				showticklabels: false,
+				showgrid: false
+			},
+			annotations: annotations,
+			legend: [{
+				orientation: "h",
+				yanchor: "bottom",
+				y: 1.02,
+				xanchor: "right",
+				x: 1
+			}]
+		};
+		Plotly.newPlot('plotOut', data, layout);
+	}
 	// fill table
 	else {
 		outputElm.innerHTML = "";
@@ -697,6 +821,10 @@ savedbElm.addEventListener("click", savedb, true);
 
 function doPlot(e) {
 	Plotly.purge('plotOut');
+	if (tab0Rad.checked) {
+		worker.postMessage({ action: 'exec', sql: sqlQueries["plot-games-victories"], id: "plot-games-victories" });
+		return;
+	}
 	if (tab5Rad.checked)
 		return;
 	tic();

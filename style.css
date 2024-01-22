@@ -317,7 +317,7 @@ p,h1 {
 }
 
 .js-plotly-plot, .plot-container {
-    height: 70vh
+    min-height: 70vh
 }
 
 .btn {
@@ -466,6 +466,7 @@ input[name="tabs"]:checked + label {
     margin: 0 0;
 }
 
+#tab0:checked ~ #content0,
 #tab1:checked ~ #content1,
 #tab2:checked ~ #content2,
 #tab3:checked ~ #content3,
@@ -478,6 +479,11 @@ input[name="tabs"]:checked + label {
 #tab5:checked ~ #plotOut,
 #tab6:checked ~ #plotOut {
     display: none;
+}
+
+#tab0:checked ~ .js-plotly-plot,
+#tab0:checked ~ .plot-container {
+    height: 100vh;
 }
 
 #sqlBox {
