@@ -558,7 +558,7 @@ input[name="tabs"]:checked + label {
 
 text {
     fill: var(--text-color) !important;
-    text-shadow: var(--bkg-color) 1px 1px 1px, var(--bkg-color) -1px -1px 1px, var(--bkg-color) 1px -1px 1px, var(--bkg-color) -1px 1px 1px !important;
+    text-shadow: var(--bkg-color) 1px 1px 3px, var(--bkg-color) -1px -1px 3px, var(--bkg-color) 1px -1px 3px, var(--bkg-color) -1px 1px 3px !important;
 }
 
 

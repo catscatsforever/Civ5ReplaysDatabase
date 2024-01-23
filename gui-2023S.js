@@ -59,15 +59,16 @@ if (currentTheme === "dark") {
 }
 
 btn.addEventListener("click", function () {
+	let theme;
 	if (prefersDarkScheme.matches) {
 		document.body.classList.toggle("light-theme");
-		var theme = document.body.classList.contains("light-theme")
+		theme = document.body.classList.contains("light-theme")
 			? "light"
 			: "dark";
 	}
 	else {
 		document.body.classList.toggle("dark-theme");
-		var theme = document.body.classList.contains("dark-theme")
+		theme = document.body.classList.contains("dark-theme")
 			? "dark"
 			: "light";
 	}
@@ -85,9 +86,9 @@ worker.onmessage = function (event) {
 	if (event.data.ready === true) {
 		toc("Loading database from file");
 		loadingElm.innerHTML = '';
-		tableHallOfFameBtn.click();
 		fillSelects();
 		doPlot();
+		tableHallOfFameBtn.click();
 		return;
 	}
 	// export db
@@ -130,7 +131,7 @@ worker.onmessage = function (event) {
 		let data = [];
 		// bar plot
 		if (conf.type === 'bar') {
-			let tracesData = results[1].values.map(([k, v]) => (k));
+			let tracesData = results[1].values.map(([k, _]) => (k));
 			console.log('tracesData', tracesData);
 			let arrX = Object.assign(...Object.values(tracesData).map((v) => ({ [v]: [] }))),
 				arrY = Object.assign(...Object.values(tracesData).map((v) => ({ [v]: [] })));
@@ -199,7 +200,7 @@ worker.onmessage = function (event) {
 					arrS.push(...blob.s[k][el]);
 					arrT.push(...blob.t[k][el]);
 					arrV.push(...blob.v[k][el]);
-					blob.v[k][el].forEach((x) => {
+					blob.v[k][el].forEach((_) => {
 						arrCl.push(conf.groups === 2 ? (el > 0 ? winColors.anyWin : winColors[el]) : winColors[el]);
 						arrLL.push(groupLabels[el]);
 					});
@@ -504,7 +505,7 @@ worker.onmessage = function (event) {
 			}
 			el.innerHTML = el.nextElementSibling.querySelector('span').innerHTML;
 			el.value = el.nextElementSibling.querySelector('span').value;
-			el.addEventListener('click', (e)=>{
+			el.addEventListener('click', (_)=>{
 				el.nextElementSibling.style.visibility = (el.nextElementSibling.style.visibility === 'visible') ? 'hidden' : 'visible';
 			});
 			el.parentElement.addEventListener('focusout', (e)=>{
@@ -523,31 +524,34 @@ worker.onmessage = function (event) {
 
 		let annotations = [
 			{
-				text: 'Civilization Standings',
-				font: { size: 20 },
+				text: '<span style=\'font-size:1.7vw;\'>Civilization Standings</span>',
 				showarrow: false,
-				x: 0.27, //position in x domain
-				y: 1.05, // position in y domain
+				x: 0.33, //position in x domain
+				y: 1.01, // position in y domain
 				xref: 'paper',
 				yref: 'paper',
+				xanchor: 'center',
+				yanchor: 'bottom',
 			},
 			{
-				text: 'Victory Types and Ideologies',
-				font: { size: 20 },
+				text: '<span style=\'font-size:1.7vw;\'>Victory Types and Ideologies</span>',
 				showarrow: false,
-				x: 0.87, //position in x domain
-				y: 1.05, // position in y domain
+				x: 0.80, //position in x domain
+				y: 1.01, // position in y domain
 				xref: 'paper',
 				yref: 'paper',
+				xanchor: 'center',
+				yanchor: 'bottom',
 			},
 			{
-				text: '% of Qualification Games Played',
-				font: { size: 20 },
+				text: '<span style=\'font-size:1.7vw;\'>% of Qualification Games Played</span>',
 				showarrow: false,
-				x: 0.87, //position in x domain
-				y: 0.45, //position in y domain
+				x: 0.80, //position in x domain
+				y: 0.41, //position in y domain
 				xref: 'paper',
 				yref: 'paper',
+				xanchor: 'center',
+				yanchor: 'bottom',
 			},
 		];
 		let data = [
@@ -568,6 +572,7 @@ worker.onmessage = function (event) {
 			hoverlabel: { align: 'left' },
 			type: 'sunburst',
 			domain: { x: [0.6, 1], y: [0.5, 1] },
+			marker: {colors: data[0].labels.map(l => civColorsDict[l] ?? null)}
 		});
 		results[1].columns.slice(3).forEach((name, i) => {
 			data.push({
@@ -581,33 +586,32 @@ worker.onmessage = function (event) {
 				offsetgroup: '0',
 				xaxis: 'x2',
 				yaxis: 'y2',
-				marker: { color: cororscaleViridis[i] },
+				marker: { color: colorscaleViridis[i] },
 			});
 		});
 		results[1].values.forEach((a, i) => {
 			annotations.push({
-					x: -0.01,
-					y: i,
-					text: a[0],
-					xref: 'x2',
-					yref: 'y2',
-					xanchor: 'right',
-					showarrow: false,
-					yshift: 0
-				},
-				{
-					x: 1.01,
-					y: i,
-					text: a[2],
-					xref: 'x2',
-					yref: 'y2',
-					xanchor: 'left',
-					showarrow: false,
-					yshift: 0
-				})
+				x: -0.01,
+				y: i,
+				text: a[0],
+				xref: 'x2',
+				yref: 'y2',
+				xanchor: 'right',
+				showarrow: false,
+				yshift: 0
+			},
+			{
+				x: 1.01,
+				y: i,
+				text: a[2],
+				xref: 'x2',
+				yref: 'y2',
+				xanchor: 'left',
+				showarrow: false,
+				yshift: 0
+			})
 		});
 		console.log('data:', data);
-		console.log('annotations:', annotations);
 		let layout = {
 			barmode: 'stack',
 			yaxis: {
@@ -630,13 +634,6 @@ worker.onmessage = function (event) {
 				showgrid: false
 			},
 			annotations: annotations,
-			legend: [{
-				orientation: "h",
-				yanchor: "bottom",
-				y: 1.02,
-				xanchor: "right",
-				x: 1
-			}]
 		};
 		Plotly.newPlot('plotOut', data, layout);
 	}
@@ -655,7 +652,7 @@ worker.onmessage = function (event) {
 			blob = Object.assign(...results.map((t, i) => ({ [`Table ${i}`]: t })));
 		}
 		console.log('table blob', blob);
-		Object.entries(blob).forEach((t, n)=>{
+		Object.entries(blob).forEach((t, _)=>{
 			outputElm.appendChild(tableCreate(t[0], t[1].columns, t[1].values));
 		});
 		const allTables = document.querySelectorAll("table");
@@ -687,11 +684,6 @@ worker.onmessage = function (event) {
 	toc("Displaying results");
 };
 
-
-// Connect to the HTML element we 'print' to
-function print(text) {
-	outputElm.innerHTML = text.replace(/\n/g, '<br>');
-}
 function error(e) {
 	console.log(e);
 	errorElm.style.height = '2em';
@@ -755,7 +747,7 @@ let tableCreate = function () {
 	function valconcat(vals, tagName) {
 		if (vals.length === 0) return '';
 		let open = '<' + tagName + '>', close = '</' + tagName + '>';
-		return open + vals.join(close + open) + close;
+		return open + vals.join(close + open).replace(/\[([^\]]+)\]/g, (_, a) => IconMarkups[a] ? `<img class="ico" src="images/${IconMarkups[a]}"/>` : `[${a}]`) + close;
 	}
 	return function (name, columns, values) {
 		let div = document.createElement('div');
@@ -852,7 +844,6 @@ function savedb() {
 	worker.postMessage({ action: 'export' });
 }
 savedbElm.addEventListener("click", savedb, true);
-let lastCompareId;
 function doPlot(e) {
 	tic();
 	noerror();
@@ -1007,7 +998,6 @@ function doPlot(e) {
 function doBarPlot(e) {
 	noerror();
 	let target = e?.target.id;
-	let traceName = '';
 	let table1, table2, table3, field1, field2, field3;
 	if (target === 'policies-time') {
 		table1 = 'PoliciesChanges';
@@ -1258,7 +1248,9 @@ tableHallOfFameBtn.addEventListener("click", () => { noerror(); let r = `
 		VALUES('config'),
 		('Greatest Wonder Builders'),
 		('Demographics Screen Lovers'),
-		('Total Turns Spent In-Game')
+		('Total Turns Spent In-Game'),
+		('Global Replay Records'),
+		('Single Turn Replay Records')
 	)
 	SELECT * FROM config;
 	
@@ -1314,6 +1306,34 @@ tableHallOfFameBtn.addEventListener("click", () => { noerror(); let r = `
 	GROUP BY Games.Player
 	ORDER BY SUM(IFNULL(Value, EndTurn)) DESC
 	;
+	
+	DROP TABLE IF EXISTS T2;
+	
+	CREATE TEMPORARY TABLE T2 AS SELECT * FROM (
+		SELECT *,
+		SUM(Value) OVER (PARTITION BY DataSetID, GameSeed, CivID ORDER BY Turn) AS rsum
+		FROM ReplayDataSetsChanges
+	);
+	
+	SELECT ReplayDataSetKey AS "Replay Category",
+  	MAX(rsum)||' ('||Player||', Game #'||Games.GameID||', Turn '||Turn||')' AS "Highest Value ever recorded"
+	FROM T2
+	JOIN ReplayDataSetKeys USING(ReplayDataSetID)
+	JOIN GameSeeds USING(GameSeed)
+	JOIN CivKeys USING(CivID)
+	JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.Civilization = CivKeys.CivKey
+	GROUP BY ReplayDataSetID;
+	
+	SELECT ReplayDataSetKey AS "Replay Category",
+	MAX(Value)||' ('||Player||', Game #'||Games.GameID||', Turn '||Turn||')' AS "Max Change per Turn"
+	FROM T2
+	JOIN ReplayDataSetKeys USING(ReplayDataSetID)
+	JOIN GameSeeds USING(GameSeed)
+	JOIN CivKeys USING(CivID)
+	JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.Civilization = CivKeys.CivKey
+	GROUP BY ReplayDataSetID;
+	
+	DROP TABLE T2;
 	`; execute(r); editor.setValue(r); }, true);
 
 tableBeliefAdoptionBtn.addEventListener("click", () => { noerror(); let r = `

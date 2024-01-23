@@ -10,7 +10,7 @@ const winColors = {
   4: 'rgba(173,0,123,0.5)',
   5: 'rgba(126,115,211,0.5)',
 };
-const cororscaleViridis = ['rgba(253,231,37,0.8)', 'rgba(132,212,75,0.8)', 'rgba(40,174,128,0.8)',
+const colorscaleViridis = ['rgba(253,231,37,0.8)', 'rgba(132,212,75,0.8)', 'rgba(40,174,128,0.8)',
   'rgba(38,130,142,0.8)', 'rgba(59,82,139,0.8)', 'rgba(72,24,106,0.8  )'];
 const IconMarkups = {
   ICON_ALPHA: 'Civ5Icon.Alpha.png',
@@ -133,6 +133,14 @@ const IconMarkups = {
   ICON_GREAT_ADMIRAL: 'Civ5Icon.GreatAdmiral.png',
   ICON_TOURISM: 'Civ5Icon.Tourism.png'
 };
+const civColorsDict = {
+  Lose: 'rgba(0,0,0,0.8)',
+  Time: 'rgba(132,87,45,0.8)',
+  Science: 'rgba(0,137,173,0.8)',
+  Domination: 'rgba(190,22,0,0.8)',
+  Cultural: 'rgba(173,0,123,0.8)',
+  Diplomatic: 'rgba(126,115,211,0.8)',
+}
 const sqlQueries = {
     v1: {
         ["plot-games-victories"]: `
@@ -469,25 +477,25 @@ const sqlQueries = {
 	
 	CREATE TEMPORARY TABLE T2 AS SELECT * FROM (
 		SELECT *,
-		SUM(ReplayDataSetsChanges.Value) OVER (PARTITION BY DataSetID, GameSeed, PlayerID ORDER BY Turn) AS rsum
+		SUM(Value) OVER (PARTITION BY DataSetID, GameSeed, PlayerID ORDER BY Turn) AS rsum
 		FROM ReplayDataSetsChanges
 	);
 	
 	SELECT ReplayDataSetKey AS "Replay Category",
-  	MAX(rsum)||' ('||Player||', Game #'||GameSeeds.GameID||', Turn '||Turn||')' AS "Highest Value ever recorded"
+  	MAX(rsum)||' ('||Player||', Game #'||GameID||', Turn '||Turn||')' AS "Highest Value ever recorded"
 	FROM T2
-	JOIN ReplayDataSetKeys ON ReplayDataSetKeys.ReplayDataSetID = T2.ReplayDataSetID
-	JOIN GameSeeds ON GameSeeds.GameSeed = T2.GameSeed
-	JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = T2.PlayerID
-	GROUP BY ReplayDataSetKeys.ReplayDataSetID;
+	JOIN ReplayDataSetKeys USING(ReplayDataSetID)
+	JOIN GameSeeds USING(GameSeed)
+	JOIN Games USING(GameID, PlayerID)
+	GROUP BY ReplayDataSetID;
 	
 	SELECT ReplayDataSetKey AS "Replay Category",
-	MAX(Value)||' ('||Player||', Game #'||GameSeeds.GameID||', Turn '||Turn||')' AS "Max Change per Turn"
+	MAX(Value)||' ('||Player||', Game #'||GameID||', Turn '||Turn||')' AS "Max Change per Turn"
 	FROM T2
-	JOIN ReplayDataSetKeys ON ReplayDataSetKeys.ReplayDataSetID = T2.ReplayDataSetID
-	JOIN GameSeeds ON GameSeeds.GameSeed = T2.GameSeed
-	JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = T2.PlayerID
-	GROUP BY ReplayDataSetKeys.ReplayDataSetID;
+	JOIN ReplayDataSetKeys USING(ReplayDataSetID)
+	JOIN GameSeeds USING(GameSeed)
+	JOIN Games USING(GameID, PlayerID)
+	GROUP BY ReplayDataSetID;
 	
 	DROP TABLE T2;
   `,
@@ -616,7 +624,7 @@ const sqlQueries = {
   		FROM (
 			SELECT *, COUNT(Num2) AS "Cnt_2", MAX(Turn)
 			FROM T2
-			GROUP BY Gameseed, PlayerID, BranchID
+			GROUP BY GameSeed, PlayerID, BranchID
 		)
   		WHERE Cnt_2 = 5 AND BranchID < 9
   );
