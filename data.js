@@ -170,7 +170,7 @@ const sqlQueries = {
                 IIF(BranchID != -1, PolicyBranch, "No Ideology") AS PolicyBranch, COUNT(WinID) AS "sum"
                 FROM T2
                 JOIN WinTypes USING(WinID)
-                LEFT JOIN PolicyBranches USING (BranchID)
+                LEFT JOIN PolicyBranches USING(BranchID)
                 GROUP BY WinID, BranchID
             )
             LEFT JOIN (
@@ -235,7 +235,7 @@ const sqlQueries = {
         IIF(BranchID != -1, PolicyBranch, "No Ideology") AS PolicyBranch, COUNT(WinID) AS "sum"
         FROM T2
         JOIN WinTypes USING(WinID)
-        LEFT JOIN PolicyBranches USING (BranchID)
+        LEFT JOIN PolicyBranches USING(BranchID)
         GROUP BY WinID, BranchID
     )
     LEFT JOIN (
@@ -290,7 +290,11 @@ const sqlQueries = {
 		('Civilizations', 'groupSeparator')
 	UNION ALL
 	SELECT * FROM (
-		SELECT CivKey, '{"group":"civs","id":'||CivID||'}' FROM CivKeys
+		SELECT CivKey, '{"group":"civs","id":'||CivID||'}'
+    	FROM Players
+    	JOIN CivKeys USING(CivID)
+    	WHERE PlayerID <= 21
+    	GROUP BY CivID
 		ORDER BY CivKey
 	)
 	UNION ALL
