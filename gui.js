@@ -672,10 +672,9 @@ worker.onmessage = function (event) {
 					th.parentElement.childNodes.forEach(el=>el.classList.remove("sort-asc", "sort-desc"));
 					th.classList.add(dir === true ? "sort-asc" : "sort-desc");
 					rows.sort((tr1, tr2) => {
-						const tr1Text = tr1.cells[cellIndex].textContent;
-						const tr2Text = tr2.cells[cellIndex].textContent;
-						return dir ? 1 : -1 * tr2Text.localeCompare(tr1Text, undefined, { numeric: true });
+						return tr1.cells[cellIndex].textContent.localeCompare(tr2.cells[cellIndex].textContent, undefined, { numeric: true });
 					});
+					if (!dir) rows.reverse();
 
 					tBody.append(...rows);
 				});
