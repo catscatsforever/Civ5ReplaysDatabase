@@ -220,7 +220,7 @@ const sqlQueries = {
           SELECT GameID AS gid, Player AS plr, MAX(Turn) AS mt, BranchID
           FROM ReplayEvents
           JOIN GameSeeds USING(GameSeed)
-          JOIN Games USING(GameID)
+          JOIN Games USING(GameID, PlayerID)
           JOIN PolicyKeys ON PolicyID = Num2
           WHERE ReplayEventType = 61 AND BranchID IN (9,10,11) AND WinID > 0
           GROUP BY gid, plr
