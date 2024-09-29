@@ -263,6 +263,7 @@ const sqlQueries = {
     JOIN GameSeeds USING(GameID)
     JOIN Players USING(GameSeed, PlayerID)
     JOIN CivKeys USING(CivID)
+    WHERE Standing NOT NULL
     GROUP BY CivID
     ORDER BY "1st Place"*1.0/COUNT(*), "2nd Place"*1.0/COUNT(*), "3rd Place"*1.0/COUNT(*),
     "4th Place"*1.0/COUNT(*), "5th Place"*1.0/COUNT(*), "6th Place"*1.0/COUNT(*);
