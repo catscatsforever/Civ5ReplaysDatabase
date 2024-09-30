@@ -482,30 +482,28 @@ const sqlQueries = {
 	;
 	
 	DROP TABLE IF EXISTS T2;
-	
-	CREATE TEMPORARY TABLE T2 AS SELECT * FROM (
-		SELECT *,
-		SUM(Value) OVER (PARTITION BY DataSetID, GameSeed, PlayerID ORDER BY Turn) AS rsum
-		FROM ReplayDataSetsChanges
-	);
-	
-	SELECT ReplayDataSetKey AS "Replay Category",
-  	MAX(rsum)||' ('||Player||', Game #'||GameID||', Turn '||Turn||')' AS "Highest Value ever recorded"
-	FROM T2
-	JOIN ReplayDataSetKeys USING(ReplayDataSetID)
-	JOIN GameSeeds USING(GameSeed)
-	JOIN Games USING(GameID, PlayerID)
-	GROUP BY ReplayDataSetID;
-	
-	SELECT ReplayDataSetKey AS "Replay Category",
-	MAX(Value)||' ('||Player||', Game #'||GameID||', Turn '||Turn||')' AS "Max Change per Turn"
-	FROM T2
-	JOIN ReplayDataSetKeys USING(ReplayDataSetID)
-	JOIN GameSeeds USING(GameSeed)
-	JOIN Games USING(GameID, PlayerID)
-	GROUP BY ReplayDataSetID;
-	
-	DROP TABLE T2;
+    
+    CREATE TEMPORARY TABLE T2 AS 
+    SELECT *,
+    SUM(Value) OVER (PARTITION BY DataSetID, GameSeed, PlayerID ORDER BY Turn) AS rsum
+    FROM ReplayDataSetsChanges
+    JOIN GameSeeds USING(GameSeed)
+    JOIN Games USING(GameID, PlayerID)
+    JOIN ReplayDataSetKeys USING(ReplayDataSetID)
+    WHERE Turn <= IFNULL(PlayerQuitTurn, EndTurn)
+    ;
+    
+    SELECT ReplayDataSetKey AS "Replay Category",
+    MAX(rsum)||' ('||Player||', Game #'||GameID||', Turn '||Turn||')' AS "Highest Value ever recorded"
+    FROM T2
+    GROUP BY ReplayDataSetID;
+    
+    SELECT ReplayDataSetKey AS "Replay Category",
+    MAX(Value)||' ('||Player||', Game #'||GameID||', Turn '||Turn||')' AS "Max Change per Turn"
+    FROM T2
+    GROUP BY ReplayDataSetID;
+    
+    DROP TABLE T2;
   `,
   ["table-belief-adoption"]: `
     WITH config(tableName) AS (
