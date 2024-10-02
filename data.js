@@ -225,7 +225,7 @@ const sqlQueries = {
           WHERE ReplayEventType = 61 AND BranchID IN (9,10,11) AND WinID > 0
           GROUP BY gid, plr
       ) ON gid = GameID AND plr = Player
-      WHERE WinID > 0
+      WHERE WinID > 0 AND GameSeed NOT NULL
       GROUP BY GameID
     )
     SELECT
