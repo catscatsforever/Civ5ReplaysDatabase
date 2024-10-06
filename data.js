@@ -413,17 +413,17 @@ const sqlQueries = {
     SELECT * FROM config
     ;
     
-    SELECT BuildingClassKey FROM BuildingClassKeys
+    SELECT BuildingKey FROM BuildingKeys
     WHERE TypeID = 2
     ;
     
-    SELECT BuildingClassKey, Turn, COUNT(*) FROM (
+    SELECT BuildingKey, Turn, COUNT(*) FROM (
     SELECT Turn, ReplayEventType, Num2 AS Value FROM ReplayEvents
     WHERE ReplayEventType = 78
     )
-    JOIN BuildingClassKeys ON BuildingClassID = Value
+    JOIN BuildingKeys ON BuildingID = Value
     WHERE TypeID = 2
-    GROUP BY Turn, BuildingClassKeys.BuildingClassID
+    GROUP BY Turn, BuildingKeys.BuildingID
     ;
   `,
   ["table-hall-of-fame"]: `
