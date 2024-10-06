@@ -418,7 +418,7 @@ const sqlQueries = {
     
     SELECT BuildingClassKey, Turn, COUNT(*) FROM (
     SELECT Turn, ReplayEventType, Num2 AS Value FROM ReplayEvents
-    WHERE ReplayEventType = 78
+    WHERE ReplayEventType = 78 AND TypeID = 2
     )
     JOIN BuildingClassKeys ON BuildingClassID = Value
     GROUP BY Turn, BuildingClassKeys.BuildingClassID
