@@ -414,6 +414,7 @@ const sqlQueries = {
     ;
     
     SELECT BuildingClassKey FROM BuildingClassKeys
+    WHERE TypeID = 2
     ;
     
     SELECT BuildingClassKey, Turn, COUNT(*) FROM (
