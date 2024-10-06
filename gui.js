@@ -964,6 +964,9 @@ function doBarPlot(e) {
 	else if (target === 'techs-time') {
 		msg = sqlQueries["plot-bar-techs-time"];
 	}
+	else if (target === 'wonders-time') {
+		msg = sqlQueries["plot-bar-wonders-time"];
+	}
 	else if (tab4Rad.checked || target === 'beliefs-time') {
 		msg = sqlQueries["plot-bar-beliefs-time"];
 	}

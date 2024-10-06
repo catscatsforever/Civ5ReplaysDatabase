@@ -403,6 +403,28 @@ const sqlQueries = {
 	GROUP BY Turn, TechnologyKeys.TechnologyID
 	;
   `,
+  ["plot-bar-wonders-time"]: `
+    WITH config(Key,Value) AS (
+        VALUES('type','bar'),
+            ('mode', 'lines'),
+            ('xaxis','Turn'),
+            ('yaxis','Occurrences')
+    )
+    SELECT * FROM config
+    ;
+    
+    SELECT BuildingClassKey FROM BuildingClassKeys
+    WHERE TypeID = 2
+    ;
+    
+    SELECT BuildingClassKey, Turn, COUNT(*) FROM (
+    SELECT Turn, ReplayEventType, Num2 AS Value FROM ReplayEvents
+    WHERE ReplayEventType = 78
+    )
+    JOIN BuildingClassKeys ON BuildingClassID = Value
+    GROUP BY Turn, BuildingClassKeys.BuildingClassID
+    ;
+  `,
   ["table-hall-of-fame"]: `
 	WITH config(tableName) AS (
 		VALUES('config'),
