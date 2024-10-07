@@ -451,6 +451,7 @@ const sqlQueries = {
       SELECT COUNT(*) AS Games, Player FROM Games GROUP BY Player
     ) AS T3 ON T3.Player = T1.Player
 	ORDER BY IFNULL(Wonders, 0) DESC
+    LIMIT 15
 	;
 	
 	SELECT Player, IFNULL(F9, 0) AS 'Times F9 Pressed', IFNULL(Games,0) AS Games FROM (
@@ -473,6 +474,7 @@ const sqlQueries = {
       GROUP BY T1.Player
     )
     ORDER BY IFNULL(F9, 0) DESC
+    LIMIT 15
     ;
     
     SELECT Player, IFNULL(CS, 0) AS 'Times Entered City', IFNULL(Games,0) AS Games FROM (
@@ -495,6 +497,7 @@ const sqlQueries = {
       GROUP BY T1.Player
     )
     ORDER BY IFNULL(CS, 0) DESC
+    LIMIT 15
     ;
 	
 	SELECT Games.Player AS Player, IFNULL(SUM(IFNULL(PlayerQuitTurn, EndTurn)), 0) AS Turns, COUNT(*) AS Games
@@ -502,6 +505,7 @@ const sqlQueries = {
 	LEFT JOIN GameSeeds ON GameSeeds.GameID = Games.GameID
 	GROUP BY Games.Player
 	ORDER BY SUM(IFNULL(PlayerQuitTurn, EndTurn)) DESC
+    LIMIT 15
 	;
 	
 	DROP TABLE IF EXISTS T2;
