@@ -822,20 +822,27 @@ const sqlQueries = {
 	SELECT * FROM config;
 	
 	WITH tmp AS (
-		SELECT COUNT(*) AS ngames FROM GameSeeds
+        SELECT COUNT(*) AS ngames FROM GameSeeds
         WHERE GameSeed NOT NULL
-	)
-	SELECT BuildingKey AS Wonder, IFNULL(ROUND(COUNT(*)*100.0/ngames, 2), 0)||'%' AS Winrate
-	FROM BuildingKeys
-	LEFT JOIN ReplayEvents ON ReplayEvents.Num2 = BuildingKeys.BuildingID
-	JOIN GameSeeds ON GameSeeds.GameSeed = ReplayEvents.GameSeed
-	JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = ReplayEvents.PlayerID
-	JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = Games.PlayerID
-	JOIN CivKeys ON CivKeys.CivID = Players.CivID
-	JOIN tmp 
-	WHERE ReplayEventType = 78 AND Standing = 1 AND TypeID = 2
-	GROUP BY BuildingID
-	ORDER BY ROUND(COUNT(*)*100.0/ngames, 2) DESC;
+    ), tmp2 AS (
+        SELECT BuildingID, COUNT(*) AS ngames2 FROM BuildingKeys
+        LEFT JOIN replayevents ON ReplayEvents.Num2 = BuildingKeys.BuildingID
+        WHERE ReplayEventType = 78 AND TypeID = 2
+        GROUP BY BuildingID
+    )
+    SELECT BuildingKey AS Wonder, IFNULL(ROUND(COUNT(*)*100.0/ngames2, 2), 0)||'%' AS 'Winrate (Wonder completed Games only)',
+    IFNULL(ROUND(COUNT(*)*100.0/ngames, 2), 0)||'%' AS 'Winrate (All Games)'
+    FROM BuildingKeys
+    LEFT JOIN ReplayEvents ON ReplayEvents.Num2 = BuildingKeys.BuildingID
+    JOIN GameSeeds ON GameSeeds.GameSeed = ReplayEvents.GameSeed
+    JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = ReplayEvents.PlayerID
+    JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = Games.PlayerID
+    JOIN CivKeys ON CivKeys.CivID = Players.CivID
+    JOIN tmp 
+    JOIN tmp2 USING(buildingID)
+    WHERE ReplayEventType = 78 AND Standing = 1 AND TypeID = 2
+    GROUP BY BuildingID
+    ORDER BY ROUND(COUNT(*)*100.0/ngames2, 2) DESC;
 	
 	DROP TABLE IF EXISTS T2;
 	
