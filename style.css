@@ -632,8 +632,12 @@ ul.tree li ul, ul.tree li > div.table-cont {
     display: none;
 }
 
-ul.tree li.open > ul, ul.tree li.open > div.table-cont {
+ul.tree li.open > ul {
     display: block;
+}
+
+ul.tree li.open > div.table-cont {
+    display: table;
 }
 
 ul.tree li a {
