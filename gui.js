@@ -79,11 +79,11 @@ btn.addEventListener("click", function () {
 
 // Start the worker in which sql.js will run
 let worker = new Worker("worker.sql-wasm.js");
+let worker2 = new Worker("worker.sql-wasm.js");  // extra worker for tables
 worker.onerror = error;
+worker2.onerror = error;
 worker.onmessage = function (event) {
 	console.log("e", event);
-	let results = event.data.results;
-	let id = event.data.id;
 	// on db load
 	if (event.data.ready === true) {
 		toc("Loading database from file");
@@ -91,6 +91,20 @@ worker.onmessage = function (event) {
 		fillSelects();
 		doPlot();
 		tableHallOfFameBtn.click();
+	}
+	else {
+		onWorkerMessage(event);
+	}
+}
+worker2.onmessage = function (event) {
+	console.log("e2", event);
+	onWorkerMessage(event);
+}
+
+function onWorkerMessage(event) {
+	let results = event.data.results;
+	let id = event.data.id;
+	if (event.data.ready === true) {
 		return;
 	}
 	// export db
@@ -492,7 +506,7 @@ worker.onmessage = function (event) {
 					el.nextElementSibling.appendChild(b);
 				}
 				else {
-					const sp = document.createElement("span");
+					let sp = document.createElement("span");
 					sp.value = results[n].values[i][1];
 					sp.innerHTML = `${results[n].values[i][0].replace(/\[([^\]]+)\]/g, (_, a) => IconMarkups[a] ? `<img class="ico" src="images/${IconMarkups[a]}"/>` : `[${a}]`)}`;
 					sp.classList.add('sp', 'dropdownItem');
@@ -683,7 +697,7 @@ worker.onmessage = function (event) {
 
 	}
 	toc("Displaying results");
-};
+}
 
 function error(e) {
 	console.log(e);
@@ -699,7 +713,7 @@ function noerror() {
 function execute(commands) {
 	tic();
 	SQLLoadingElm.textContent = "Fetching results...";
-	worker.postMessage({ action: 'exec', sql: commands });
+	worker2.postMessage({ action: 'exec', id: 'table', sql: commands });
 }
 
 function fillSelects() {
@@ -793,9 +807,11 @@ function fetchdb() {
 		tic();
 		try {
 			worker.postMessage({ action: 'open', buffer: unzipped }, [unzipped]);
+			worker2.postMessage({ action: 'open', buffer: unzipped }, [unzipped]);
 		}
 		catch (exception) {
 			worker.postMessage({ action: 'open', buffer: unzipped });
+			worker2.postMessage({ action: 'open', buffer: unzipped });
 		}
 	};
 	tic();
