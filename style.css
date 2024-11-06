@@ -381,7 +381,13 @@ p,h1 {
     height: 20px;
     width: 20px;
 }
-
+.cb-sub {
+    margin: 0;
+    height: 1.5em;
+    width: 1.5em;
+    position: absolute;
+    right: 18px;
+}
 tr {
     color: var(--text-color);
 }
@@ -611,3 +617,51 @@ svg.icon:hover > path, a.modebar-btn.active path {
      margin: 5px 10px;
      color: var(--text-color);
  }
+
+ul.tree li {
+    list-style-type: none;
+    position: relative;
+    cursor: default;
+    padding: 5px 0;
+    font-family: OpenSans-Regular, sans-serif;
+    font-size:17px;
+    user-select: none;
+}
+
+ul.tree li ul {
+    display: none;
+}
+
+ul.tree li.open > ul {
+    display: block;
+}
+
+ul.tree li a {
+    color: var(--text-color);
+    text-decoration: none;
+}
+
+ul.tree li a:before {
+    height: 1em;
+    padding:0 .1em;
+    display: block;
+    position: absolute;
+    left: -1.3em;
+    top: .2em;
+    font-size:17px;
+}
+
+ul.tree li > a:not(:last-child):before {
+    content: '˃';
+    transform: scaleX(0.5);
+}
+
+ul.tree li.open > a:not(:last-child):before {
+    content: '˅';
+    font-size:17px;
+    transform: scaleY(0.6);
+}
+
+ul.tree div.table-cont {
+    display: table;
+}

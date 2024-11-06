@@ -26,6 +26,7 @@ let tab2Rad = document.getElementById("tab2");
 let tab3Rad = document.getElementById("tab3");
 let tab4Rad = document.getElementById("tab4");
 let tab5Rad = document.getElementById("tab5");
+let tab6Rad = document.getElementById("tab6");
 
 let tableHallOfFameBtn = document.getElementById('tableHallOfFame');
 let tableBeliefAdoptionBtn = document.getElementById('tableBeliefAdoption');
@@ -47,6 +48,8 @@ let compareGroupMedianRad = document.getElementById('compare-group-median');
 let sankeyGroups1Rad = document.getElementById('sankey-groups1');
 let sankeyGroups2Rad = document.getElementById('sankey-groups2');
 let sankeyGroups3Rad = document.getElementById('sankey-groups3');
+
+let treeRoot = document.getElementById('tree-root');
 
 let dbsizeLbl = document.getElementById('dbsize');
 
@@ -533,6 +536,38 @@ function onWorkerMessage(event) {
 			el.style.minWidth = el.nextElementSibling.getBoundingClientRect().width + 'px';
 			el.parentElement.parentElement.style.display = temp;
 		});
+		for (let i = 0; i < results[0].values.length; i++) {
+			let li = document.createElement("li");
+			li.classList.add(`events-cities-GameID`,`GameID${results[0].values[i][1]}`);
+			li.value = results[0].values[i][1];
+			li.innerHTML = `<a href="#">${results[0].values[i][0]}</a><ul><li><a href="#">Loading...</a></li></ul>`;
+			li.addEventListener('click', function(e) {
+				let parent = e.target.parentElement;
+				let classList = parent.classList;
+				if(classList.contains('open')) {
+					classList.remove('open');
+					parent.querySelectorAll(':scope .open').forEach((el) => {
+						el.classList.remove('open');
+					});
+				} else {
+					classList.add('open');
+				}
+				if (!classList.contains('cached')) {
+					classList.add('cached');
+					let query = `
+							SELECT * FROM (VALUES('GameID${results[0].values[i][1]}'),('Players'));
+							SELECT Player||' ('||CivKey||')'||IIF(Standing = 1, ' *Winner*', ''), GameID, PlayerID FROM Games
+							JOIN GameSeeds USING(GameID)
+							JOIN Players USING(GameSeed, PlayerID)
+							JOIN CivKeys USING(CivID)
+							WHERE GameID = ${results[0].values[i][1]}
+						`;
+					worker.postMessage({ action: 'exec', sql: query, id: 'tree-node-update' });
+				}
+				e.preventDefault();
+			});
+			treeRoot.appendChild(li);
+		}
 	}
 	// fill Games front tab
 	else if (id === "plot-games-victories") {
@@ -653,6 +688,83 @@ function onWorkerMessage(event) {
 		};
 		Plotly.newPlot('plotOut', data, layout);
 	}
+	// events tree node update
+	else if (id === "tree-node-update") {
+		let nodeID = results[0].values[0][0];
+		let tag = results[0].values[1][0];
+		console.log('nodeid', nodeID, tag)
+		document.querySelectorAll('.'+nodeID).forEach((li,ind) => {
+			if (tag === 'Constructions') {
+				li.replaceChildren(li.firstElementChild, tableCreate(null, results[1].columns, results[1].values));
+			}
+			else {
+				li.replaceChildren(li.firstElementChild, ...results[1].values.map((el) => {
+					let li2 = document.createElement("li");
+					let ul = document.createElement("ul");
+					ul.appendChild(li2);
+					let nodeID2 = results[1].columns.slice(1).reduce((a,c,i)=>a+c+el[i+1],'');
+					li2.classList.add(nodeID2);
+					li2.innerHTML = `<a href="#">${el[0]}</a><ul><li><a href="#">Loading...</a></li></ul>`;
+					li2.addEventListener('click', function(e) {
+						let parent = e.target.parentElement;
+						let classList = parent.classList;
+						if(classList.contains('open')) {
+							classList.remove('open');
+							parent.querySelectorAll(':scope .open').forEach((el2) => {
+								el2.classList.remove('open');
+							});
+						} else {
+							classList.add('open');
+						}
+						if (!classList.contains('cached')) {
+							classList.add('cached');
+							if (tag === 'Players') {
+								let query = `
+									SELECT * FROM (VALUES('${nodeID2}'),('Cities'));
+									select CityName, GameID, PlayerID, PlotIndex AS CityID FROM (
+										select GameID, PlayerID, CivKey, Player, Turn, TimeStamp, num1 as PlotIndex, IFNULL(Text, str) as CityName, iif(count(*)=1, iif(str = 'NO_CITY', 'raze',''), 'conquest') as remark, max(ReplayEvents.rowid) as mx from ReplayEvents
+										join ReplayEventKeys on ReplayEventKeys.ReplayEventID = ReplayEvents.ReplayEventType
+										join GameSeeds using(GameSeed)
+										join Games using(GameID, PlayerID)
+										join Players using(GameSeed, PlayerID)
+										join CivKeys using(CivID)
+										left join CityNames on str = CityName
+										where ReplayEventID in (101) and GameID = ${el[1]} and PlayerID = ${el[2]}
+										group by GameSeed, PlotIndex, Turn, TimeStamp
+										order by GameID, PlayerID, Turn, TimeStamp
+									) where remark = ''
+								`;
+								worker.postMessage({action: 'exec', sql: query, id: 'tree-node-update'});
+							}
+							else if (tag === 'Cities') {
+								let query = `
+									SELECT * FROM (VALUES('${nodeID2}'),('Constructions'));
+									select turn,
+									iif(replayeventid=62,'purchased '||UnitKey,
+									iif(replayeventid=63,'purchased '||BuildingKey,
+									iif(replayeventid=77,UnitKey,
+									iif(replayeventid=78,BuildingKey,
+									'???')))) as Event from replayevents
+									join replayeventkeys on replayeventkeys.replayeventid = replayevents.replayeventtype
+									join gameseeds using(gameseed)
+									join games using(gameid, playerid)
+									join players using(gameseed, playerid)
+									join civkeys using(civid)
+									left join BuildingKeys on iif(replayeventid=78,BuildingID = num2,BuildingID=num3)
+									left join UnitKeys on UnitID = num2
+									where replayeventid in (62,63,77,78) and gameid = ${el[1]} and playerid = ${el[2]} and num1 = ${el[3]}
+								`;
+								worker.postMessage({action: 'exec', sql: query, id: 'tree-node-update'});
+							}
+						}
+						e.stopPropagation();
+						e.preventDefault();
+					});
+					return ul;
+				}));
+			}
+		});
+	}
 	// fill table
 	else {
 		outputElm.innerHTML = "";
@@ -730,11 +842,13 @@ let tableCreate = function () {
 	return function (name, columns, values) {
 		let div = document.createElement('div');
 		div.classList.add('table-cont');
-		let ttl = document.createElement('span');
-		ttl.textContent = name;
-		ttl.classList.add('sp');
-		ttl.style.fontSize = '22px';
-		div.appendChild(ttl);
+		if (name) {
+			let ttl = document.createElement('span');
+			ttl.textContent = name;
+			ttl.classList.add('sp');
+			ttl.style.fontSize = '22px';
+			div.appendChild(ttl);
+		}
 		let tbl = document.createElement('table');
 		let html = '<thead>' + valconcat(columns, 'th') + '</thead>';
 		let rows = values.map(function (v) { return valconcat(v, 'td'); });
@@ -744,6 +858,9 @@ let tableCreate = function () {
 		return div;
 	}
 }();
+
+function populateTreeNode(tag, id) {
+}
 
 // Execute the commands when the button is clicked
 function execEditorContents() {
@@ -832,7 +949,7 @@ function doPlot(e) {
 		worker.postMessage({ action: 'exec', sql: sqlQueries["plot-games-victories"], id: "plot-games-victories" });
 		return;
 	}
-	if (tab5Rad.checked)
+	if (tab5Rad.checked || tab6Rad.checked)
 		return;
 	tic();
 	noerror();
@@ -906,11 +1023,11 @@ function doPlot(e) {
 			supplement = `
 				LEFT JOIN (
 					SELECT GameID, PlayerID, 0 AS GroupID FROM ReplayEvents
-					JOIN BuildingKeys ON BuildingKeys.BuildingID = Num2
-					JOIN BuildingClassKeys ON BuildingClassKeys.BuildingClassID = BuildingKeys.BuildingClassID
-					JOIN GameSeeds ON GameSeeds.GameSeed = ReplayEvents.GameSeed
-					WHERE ReplayEventType = 78 AND BuildingClassKeys.TypeID = 2 AND BuildingClassKeys.BuildingClassKey = "${val.id}"
-				) T1 ON T1.GameID = Games.GameID AND T1.PlayerID = Games.PlayerID
+					JOIN BuildingKeys ON BuildingID = Num2
+					JOIN BuildingClassKeys USING(BuildingClassID)
+					JOIN GameSeeds USING(GameSeed)
+					WHERE ReplayEventType = 78 AND BuildingClassKeys.TypeID = 2 AND BuildingClassKey IN (${selection})
+				) USING(GameID, PlayerID)
 			`;
 			groupID = 'IFNULL(GroupID, 1)';
 		}
@@ -949,9 +1066,9 @@ function doPlot(e) {
 			tracesData AS (
 				SELECT Games.GameID, Games.rowid, ${traceName} AS TraceName, Standing, PlayerQuitTurn AS QuitTurn ${groupID ? `, ${groupID} AS GroupID` : ''}
 				FROM Games
-				JOIN GameSeeds ON GameSeeds.GameID = Games.GameID
-        		JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = Games.PlayerID
-				JOIN CivKeys ON CivKeys.CivID = Players.CivID
+				JOIN GameSeeds USING(GameID)
+        		JOIN Players USING(GameSeed, PlayerID)
+				JOIN CivKeys USING(CivID)
 				${supplement || ''}
 				${condition1 ? `WHERE ${condition1}` : ''}
 			)
