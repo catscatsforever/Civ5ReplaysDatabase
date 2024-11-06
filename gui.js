@@ -396,20 +396,20 @@ worker.onmessage = function (event) {
 						arrY = Array.from({length: group.length}, (el, i)=>blob[n][i][1].reduce((acc,it)=>acc+it,0)/blob[n][i][1].length);
 					}
 					else if (conf.aggregate.method === 1) {  // 20% winsorized mean
-						arrY = Array.from({length: group.length}, (el, i)=> {
+						arrY = Array.from({length: group.length}, (el, i) => {
 							let s = [...blob[n][i][1]].sort((a,b)=>a-b);
 							let LBound = Math.trunc(s.length * 0.2);
 							let UBound = s.length - LBound - 1;
-							return s.reduce((acc,it,wi,arr)=>{
+							return s.reduce((acc,it,wi,arr) => {
 								let r = (wi < LBound) ? arr[LBound] : ((wi > UBound) ? arr[UBound] : it);
 								return acc + r;
 							})/s.length;
 						});
 					}
 					else if (conf.aggregate.method === 2) {  // Median
-						arrY = Array.from({length: group.length}, (el, i)=>{
+						arrY = Array.from({length: group.length}, (el, i) => {
 							let s = [...blob[n][i][1]].sort((a,b)=>a-b);
-							return (s[Math.floor(s.length / 2) - 1] + s[Math.ceil(s.length / 2) - 1]) / 2;
+							return (s[Math.floor((s.length - 1) / 2)] + s[Math.ceil((s.length - 1) / 2)]) / 2;
 						});
 					}
 					data.push({
