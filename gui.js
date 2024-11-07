@@ -783,29 +783,6 @@ function onWorkerMessage(event) {
 		Object.entries(blob).forEach((t, _)=>{
 			outputElm.appendChild(tableCreate(t[0], t[1].columns, t[1].values));
 		});
-		const allTables = document.querySelectorAll("table");
-
-		for (const table of allTables) {
-			const tBody = table.tBodies[0];
-			const rows = Array.from(tBody.rows);
-			const headerCells = table.tHead.rows[0].cells;
-
-			for (const th of headerCells) {
-				const cellIndex = th.cellIndex;
-
-				th.addEventListener("click", () => {
-					let dir = th.classList.contains("sort-desc");
-					th.parentElement.childNodes.forEach(el=>el.classList.remove("sort-asc", "sort-desc"));
-					th.classList.add(dir === true ? "sort-asc" : "sort-desc");
-					rows.sort((tr1, tr2) => {
-						return tr1.cells[cellIndex].textContent.localeCompare(tr2.cells[cellIndex].textContent, undefined, { numeric: true });
-					});
-					if (!dir) rows.reverse();
-
-					tBody.append(...rows);
-				});
-			}
-		}
 
 	}
 	toc("Displaying results");
@@ -854,6 +831,22 @@ let tableCreate = function () {
 		let rows = values.map(function (v) { return valconcat(v, 'td'); });
 		html += '<tbody>' + valconcat(rows, 'tr') + '</tbody>';
 		tbl.innerHTML = html;
+		rows = Array.from(tbl.tBodies[0].rows);
+		for (const th of tbl.tHead.rows[0].cells) {
+			const cellIndex = th.cellIndex;
+
+			th.addEventListener("click", () => {
+				let dir = th.classList.contains("sort-desc");
+				th.parentElement.childNodes.forEach(el=>el.classList.remove("sort-asc", "sort-desc"));
+				th.classList.add(dir === true ? "sort-asc" : "sort-desc");
+				rows.sort((tr1, tr2) => {
+					return tr1.cells[cellIndex].textContent.localeCompare(tr2.cells[cellIndex].textContent, undefined, { numeric: true });
+				});
+				if (!dir) rows.reverse();
+
+				tbl.tBodies[0].append(...rows);
+			});
+		}
 		div.appendChild(tbl);
 		return div;
 	}
