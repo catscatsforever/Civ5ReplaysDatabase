@@ -33,6 +33,7 @@ let tableBeliefAdoptionBtn = document.getElementById('tableBeliefAdoption');
 let tablePolicyAdoptionBtn = document.getElementById('tablePolicyAdoption');
 let tableTechResearchBtn = document.getElementById('tableTechResearch');
 let tableWonderConstructionBtn = document.getElementById('tableWonderConstruction');
+let tableCSRelationsBtn = document.getElementById('tableCSRelations');
 
 let gameSelHead = document.getElementById('gameID-select-head');
 let datasetSelHead = document.getElementById('dataset-select-head');
@@ -1299,3 +1300,5 @@ tablePolicyAdoptionBtn.addEventListener("click", () => { noerror(); let r = sqlQ
 tableTechResearchBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-tech-research"]; execute(r); editor.setValue(r); }, true);
 
 tableWonderConstructionBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-wonder-construction"]; execute(r); editor.setValue(r); }, true);
+
+tableCSRelationsBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-cs-relations"]; execute(r); editor.setValue(r); }, true);

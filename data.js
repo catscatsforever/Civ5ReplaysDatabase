@@ -896,4 +896,55 @@ const sqlQueries = {
     GROUP BY BuildingClassID
     ORDER BY TypeID, COUNT(*);
   `,
+  ["table-cs-relations"]: `
+  WITH config(tableName) AS (
+        VALUES('config'),
+        ('City-State Coups'),
+        ('City-State Liberators'),
+        ('Top City-State Donators'),
+        ('Top City-State Robbers'),
+        ('Quest Masters')
+    )
+    SELECT * FROM config;
+    -- CS coups
+    select player, count(iif(replayeventtype = 93,1,null)) as 'City-State Coups', round(count(iif(num4=1,1,null))*1.0/count(iif(replayeventtype = 93,1,null)),2) as 'Success Rate' from replayevents
+    join gameseeds using(gameseed)
+    join games using(gameid, playerid)
+    where replayeventtype in (93)
+    group by player
+    order by count(iif(replayeventtype = 93,1,null)) desc
+    LIMIT 20;
+    -- CS liberated
+    select player, count(iif(replayeventtype = 35,1,null)) as 'City-States liberated' from replayevents
+    join gameseeds using(gameseed)
+    join games using(gameid, playerid)
+    where replayeventtype in (35)
+    group by player
+    order by count(iif(replayeventtype = 35,1,null)) desc
+    LIMIT 20;
+    -- gold donated to CS
+    select player, sum(num2) as 'Gold[ICON_GOLD] donated to City-States' from replayevents
+    join gameseeds using(gameseed)
+    join games using(gameid, playerid)
+    where replayeventtype in (38)
+    group by player
+    order by sum(num2) desc
+    LIMIT 20;
+    -- gold seized from CS
+    select player, sum(num2) as 'Gold[ICON_GOLD] seized from City-States' from replayevents
+    join gameseeds using(gameseed)
+    join games using(gameid, playerid)
+    where replayeventtype in (36)
+    group by player
+    order by sum(num2) desc
+    LIMIT 20;
+    -- quests
+    select player, count(iif(replayeventtype = 95,1,null)) as 'City-State Quests Completed' from replayevents
+    join gameseeds using(gameseed)
+    join games using(gameid, playerid)
+    where replayeventtype in (95)
+    group by player
+    order by count(iif(replayeventtype = 95,1,null)) desc
+    LIMIT 20;
+  `,
 };
