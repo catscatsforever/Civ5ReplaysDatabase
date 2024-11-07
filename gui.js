@@ -706,6 +706,10 @@ function onWorkerMessage(event) {
 					li2.classList.add(nodeID2);
 					li2.innerHTML = `<a href="#">${el[0]}</a><ul><li><a href="#">Loading...</a></li></ul>`;
 					li2.addEventListener('click', function(e) {
+						if (e.target.localName !== 'a') {
+							e.stopPropagation();
+							return;
+						}
 						let parent = e.target.parentElement;
 						let classList = parent.classList;
 						if(classList.contains('open')) {
