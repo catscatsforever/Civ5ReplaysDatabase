@@ -601,11 +601,15 @@ const sqlQueries = {
     GROUP BY BeliefID
     ORDER BY MIN(Turn);
 	
-	SELECT BeliefType AS "Belief Type", BeliefKey AS "Belief",
-	COUNT(*) AS "Total Times Adopted"
-	FROM T2
-    GROUP BY BeliefID
-    ORDER BY COUNT(*) DESC;
+	SELECT BeliefTypes.BeliefType AS "Belief Type", ifnull("Belief", BeliefKeys.BeliefKey) AS "Belief", ifnull("Total Times Adopted", 0) AS "Total Times Adopted" FROM (
+        SELECT BeliefKey AS "Belief",
+        COUNT(*) AS "Total Times Adopted"
+        FROM T2
+        GROUP BY BeliefID
+        ORDER BY COUNT(*) DESC
+    )
+    RIGHT OUTER JOIN BeliefKeys ON BeliefKeys.BeliefKey = "Belief"
+    JOIN BeliefTypes ON BeliefTypes.TypeID = BeliefKeys.TypeID;
 	
 	DROP TABLE T2;
   `,
