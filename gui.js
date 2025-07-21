@@ -446,6 +446,7 @@ function onWorkerMessage(event) {
 			}
 		}
 		let layout = {
+			title: (conf.aggregate) ? `<b>${conf.aggregate.name} vs All average<br>${conf.yaxis ?? 'TODO'}</b>` : undefined,
 			hovermode: "x unified",
 			barmode: 'relative',
 			xaxis: {
