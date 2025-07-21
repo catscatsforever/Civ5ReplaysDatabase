@@ -1,0 +1,525 @@
+DROP TABLE IF EXISTS _cached_HoF_GWB;
+DROP TABLE IF EXISTS _cached_HoF_DSL;
+DROP TABLE IF EXISTS _cached_HoF_PCG;
+DROP TABLE IF EXISTS _cached_HoF_TTSIG;
+DROP TABLE IF EXISTS _cached_HoF_GRR;
+DROP TABLE IF EXISTS _cached_HoF_STRR;
+
+DROP TABLE IF EXISTS _cached_BA_AToBA;
+DROP TABLE IF EXISTS _cached_BA_MedToBA;
+DROP TABLE IF EXISTS _cached_BA_MinToBA;
+DROP TABLE IF EXISTS _cached_BA_NToBA;
+
+DROP TABLE IF EXISTS _cached_PA_AToPA;
+DROP TABLE IF EXISTS _cached_PA_MedToPA;
+DROP TABLE IF EXISTS _cached_PA_MinToPA;
+DROP TABLE IF EXISTS _cached_PA_NToPA;
+
+DROP TABLE IF EXISTS _cached_TR_AToTR;
+DROP TABLE IF EXISTS _cached_TR_MedToTR;
+DROP TABLE IF EXISTS _cached_TR_MinToTR;
+DROP TABLE IF EXISTS _cached_TR_NToTR;
+
+DROP TABLE IF EXISTS _cached_WC_WW;
+DROP TABLE IF EXISTS _cached_WC_AToWC;
+DROP TABLE IF EXISTS _cached_WC_MedToWC;
+DROP TABLE IF EXISTS _cached_WC_MinToWC;
+DROP TABLE IF EXISTS _cached_WC_NToWC;
+
+DROP TABLE IF EXISTS _cached_CSR_CSC;
+DROP TABLE IF EXISTS _cached_CSR_CSL;
+DROP TABLE IF EXISTS _cached_CSR_TCSD;
+DROP TABLE IF EXISTS _cached_CSR_TCSR;
+DROP TABLE IF EXISTS _cached_CSR_QM;
+
+CREATE TABLE _cached_HoF_GWB AS SELECT * FROM (
+	SELECT DISTINCT T1.Player, IFNULL(T2.Wonders, 0) AS Wonders, Games FROM Games AS T1
+	LEFT JOIN (
+		SELECT Games.Player AS Player, COUNT(*) AS Wonders FROM ReplayEvents
+		JOIN BuildingKeys ON BuildingKeys.BuildingID = Num2
+		JOIN GameSeeds ON GameSeeds.GameSeed = ReplayEvents.GameSeed
+		JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = ReplayEvents.PlayerID
+		WHERE ReplayEvents.ReplayEventType = 78 AND TypeID = 2
+		GROUP BY Games.Player
+	) AS T2 ON T1.Player = T2.Player
+    LEFT JOIN (
+      SELECT COUNT(*) AS Games, Player FROM Games GROUP BY Player
+    ) AS T3 ON T3.Player = T1.Player
+	ORDER BY IFNULL(Wonders, 0) DESC
+    LIMIT 15
+);
+CREATE TABLE _cached_HoF_DSL AS SELECT * FROM (
+	SELECT Player, IFNULL(F9, 0) AS 'Times F9 Pressed', IFNULL(Games,0) AS Games FROM (
+      SELECT *, Count(*) AS Games FROM (SELECT Games.Player FROM Games) AS T1
+      LEFT JOIN (
+        SELECT Player, SUM(F9) AS F9 FROM (
+          SELECT Games.GameID, Games.Player, sum(ReplayDataSetsChanges.Value) AS F9
+          FROM ReplayDataSetsChanges
+          JOIN ReplayDataSetKeys ON ReplayDataSetKeys.ReplayDataSetID = ReplayDataSetsChanges.ReplayDataSetID
+          JOIN GameSeeds ON GameSeeds.GameSeed = ReplayDataSetsChanges.GameSeed
+          JOIN Games ON Games.PlayerID = ReplayDataSetsChanges.PlayerID AND Games.GameID = GameSeeds.GameID
+          WHERE ReplayDataSetsChanges.ReplayDataSetID = 68 AND ReplayDataSetsChanges.Value > 0
+          GROUP BY Games.Player
+        )
+        GROUP BY Player
+      ) AS T2 ON T1.Player = T2.Player
+    LEFT JOIN (
+      SELECT COUNT(*) AS Games, Player FROM Games GROUP BY Player
+    ) AS T3 ON T3.Player = T1.Player
+      GROUP BY T1.Player
+    )
+    ORDER BY IFNULL(F9, 0) DESC
+    LIMIT 15
+);
+CREATE TABLE _cached_HoF_PCG AS SELECT * FROM (
+    SELECT Player, IFNULL(CS, 0) AS 'Times Entered City', IFNULL(Games,0) AS Games FROM (
+      SELECT *, Count(*) AS Games FROM (SELECT Games.Player FROM Games) AS T1
+      LEFT JOIN (
+        SELECT Player, SUM(CS) AS CS FROM (
+          SELECT Games.GameID, Games.Player, sum(ReplayDataSetsChanges.Value) AS CS
+          FROM ReplayDataSetsChanges
+          JOIN ReplayDataSetKeys ON ReplayDataSetKeys.ReplayDataSetID = ReplayDataSetsChanges.ReplayDataSetID
+          JOIN GameSeeds ON GameSeeds.GameSeed = ReplayDataSetsChanges.GameSeed
+          JOIN Games ON Games.PlayerID = ReplayDataSetsChanges.PlayerID AND Games.GameID = GameSeeds.GameID
+          WHERE ReplayDataSetsChanges.ReplayDataSetID = 79 AND ReplayDataSetsChanges.Value > 0
+          GROUP BY Games.Player
+        )
+        GROUP BY Player
+      ) AS T2 ON T1.Player = T2.Player
+    LEFT JOIN (
+      SELECT COUNT(*) AS Games, Player FROM Games GROUP BY Player
+    ) AS T3 ON T3.Player = T1.Player
+      GROUP BY T1.Player
+    )
+    ORDER BY IFNULL(CS, 0) DESC
+    LIMIT 15
+);
+CREATE TABLE _cached_HoF_TTSIG AS SELECT * FROM (
+	SELECT Games.Player AS Player, IFNULL(SUM(IFNULL(PlayerQuitTurn, EndTurn)), 0) AS Turns, COUNT(*) AS Games
+	FROM Games
+	LEFT JOIN GameSeeds ON GameSeeds.GameID = Games.GameID
+	GROUP BY Games.Player
+	ORDER BY SUM(IFNULL(PlayerQuitTurn, EndTurn)) DESC
+    LIMIT 15
+);
+DROP TABLE IF EXISTS T2;
+    
+    CREATE TEMPORARY TABLE T2 AS 
+    SELECT *,
+    SUM(Value) OVER (PARTITION BY DataSetID, GameSeed, PlayerID ORDER BY Turn) AS rsum
+    FROM ReplayDataSetsChanges
+    JOIN GameSeeds USING(GameSeed)
+    JOIN Games USING(GameID, PlayerID)
+    JOIN ReplayDataSetKeys USING(ReplayDataSetID)
+    WHERE Turn <= IFNULL(PlayerQuitTurn, EndTurn)
+    ;
+CREATE TABLE _cached_HoF_GRR AS SELECT * FROM (
+    SELECT ReplayDataSetKey AS "Replay Category",
+    MAX(rsum)||' ('||Player||', Game #'||GameID||', Turn '||Turn||')' AS "Highest Value ever recorded"
+    FROM T2
+    GROUP BY ReplayDataSetID
+);
+CREATE TABLE _cached_HoF_STRR AS SELECT * FROM (
+    SELECT ReplayDataSetKey AS "Replay Category",
+    MAX(Value)||' ('||Player||', Game #'||GameID||', Turn '||Turn||')' AS "Max Change per Turn"
+    FROM T2
+    GROUP BY ReplayDataSetID
+);
+
+DROP TABLE IF EXISTS T2;
+
+CREATE TEMPORARY TABLE T2 AS SELECT * FROM (
+	SELECT *,
+    ROW_NUMBER() OVER (PARTITION BY Value ORDER BY Turn) AS Rnk,
+    COUNT(*) OVER (PARTITION BY BeliefID) AS Cnt
+	FROM (
+	    SELECT *, Num1 AS Value FROM ReplayEvents
+	    WHERE ReplayEventType = 17
+	    UNION
+	    SELECT *, Num2 FROM ReplayEvents
+	    WHERE ReplayEventType = 18
+	    UNION
+	    SELECT *, Num3 FROM ReplayEvents
+	    WHERE ReplayEventType = 18
+	    UNION
+	    SELECT *, Num4 FROM ReplayEvents
+	    WHERE ReplayEventType = 18
+	    UNION
+	    SELECT *, Num5 FROM ReplayEvents
+	    WHERE ReplayEventType = 18
+	    UNION
+	    SELECT *, Num2 FROM ReplayEvents
+	    WHERE ReplayEventType = 19
+	    UNION
+	    SELECT *, Num3 FROM ReplayEvents
+	    WHERE ReplayEventType = 19
+	) AS T1
+	JOIN BeliefKeys ON BeliefID = Value
+	JOIN BeliefTypes ON BeliefTypes.TypeID = BeliefKeys.TypeID
+	JOIN GameSeeds ON GameSeeds.GameSeed = T1.GameSeed
+	JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = T1.PlayerID
+	JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = T1.PlayerID
+	JOIN CivKeys ON CivKeys.CivID = Players.CivID
+);
+
+CREATE TABLE _cached_BA_AToBA AS SELECT * FROM (
+	SELECT BeliefType AS "Belief Type", BeliefKey AS "Belief",
+	ROUND(AVG(Turn), 1) AS "Average Turn"
+	FROM T2
+    GROUP BY BeliefID
+    ORDER BY "Average Turn"
+);
+CREATE TABLE _cached_BA_MedToBA AS SELECT * FROM (
+	SELECT BeliefType AS "Belief Type", BeliefKey AS "Belief",
+    Median AS "Median Turn"
+	FROM T2
+	JOIN (
+	  	SELECT BeliefID AS BID, Turn AS Median
+		FROM T2
+		WHERE T2.Rnk = T2.Cnt / 2 + 1
+	) AS T3 ON T3.BID = BeliefID
+    GROUP BY BeliefID
+    ORDER BY "Median Turn"
+);
+CREATE TABLE _cached_BA_MinToBA AS SELECT * FROM (
+	SELECT BeliefType AS "Belief Type", BeliefKey AS "Belief",
+    MIN(Turn)||' ('||Player||', '||CivKey||')' AS "Minimum Turn"
+	FROM T2
+    GROUP BY BeliefID
+    ORDER BY MIN(Turn)
+);
+CREATE TABLE _cached_BA_NToBA AS SELECT * FROM (
+	SELECT BeliefTypes.BeliefType AS "Belief Type", ifnull("Belief", BeliefKeys.BeliefKey) AS "Belief", ifnull("Total Times Adopted", 0) AS "Total Times Adopted" FROM (
+        SELECT BeliefKey AS "Belief",
+        COUNT(*) AS "Total Times Adopted"
+        FROM T2
+        GROUP BY BeliefID
+        ORDER BY COUNT(*) DESC
+    )
+    RIGHT OUTER JOIN BeliefKeys ON BeliefKeys.BeliefKey = "Belief"
+    JOIN BeliefTypes ON BeliefTypes.TypeID = BeliefKeys.TypeID
+);
+
+
+DROP TABLE IF EXISTS T2;
+DROP TABLE IF EXISTS T3;
+DROP TABLE IF EXISTS T4;
+
+CREATE TEMPORARY TABLE T2 AS SELECT * FROM (
+  SELECT *,
+      ROW_NUMBER() OVER (PARTITION BY Value ORDER BY Turn) AS Rnk,
+      COUNT(*) OVER (PARTITION BY PolicyID) AS Cnt
+      FROM (
+          SELECT *, Num2 AS Value FROM ReplayEvents
+          WHERE ReplayEventType = 61
+      ) AS T1
+      JOIN PolicyKeys ON PolicyID = Value
+      JOIN PolicyBranches ON PolicyBranches.BranchID = PolicyKeys.BranchID
+      JOIN GameSeeds ON GameSeeds.GameSeed = T1.GameSeed
+      JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = T1.PlayerID
+      JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = T1.PlayerID
+      JOIN CivKeys ON CivKeys.CivID = Players.CivID
+);
+CREATE TEMPORARY TABLE T3 AS SELECT * FROM (
+  SELECT *,
+      ROW_NUMBER() OVER (PARTITION BY Value ORDER BY Turn) AS Rnk,
+      COUNT(*) OVER (PARTITION BY BranchID) AS Cnt
+      FROM (
+          SELECT *, Num2 AS Value FROM ReplayEvents
+          WHERE ReplayEventType = 75
+      ) AS T1
+      JOIN PolicyBranches ON BranchID = Value
+      JOIN GameSeeds ON GameSeeds.GameSeed = T1.GameSeed
+      JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = T1.PlayerID
+      JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = T1.PlayerID
+      JOIN CivKeys ON CivKeys.CivID = Players.CivID
+);
+CREATE TEMPORARY TABLE T4 AS SELECT * FROM (
+		SELECT *
+		FROM (
+			SELECT *, COUNT(Num2) AS "Cnt_2", MAX(Turn)
+			FROM T2
+			GROUP BY GameSeed, PlayerID, BranchID
+		)
+		WHERE Cnt_2 = 5 AND BranchID < 9
+);
+
+CREATE TABLE _cached_PA_AToPA AS SELECT * FROM (
+  SELECT "Policy Branch", "Policy", "Average Turn"
+  FROM (
+  	SELECT BranchID, PolicyID, PolicyBranch AS "Policy Branch", PolicyKey AS "Policy",
+  	ROUND(AVG(Turn), 1) AS "Average Turn"
+  	FROM T2
+    	GROUP BY PolicyID
+  	UNION
+  	SELECT BranchID, -1 AS "PolicyID", PolicyBranch AS "Policy Branch", PolicyBranch AS "Policy",
+  	ROUND(AVG(Turn), 1) AS "Average Turn"
+  	FROM T3
+    	GROUP BY BranchID
+  	UNION
+  	SELECT BranchID, 111 AS "PolicyID", PolicyBranch AS "Policy Branch", PolicyBranch||' Finisher' AS "Policy",
+  	ROUND(AVG(Turn), 1) AS "Average Turn"
+  	FROM T4
+    	GROUP BY BranchID
+    	ORDER BY BranchID
+	)
+);
+CREATE TABLE _cached_PA_MedToPA AS SELECT * FROM (
+	SELECT "Policy Branch", "Policy", "Median Turn"
+	FROM (
+		SELECT BranchID, PolicyID, PolicyBranch AS "Policy Branch", PolicyKey AS "Policy",
+    	Median AS "Median Turn"
+		FROM T2
+		JOIN (
+	  		SELECT PolicyID AS PID, Turn AS Median
+			FROM T2
+			WHERE T2.Rnk = T2.Cnt / 2 + 1
+		) AS T5 ON T5.PID = PolicyID
+    	GROUP BY PolicyID
+  	UNION
+  	SELECT BranchID, -1 AS "PolicyID", PolicyBranch AS "Policy Branch", PolicyBranch AS "Policy",
+    	Median AS "Median Turn"
+  	FROM T3
+  	JOIN (
+    	  SELECT BranchID AS PID, Turn AS Median
+    	FROM T3
+    	WHERE T3.Rnk = T3.Cnt / 2 + 1
+  	) AS T5 ON T5.PID = BranchID
+    	GROUP BY BranchID
+  	UNION
+  	SELECT BranchID, 111 AS "PolicyID", PolicyBranch AS "Policy Branch", PolicyBranch||' Finisher' AS "Policy",
+  		Median AS "Median Turn"
+  	FROM T4
+  	JOIN (
+    	  SELECT BranchID AS PID, Turn AS Median
+    	FROM T4
+    	WHERE T4.Rnk = T4.Cnt / 2 + 1
+  	) AS T5 ON T5.PID = BranchID
+    	GROUP BY BranchID
+    	ORDER BY BranchID
+  )
+);
+CREATE TABLE _cached_PA_MinToPA AS SELECT * FROM (
+  SELECT "Policy Branch", "Policy", "Minimum Turn"
+  FROM (
+		SELECT BranchID, PolicyID, PolicyBranch AS "Policy Branch", PolicyKey AS "Policy",
+    	MIN(Turn)||' ('||Player||', '||CivKey||')' AS "Minimum Turn"
+		FROM T2
+    	GROUP BY PolicyID
+  	UNION
+  	SELECT BranchID, -1 AS "PolicyID", PolicyBranch AS "Policy Branch", PolicyBranch AS "Policy",
+    	MIN(Turn)||' ('||Player||', '||CivKey||')' AS "Minimum Turn"
+	  FROM T3
+  	  GROUP BY BranchID
+  	UNION
+  	SELECT BranchID, 111 AS "PolicyID", PolicyBranch AS "Policy Branch", PolicyBranch||' Finisher' AS "Policy",
+  		MIN(Turn)||' ('||Player||', '||CivKey||')' AS "Minimum Turn"
+  	FROM T4
+    	GROUP BY BranchID
+    	ORDER BY BranchID
+  )
+);
+CREATE TABLE _cached_PA_NToPA AS SELECT * FROM (
+  SELECT "Policy Branch", "Policy", "Total Times Adopted"
+  FROM (
+		SELECT BranchID, PolicyID, PolicyBranch AS "Policy Branch", PolicyKey AS "Policy",
+		COUNT(*) AS "Total Times Adopted"
+		FROM T2
+    	GROUP BY PolicyID
+  	UNION
+  	SELECT BranchID, -1 AS "PolicyID", PolicyBranch AS "Policy Branch", PolicyBranch AS "Policy",
+  	COUNT(*) AS "Total Times Adopted"
+  	FROM T3
+    	GROUP BY BranchID
+  	UNION
+  	SELECT BranchID, 111 AS "PolicyID", PolicyBranch AS "Policy Branch", PolicyBranch||' Finisher' AS "Policy",
+  	COUNT(*) AS "Total Times Adopted"
+  	FROM T4
+    	GROUP BY BranchID
+    	ORDER BY BranchID
+  )
+);
+
+DROP TABLE IF EXISTS T2;
+
+CREATE TEMPORARY TABLE T2 AS SELECT * FROM (
+	SELECT *,
+    ROW_NUMBER() OVER (PARTITION BY Value ORDER BY Turn) AS Rnk,
+    COUNT(*) OVER (PARTITION BY TechnologyID) AS Cnt
+	FROM (
+    	SELECT *, Num2 AS Value FROM ReplayEvents
+    	WHERE ReplayEventType = 91
+	) AS T1
+	JOIN TechnologyKeys ON TechnologyID = Value
+	JOIN TechnologyEras ON TechnologyEras.EraID = TechnologyKeys.EraID
+	JOIN GameSeeds ON GameSeeds.GameSeed = T1.GameSeed
+	JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = T1.PlayerID
+	JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = T1.PlayerID
+	JOIN CivKeys ON CivKeys.CivID = Players.CivID
+);
+
+CREATE TABLE _cached_TR_AToTR AS SELECT * FROM (
+	SELECT EraKey AS "Era", TechnologyKey AS "Technology",
+	ROUND(AVG(Turn), 1) AS "Average Turn"
+	FROM T2
+    GROUP BY TechnologyID
+    ORDER BY EraID
+);
+CREATE TABLE _cached_TR_MedToTR AS SELECT * FROM (
+	SELECT EraKey AS "Era", TechnologyKey AS "Technology",
+    Median AS "Median Turn"
+	FROM T2
+	JOIN (
+	  	SELECT TechnologyID AS TID, Turn AS Median
+		FROM T2
+		WHERE T2.Rnk = T2.Cnt / 2 + 1
+	) AS T3 ON T3.TID = TechnologyID
+    GROUP BY TechnologyID
+    ORDER BY EraID
+);
+CREATE TABLE _cached_TR_MinToTR AS SELECT * FROM (
+	SELECT EraKey AS "Era", TechnologyKey AS "Technology",
+    MIN(Turn)||' ('||Player||', '||CivKey||')' AS "Minimum Turn"
+	FROM T2
+    GROUP BY TechnologyID
+    ORDER BY EraID
+);
+CREATE TABLE _cached_TR_NToTR AS SELECT * FROM (
+	SELECT EraKey AS "Era", TechnologyKey AS "Technology",
+	COUNT(*) AS "Total Times Researched"
+	FROM T2
+    GROUP BY TechnologyID
+    ORDER BY EraID
+);
+
+
+DROP TABLE IF EXISTS T2;
+
+CREATE TEMPORARY TABLE T2 AS SELECT * FROM (
+	SELECT *,
+    ROW_NUMBER() OVER (PARTITION BY Value ORDER BY Turn) AS Rnk,
+    COUNT(*) OVER (PARTITION BY BuildingClassKeys.BuildingClassID) AS Cnt
+	FROM (
+    	SELECT *, Num2 AS Value FROM ReplayEvents
+    	WHERE ReplayEventType = 78
+	) AS T1
+	JOIN BuildingKeys ON BuildingID = Value
+	JOIN BuildingClassKeys ON BuildingClassKeys.BuildingClassID = BuildingKeys.BuildingClassID
+  	JOIN BuildingClassTypes ON BuildingClassTypes.TypeID = BuildingKeys.TypeID
+	JOIN GameSeeds ON GameSeeds.GameSeed = T1.GameSeed
+	JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = T1.PlayerID
+	JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = T1.PlayerID
+	JOIN CivKeys ON CivKeys.CivID = Players.CivID
+);
+
+CREATE TABLE _cached_WC_WW AS SELECT * FROM (
+WITH tmp AS (
+        SELECT COUNT(*) AS ngames FROM GameSeeds
+        WHERE GameSeed NOT NULL
+    ), tmp2 AS (
+        SELECT BuildingID, COUNT(*) AS ngames2 FROM BuildingKeys
+        LEFT JOIN replayevents ON ReplayEvents.Num2 = BuildingKeys.BuildingID
+        WHERE ReplayEventType = 78 AND TypeID = 2
+        GROUP BY BuildingID
+    )
+    SELECT BuildingKey AS Wonder, IFNULL(ROUND(COUNT(*)*100.0/ngames2, 2), 0)||'%' AS 'Winrate (Wonder completed Games only)',
+    IFNULL(ROUND(COUNT(*)*100.0/ngames, 2), 0)||'%' AS 'Winrate (All Games)'
+    FROM BuildingKeys
+    LEFT JOIN ReplayEvents ON ReplayEvents.Num2 = BuildingKeys.BuildingID
+    JOIN GameSeeds ON GameSeeds.GameSeed = ReplayEvents.GameSeed
+    JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = ReplayEvents.PlayerID
+    JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = Games.PlayerID
+    JOIN CivKeys ON CivKeys.CivID = Players.CivID
+    JOIN tmp 
+    JOIN tmp2 USING(buildingID)
+    WHERE ReplayEventType = 78 AND Standing = 1 AND TypeID = 2
+    GROUP BY BuildingID
+    ORDER BY ROUND(COUNT(*)*100.0/ngames2, 2) DESC
+);
+CREATE TABLE _cached_WC_AToWC AS SELECT * FROM (
+	SELECT BuildingClassType AS "Wonder Type", BuildingClassKey AS "Building",
+	ROUND(AVG(Turn), 1) AS "Average Turn"
+	FROM T2
+	WHERE TypeID IN (1,2)
+    GROUP BY BuildingClassID
+    ORDER BY TypeID, "Average Turn"
+);
+CREATE TABLE _cached_WC_MedToWC AS SELECT * FROM (
+	SELECT BuildingClassType AS "Wonder Type", BuildingClassKey AS "Building",
+    Median AS "Median Turn"
+	FROM T2
+	JOIN (
+	  	SELECT BuildingID AS BID, Turn AS Median
+		FROM T2
+		WHERE T2.Rnk = T2.Cnt / 2 + 1
+	) AS T3 ON T3.BID = BuildingID
+	WHERE TypeID IN (1,2)
+    GROUP BY BuildingClassID
+    ORDER BY TypeID, Median
+);
+CREATE TABLE _cached_WC_MinToWC AS SELECT * FROM (
+	SELECT BuildingClassType AS "Wonder Type", BuildingClassKey AS "Building",
+    MIN(Turn)||' ('||Player||', '||CivKey||')' AS "Minimum Turn"
+	FROM T2
+	WHERE TypeID IN (1,2)
+    GROUP BY BuildingClassID
+    ORDER BY TypeID, MIN(Turn)
+);
+CREATE TABLE _cached_WC_NToWC AS SELECT * FROM (
+	SELECT BuildingClassType AS "Wonder Type", BuildingClassKey AS "Building",
+	COUNT(*) AS "Total Times Constructed"
+	FROM T2
+	WHERE TypeID IN (1,2)
+    GROUP BY BuildingClassID
+    ORDER BY TypeID, COUNT(*)
+);
+CREATE TABLE _cached_CSR_CSC AS SELECT * FROM (
+    select player, count(iif(replayeventtype = 93,1,null)) as 'City-State Coups', round(count(iif(num4=1,1,null))*1.0/count(iif(replayeventtype = 93,1,null)),2) as 'Success Rate' from replayevents
+    join gameseeds using(gameseed)
+    join games using(gameid, playerid)
+    where replayeventtype in (93)
+    group by player
+    order by count(iif(replayeventtype = 93,1,null)) desc
+    LIMIT 20
+);
+CREATE TABLE _cached_CSR_CSL AS SELECT * FROM (
+    select player, count(iif(replayeventtype = 35,1,null)) as 'City-States liberated' from replayevents
+    join gameseeds using(gameseed)
+    join games using(gameid, playerid)
+    where replayeventtype in (35)
+    group by player
+    order by count(iif(replayeventtype = 35,1,null)) desc
+    LIMIT 20
+);
+CREATE TABLE _cached_CSR_TCSD AS SELECT * FROM (
+select player, sum(num2) as 'Gold[ICON_GOLD] donated to City-States' from replayevents
+join gameseeds using(gameseed)
+join games using(gameid, playerid)
+where replayeventtype in (38)
+group by player
+order by sum(num2) desc
+LIMIT 20
+);
+CREATE TABLE _cached_CSR_TCSR AS SELECT * FROM (
+select player, sum(num2) as 'Gold[ICON_GOLD] seized from City-States' from replayevents
+join gameseeds using(gameseed)
+join games using(gameid, playerid)
+where replayeventtype in (36)
+group by player
+order by sum(num2) desc
+LIMIT 20
+);
+CREATE TABLE _cached_CSR_QM AS SELECT * FROM (
+select player, count(iif(replayeventtype = 95,1,null)) as 'City-State Quests Completed' from replayevents
+join gameseeds using(gameseed)
+join games using(gameid, playerid)
+where replayeventtype in (95)
+group by player
+order by count(iif(replayeventtype = 95,1,null)) desc
+LIMIT 20
+);
+
+
+DROP TABLE IF EXISTS T2;
+DROP TABLE IF EXISTS T3;
+DROP TABLE IF EXISTS T4;

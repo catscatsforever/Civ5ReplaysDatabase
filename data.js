@@ -951,4 +951,102 @@ const sqlQueries = {
     order by count(iif(replayeventtype = 95,1,null)) desc
     LIMIT 20;
   `,
+  ["table-hall-of-fame-CACHE"]: `
+	WITH config(tableName) AS (
+		VALUES('config'),
+		('Greatest Wonder Builders'),
+		('Demographics Screen Lovers'),
+        ('Prominent City Governors'),
+		('Total Turns Spent In-Game'),
+		('Global Replay Records'),
+		('Single Turn Replay Records')
+	)
+	SELECT * FROM config;
+	
+	SELECT * FROM _cached_HoF_GWB;
+	SELECT * FROM _cached_HoF_DSL;
+	SELECT * FROM _cached_HoF_PCG;
+	SELECT * FROM _cached_HoF_TTSIG;
+	SELECT * FROM _cached_HoF_GRR;
+	SELECT * FROM _cached_HoF_STRR;
+  `,
+  ["table-belief-adoption-CACHE"]: `
+    WITH config(tableName) AS (
+		VALUES('config'),
+		('Average Turn of Belief Adoption'),
+		('Median Turn of Belief Adoption'),
+		('Minimum Turn of Belief Adoption'),
+		('Number Times of Belief Adoption')
+	)
+	SELECT * FROM config;
+	
+	SELECT * FROM _cached_BA_AToBA;
+	SELECT * FROM _cached_BA_MedToBA;
+	SELECT * FROM _cached_BA_MinToBA;
+	SELECT * FROM _cached_BA_NToBA;
+  `,
+  ["table-policy-adoption-CACHE"]: `
+	WITH config(tableName) AS (
+		VALUES('config'),
+		('Average Turn of Policy Adoption'),
+		('Median Turn of Policy Adoption'),
+		('Minimum Turn of Policy Adoption'),
+		('Number Times of Policy Adoption')
+	)
+	SELECT * FROM config;
+	
+	SELECT * FROM _cached_PA_AToPA;
+	SELECT * FROM _cached_PA_MedToPA;
+	SELECT * FROM _cached_PA_MinToPA;
+	SELECT * FROM _cached_PA_NToPA;
+  `,
+  ["table-tech-research-CACHE"]: `
+	WITH config(tableName) AS (
+		VALUES('config'),
+		('Average Turn of Technology Research'),
+		('Median Turn of Technology Research'),
+		('Minimum Turn of Technology Research'),
+  		('Number Times of Technology Research')
+	)
+	SELECT * FROM config;
+	
+	SELECT * FROM _cached_TR_AToTR;
+	SELECT * FROM _cached_TR_MedToTR;
+	SELECT * FROM _cached_TR_MinToTR;
+	SELECT * FROM _cached_TR_NToTR;
+  `,
+  ["table-wonder-construction-CACHE"]: `
+	WITH config(tableName) AS (
+		VALUES('config'),
+		('Wonder Winrate'),
+		('Average Turn of Wonder Construction'),
+		('Median Turn of Wonder Construction'),
+		('Minimum Turn of Wonder Construction'),
+		('Number Times of Wonder Construction')
+	)
+	SELECT * FROM config;
+	
+	SELECT * FROM _cached_WC_WW;
+	SELECT * FROM _cached_WC_AToWC;
+	SELECT * FROM _cached_WC_MedToWC;
+	SELECT * FROM _cached_WC_MinToWC;
+	SELECT * FROM _cached_WC_NToWC;
+  `,
+  ["table-cs-relations-CACHE"]: `
+  WITH config(tableName) AS (
+        VALUES('config'),
+        ('City-State Coups'),
+        ('City-State Liberators'),
+        ('Top City-State Donators'),
+        ('Top City-State Robbers'),
+        ('Quest Masters')
+    )
+    SELECT * FROM config;
+	
+	SELECT * FROM _cached_CSR_CSC;
+	SELECT * FROM _cached_CSR_CSL;
+	SELECT * FROM _cached_CSR_TCSD;
+	SELECT * FROM _cached_CSR_TCSR;
+	SELECT * FROM _cached_CSR_QM;
+  `,
 };

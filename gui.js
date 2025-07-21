@@ -1291,14 +1291,14 @@ document.querySelectorAll(".sankey-clk").forEach(el => {
 	el.addEventListener("click", doSankeyPlot, true);
 });
 
-tableHallOfFameBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-hall-of-fame"]; execute(r); editor.setValue(r); }, true);
+tableHallOfFameBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-hall-of-fame-CACHE"]; execute(r); editor.setValue(r); }, true);
 
-tableBeliefAdoptionBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-belief-adoption"]; execute(r); editor.setValue(r); }, true);
+tableBeliefAdoptionBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-belief-adoption-CACHE"]; execute(r); editor.setValue(r); }, true);
 
-tablePolicyAdoptionBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-policy-adoption"]; execute(r); editor.setValue(r); }, true);
+tablePolicyAdoptionBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-policy-adoption-CACHE"]; execute(r); editor.setValue(r); }, true);
 
-tableTechResearchBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-tech-research"]; execute(r); editor.setValue(r); }, true);
+tableTechResearchBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-tech-research-CACHE"]; execute(r); editor.setValue(r); }, true);
 
-tableWonderConstructionBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-wonder-construction"]; execute(r); editor.setValue(r); }, true);
+tableWonderConstructionBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-wonder-construction-CACHE"]; execute(r); editor.setValue(r); }, true);
 
-tableCSRelationsBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-cs-relations"]; execute(r); editor.setValue(r); }, true);
+tableCSRelationsBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-cs-relations-CACHE"]; execute(r); editor.setValue(r); }, true);
