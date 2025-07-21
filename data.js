@@ -315,7 +315,14 @@ const sqlQueries = {
 	SELECT * FROM (
 		SELECT BuildingClassKey, '{"group":"wonders","id":"'||BuildingClassKey||'"}' FROM BuildingClassKeys WHERE TypeID = 2
 		ORDER BY BuildingClassKey
-	);
+	)
+    UNION ALL
+    VALUES('Policy Branch Finishers', 'groupSeparator')
+    UNION ALL
+    SELECT * FROM (
+        SELECT PolicyBranch, '{"group":"policies","id":"'||PolicyBranch||'"}' FROM PolicyBranches WHERE BranchID < 9
+        ORDER BY BranchID
+    );
 	SELECT ReplayDataSetKey, ReplayDataSetID FROM ReplayDataSetKeys
 	WHERE ReplayDataSetKey > ''
 	ORDER BY ReplayDataSetKey;

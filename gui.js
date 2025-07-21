@@ -346,6 +346,10 @@ function onWorkerMessage(event) {
 						conf.aggregate.name = conf.aggregate.id + ' builders';
 						groupId = tracesData[i].GroupID;
 					}
+					else if (conf.aggregate.group === 'policies') {
+						conf.aggregate.name = conf.aggregate.id + ' finishers';
+						groupId = tracesData[i].GroupID;
+					}
 					arrY[i].forEach((j,k)=>{
 						if (blob[groupId][k] === undefined)
 							blob[groupId][k] = [k, []];
@@ -1026,6 +1030,40 @@ function doPlot(e) {
 					JOIN BuildingClassKeys USING(BuildingClassID)
 					JOIN GameSeeds USING(GameSeed)
 					WHERE ReplayEventType = 78 AND BuildingClassKeys.TypeID = 2 AND BuildingClassKey IN ("${val.id}")
+				) USING(GameID, PlayerID)
+			`;
+			groupID = 'IFNULL(GroupID, 1)';
+		}
+		else if (val.group === 'policies') {
+			traceName = `Games.Player`;
+			aggregate = `{"group":"policies","method":${aggregateMethod},"id":"${val.id}"}`;
+			supplement = `
+				LEFT JOIN (
+					SELECT GameID, PlayerID, 0 AS GroupID FROM (
+  						SELECT BranchID, 111 AS "PolicyID", PolicyBranch AS "Policy Branch", PolicyBranch||' Finisher' AS "Policy", *
+  						FROM (
+  							SELECT * FROM (
+								SELECT *, COUNT(Num2) AS "Cnt_2", MAX(Turn)
+								FROM (
+    								SELECT *, ROW_NUMBER() OVER (PARTITION BY Value ORDER BY Turn) AS Rnk,
+        							COUNT(*) OVER (PARTITION BY PolicyID) AS Cnt
+        							FROM (
+        							    SELECT *, Num2 AS Value FROM ReplayEvents
+        							    WHERE ReplayEventType = 61
+        							) AS T1
+        							JOIN PolicyKeys ON PolicyID = Value
+        							JOIN PolicyBranches ON PolicyBranches.BranchID = PolicyKeys.BranchID
+        							JOIN GameSeeds ON GameSeeds.GameSeed = T1.GameSeed
+        							JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = T1.PlayerID
+        							JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = T1.PlayerID
+        							JOIN CivKeys ON CivKeys.CivID = Players.CivID
+  								)
+								GROUP BY GameSeed, PlayerID, BranchID
+							)
+  							WHERE Cnt_2 = 5 AND BranchID < 9
+  						)
+   						WHERE PolicyBranch IN ("${val.id}")
+					)
 				) USING(GameID, PlayerID)
 			`;
 			groupID = 'IFNULL(GroupID, 1)';
