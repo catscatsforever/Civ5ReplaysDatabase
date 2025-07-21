@@ -1024,7 +1024,7 @@ function doPlot(e) {
 					JOIN BuildingKeys ON BuildingID = Num2
 					JOIN BuildingClassKeys USING(BuildingClassID)
 					JOIN GameSeeds USING(GameSeed)
-					WHERE ReplayEventType = 78 AND BuildingClassKeys.TypeID = 2 AND BuildingClassKey IN (${selection})
+					WHERE ReplayEventType = 78 AND BuildingClassKeys.TypeID = 2 AND BuildingClassKey IN ("${val.id}")
 				) USING(GameID, PlayerID)
 			`;
 			groupID = 'IFNULL(GroupID, 1)';
