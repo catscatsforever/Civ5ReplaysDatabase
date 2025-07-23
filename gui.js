@@ -731,8 +731,8 @@ function onWorkerMessage(event) {
 							if (tag === 'Players') {
 								let query = `
 									SELECT * FROM (VALUES('${nodeID2}'),('Cities'));
-									select CityName, GameID, PlayerID, PlotIndex AS CityID FROM (
-										select GameID, PlayerID, CivKey, Player, Turn, TimeStamp, num1 as PlotIndex, IFNULL(Text, str) as CityName, iif(count(*)=1, iif(str = 'NO_CITY', 'raze',''), 'conquest') as remark, max(ReplayEvents.rowid) as mx from ReplayEvents
+									select CityName||' (T'||Turn||')', GameID, PlayerID, PlotIndex AS CityID FROM (
+										select GameID, PlayerID, CivKey, Player, Turn, TimeStamp, num1 as PlotIndex, IFNULL(Text, str) as CityName, iif(str = 'NO_CITY', 'raze', iif(count(*)=1, '', 'conquest')) as remark, row_number() over() as rn from ReplayEvents
 										join ReplayEventKeys on ReplayEventKeys.ReplayEventID = ReplayEvents.ReplayEventType
 										join GameSeeds using(GameSeed)
 										join Games using(GameID, PlayerID)
@@ -740,9 +740,11 @@ function onWorkerMessage(event) {
 										join CivKeys using(CivID)
 										left join CityNames on str = CityName
 										where ReplayEventID in (101) and GameID = ${el[1]} and PlayerID = ${el[2]}
-										group by GameSeed, PlotIndex, Turn, TimeStamp
-										order by GameID, PlayerID, Turn, TimeStamp
-									) where remark = ''
+										group by GameID, PlayerID, timestamp 
+										order by GameID, PlayerID, Turn, timestamp desc
+									) where remark != 'raze'
+									group by GameID, PlayerID, plotindex
+									order by rn
 								`;
 								worker.postMessage({action: 'exec', sql: query, id: 'tree-node-update'});
 							}
