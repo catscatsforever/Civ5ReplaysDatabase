@@ -108,6 +108,7 @@
         <button id="beliefs-time" class="btn plot-clk">Beliefs-Time</button>
         <button id="policies-time" class="btn plot-clk">Policies-Time</button>
         <button id="techs-time" class="btn plot-clk">Technologies-Time</button>
+        <button id="wonders-time" class="btn plot-clk">Wonders-Time</button>
         <br>
         <span class="sp">Sankey diagrams:</span>
         <br>
@@ -145,6 +146,7 @@
         <button id="tablePolicyAdoption" class="btn">Policy Adoption</button>
         <button id="tableTechResearch" class="btn">Technology Research</button>
         <button id="tableWonderConstruction" class="btn">Wonder Construction</button>
+        <button id="tableCSRelations" class="btn">City-States Relations</button>
         <br>
         <label for="showSql" class="sp">Show SQL</label>
         <input id="showSql" type="checkbox" class="chk">
@@ -158,6 +160,8 @@
         <pre id="output"></pre>
       </section>
       <section id="content6">
+        <span class="sp">Cities Construction Order:</span>
+        <ul id="tree-root" class="tree"></ul>
       </section>
 
       <div id="plotOut"><!-- Plotly chart will be drawn inside this DIV --></div>
@@ -171,13 +175,13 @@
   <footer>
     <label id="dbsize"></label>
     <a href='index.html' class="sref">Summer 2025 Tournament</a>
-    <a href='index-2024F.html' class="sref">Fall 2024 Tournament</a>
-    <span class="sttl">Winter 2024 Tournament</span>
+    <span class="sttl">Fall 2024 Tournament</span>
+    <a href='index-2024W.html' class="sref">Winter 2024 Tournament</a>
     <a href='index-2023S.html' class="sref">Summer 2023 Tournament</a>
   </footer>
 
   <script type="text/javascript" src="data.js"></script>
-  <script type="text/javascript" src="gui-2024W.js"></script>
+  <script type="text/javascript" src="gui-2024F.js"></script>
 </body>
 
 </html>

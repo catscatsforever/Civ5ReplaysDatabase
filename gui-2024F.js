@@ -908,14 +908,14 @@ resizeWatcher.observe(document.getElementById("sqlBox"));
 // Load a db from URL
 function fetchdb() {
 	let r = new XMLHttpRequest();
-	r.open('GET', 'sample4.zip', true);
+	r.open('GET', 'sample3.zip', true);
 	r.responseType = 'arraybuffer';
 	r.onload = function () {
 		toc('loading DB');
 		inputsElm.style.display = 'block';
 		const uInt8Array = new Uint8Array(r.response);
 		tic();
-		const unzipped = fflate.unzipSync(uInt8Array)['sample4.db'];
+		const unzipped = fflate.unzipSync(uInt8Array)['sample3.db'];
 		DBConfig = JSON.parse(String.fromCharCode.apply(null, fflate.unzipSync(uInt8Array)['config.json']));
 		toc('decompression finished');
 		let b = uInt8Array.length;
