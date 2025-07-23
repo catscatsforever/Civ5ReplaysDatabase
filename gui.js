@@ -701,7 +701,11 @@ function onWorkerMessage(event) {
 		console.log('nodeid', nodeID, tag)
 		document.querySelectorAll('.'+nodeID).forEach((li,ind) => {
 			if (tag === 'Constructions') {
-				li.replaceChildren(li.firstElementChild, tableCreate(null, results[1].columns, results[1].values));
+				if (results[1]) {
+					li.replaceChildren(li.firstElementChild, tableCreate(null, results[1].columns, results[1].values));
+				} else {
+					li.replaceChildren(li.firstElementChild, tableCreate(null, ['No Entries'], []));
+				}
 			}
 			else {
 				li.replaceChildren(li.firstElementChild, ...results[1].values.map((el) => {
