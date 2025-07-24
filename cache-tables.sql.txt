@@ -5,6 +5,7 @@ DROP TABLE IF EXISTS _cached_HoF_TTSIG;
 DROP TABLE IF EXISTS _cached_HoF_GRR;
 DROP TABLE IF EXISTS _cached_HoF_STRR;
 
+DROP TABLE IF EXISTS _cached_BA_BW;
 DROP TABLE IF EXISTS _cached_BA_AToBA;
 DROP TABLE IF EXISTS _cached_BA_MedToBA;
 DROP TABLE IF EXISTS _cached_BA_MinToBA;
@@ -162,6 +163,77 @@ CREATE TEMPORARY TABLE T2 AS SELECT * FROM (
 	JOIN CivKeys ON CivKeys.CivID = Players.CivID
 );
 
+CREATE TABLE _cached_BA_BW AS SELECT * FROM (
+	-- Beliefs winrate
+    WITH tmp AS (
+        SELECT COUNT(*) AS ngames
+      	FROM GameSeeds
+        WHERE GameSeed NOT NULL
+    ), tmp2 AS (
+    	SELECT * FROM (
+    	SELECT value as BeliefID, COUNT(*) as ngames2 FROM (
+    	    SELECT *, Num1 AS Value FROM ReplayEvents
+    	    WHERE ReplayEventType = 17
+    	    UNION
+    	    SELECT *, Num2 FROM ReplayEvents
+    	    WHERE ReplayEventType = 18
+    	    UNION
+    	    SELECT *, Num3 FROM ReplayEvents
+    	    WHERE ReplayEventType = 18
+    	    UNION
+    	    SELECT *, Num4 FROM ReplayEvents
+    	    WHERE ReplayEventType = 18
+    	    UNION
+    	    SELECT *, Num5 FROM ReplayEvents
+    	    WHERE ReplayEventType = 18
+    	    UNION
+    	    SELECT *, Num2 FROM ReplayEvents
+    	    WHERE ReplayEventType = 19
+    	    UNION
+    	    SELECT *, Num3 FROM ReplayEvents
+    	    WHERE ReplayEventType = 19
+    	)
+    	where value <> -1
+    	group BY value
+    ))
+    SELECT belieftype, BeliefKey AS Belief, IFNULL(ROUND(COUNT(*)*100.0/ngames2, 2), 0)||'%' AS 'Winrate (Belief adopted Games only)',
+    IFNULL(ROUND(COUNT(*)*100.0/ngames, 2), 0)||'%' AS 'Winrate (All Games)', count(*) as Victories, ngames2 as Picks
+    FROM BeliefKeys
+    LEFT JOIN (SELECT value as BeliefID, gameseed, playerid FROM (
+    	    SELECT *, Num1 AS Value FROM ReplayEvents
+    	    WHERE ReplayEventType = 17
+    	    UNION
+    	    SELECT *, Num2 FROM ReplayEvents
+    	    WHERE ReplayEventType = 18
+    	    UNION
+    	    SELECT *, Num3 FROM ReplayEvents
+    	    WHERE ReplayEventType = 18
+    	    UNION
+    	    SELECT *, Num4 FROM ReplayEvents
+    	    WHERE ReplayEventType = 18
+    	    UNION
+    	    SELECT *, Num5 FROM ReplayEvents
+    	    WHERE ReplayEventType = 18
+    	    UNION
+    	    SELECT *, Num2 FROM ReplayEvents
+    	    WHERE ReplayEventType = 19
+    	    UNION
+    	    SELECT *, Num3 FROM ReplayEvents
+    	    WHERE ReplayEventType = 19
+    	)
+    	where value <> -1
+      ) using(BeliefID)
+    JOIN GameSeeds using(gameseed)
+    JOIN Games using(gameid, playerid)
+    JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = Games.PlayerID
+    JOIN CivKeys ON CivKeys.CivID = Players.CivID
+    join belieftypes using(typeid)
+    JOIN tmp 
+    JOIN tmp2 USING(beliefid)
+    WHERE Standing = 1
+    GROUP BY beliefID
+    ORDER BY typeid, ROUND(COUNT(*)*100.0/ngames2, 2) DESC
+);
 CREATE TABLE _cached_BA_AToBA AS SELECT * FROM (
 	SELECT BeliefType AS "Belief Type", BeliefKey AS "Belief",
 	ROUND(AVG(Turn), 1) AS "Average Turn"
