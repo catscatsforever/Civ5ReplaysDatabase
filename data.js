@@ -26,7 +26,15 @@ const IconMarkups = {
   ICON_FOOD: 'Civ5Icon.Food.png',
   ICON_GOLD: 'Civ5Icon.Gold.png',
   ICON_GOLDEN_AGE: 'Civ5Icon.GoldenAge.png',
+  ICON_GREAT_ADMIRAL: 'Civ5Icon.GreatAdmiral.png',
+  ICON_GREAT_ARTIST: 'Civ5Icon.GreatArtist.png',
+  ICON_GREAT_ENGINEER: 'Civ5Icon.GreatEngineer.png',
+  ICON_GREAT_GENERAL: 'Civ5Icon.GreatGeneral.png',
+  ICON_GREAT_MERCHANT: 'Civ5Icon.GreatMerchant.png',
+  ICON_GREAT_MUSICIAN: 'Civ5Icon.GreatMusician.png',
   ICON_GREAT_PEOPLE: 'Civ5Icon.GreatPeople.png',
+  ICON_GREAT_SCIENTIST: 'Civ5Icon.GreatScientist.png',
+  ICON_GREAT_WRITER: 'Civ5Icon.GreatWriter.png',
   ICON_HAPPINESS_1: 'Civ5Icon.Happiness1.png',
   ICON_HAPPINESS_2: 'Civ5Icon.Happiness2.png',
   ICON_HAPPINESS_3: 'Civ5Icon.Happiness3.png',
@@ -36,7 +44,9 @@ const IconMarkups = {
   ICON_IDEOLOGY_ORDER: 'Civ5Icon.IdeologyOrder.png',
   ICON_INFLUENCE: 'Civ5Icon.Influence.png',
   ICON_INQUISITOR: 'Civ5Icon.Inquisitor.png',
+  ICON_INTERNATIONAL_TRADE: 'Civ5Icon.InternationalTrade.png',
   ICON_INVEST: 'Civ5Icon.Invest.png',
+  ICON_KAPPA: 'Civ5Icon.Kappa.png',
   ICON_LOCKED: 'Civ5Icon.Locked.png',
   ICON_MINUS: 'Civ5Icon.Minus.png',
   ICON_MISSIONARY: 'Civ5Icon.Missionary.png',
@@ -107,9 +117,9 @@ const IconMarkups = {
   ICON_SPY: 'Civ5Icon.Spy.png',
   ICON_STAR: 'Civ5Icon.Star.png',
   ICON_STRENGTH: 'Civ5Icon.Strength.png',
-  ICON_TEAM_1: 'Civ5Icon.Team1.png',
   ICON_TEAM_10: 'Civ5Icon.Team10.png',
   ICON_TEAM_11: 'Civ5Icon.Team11.png',
+  ICON_TEAM_1: 'Civ5Icon.Team1.png',
   ICON_TEAM_2: 'Civ5Icon.Team2.png',
   ICON_TEAM_3: 'Civ5Icon.Team3.png',
   ICON_TEAM_4: 'Civ5Icon.Team4.png',
@@ -119,22 +129,14 @@ const IconMarkups = {
   ICON_TEAM_8: 'Civ5Icon.Team8.png',
   ICON_TEAM_9: 'Civ5Icon.Team9.png',
   ICON_TEAM_USA: 'Civ5Icon.TeamUsa.png',
+  ICON_TOURISM: 'Civ5Icon.Tourism.png',
   ICON_TRADE: 'Civ5Icon.Trade.png',
   ICON_TRADE_WHITE: 'Civ5Icon.TradeWhite.png',
   ICON_VIEW_CITY: 'Civ5Icon.ViewCity.png',
   ICON_WAR: 'Civ5Icon.War.png',
   ICON_WORKER: 'Civ5Icon.Worker.png',
   ICON_WTF1: 'Civ5Icon.Wtf1.png',
-  ICON_WTF2: 'Civ5Icon.Wtf2.png',
-  ICON_GREAT_ENGINEER: 'Civ5Icon.GreatEngineer.png',
-  ICON_GREAT_GENERAL: 'Civ5Icon.GreatGeneral.png',
-  ICON_GREAT_SCIENTIST: 'Civ5Icon.GreatScientist.png',
-  ICON_GREAT_MERCHANT: 'Civ5Icon.GreatMerchant.png',
-  ICON_GREAT_ARTIST: 'Civ5Icon.GreatArtist.png',
-  ICON_GREAT_MUSICIAN: 'Civ5Icon.GreatMusician.png',
-  ICON_GREAT_WRITER: 'Civ5Icon.GreatWriter.png',
-  ICON_GREAT_ADMIRAL: 'Civ5Icon.GreatAdmiral.png',
-  ICON_TOURISM: 'Civ5Icon.Tourism.png'
+  ICON_WTF2: 'Civ5Icon.Wtf2.png'
 };
 const civColorsDict = {
   Lose: 'rgba(0,0,0,0.8)',
@@ -542,12 +544,84 @@ const sqlQueries = {
   ["table-belief-adoption"]: `
     WITH config(tableName) AS (
 		VALUES('config'),
+		('Belief Winrate'),
 		('Average Turn of Belief Adoption'),
 		('Median Turn of Belief Adoption'),
 		('Minimum Turn of Belief Adoption'),
 		('Number Times of Belief Adoption')
 	)
 	SELECT * FROM config;
+	
+	-- Beliefs winrate
+    WITH tmp AS (
+        SELECT COUNT(*) AS ngames
+      	FROM GameSeeds
+        WHERE GameSeed NOT NULL
+    ), tmp2 AS (
+    	SELECT * FROM (
+    	SELECT value as BeliefID, COUNT(*) as ngames2 FROM (
+    	    SELECT *, Num1 AS Value FROM ReplayEvents
+    	    WHERE ReplayEventType = 17
+    	    UNION
+    	    SELECT *, Num2 FROM ReplayEvents
+    	    WHERE ReplayEventType = 18
+    	    UNION
+    	    SELECT *, Num3 FROM ReplayEvents
+    	    WHERE ReplayEventType = 18
+    	    UNION
+    	    SELECT *, Num4 FROM ReplayEvents
+    	    WHERE ReplayEventType = 18
+    	    UNION
+    	    SELECT *, Num5 FROM ReplayEvents
+    	    WHERE ReplayEventType = 18
+    	    UNION
+    	    SELECT *, Num2 FROM ReplayEvents
+    	    WHERE ReplayEventType = 19
+    	    UNION
+    	    SELECT *, Num3 FROM ReplayEvents
+    	    WHERE ReplayEventType = 19
+    	)
+    	where value <> -1
+    	group BY value
+    ))
+    SELECT belieftype, BeliefKey AS Belief, IFNULL(ROUND(COUNT(*)*100.0/ngames2, 2), 0)||'%' AS 'Winrate (Belief adopted Games only)',
+    IFNULL(ROUND(COUNT(*)*100.0/ngames, 2), 0)||'%' AS 'Winrate (All Games)', count(*) as Victories, ngames2 as Picks
+    FROM BeliefKeys
+    LEFT JOIN (SELECT value as BeliefID, gameseed, playerid FROM (
+    	    SELECT *, Num1 AS Value FROM ReplayEvents
+    	    WHERE ReplayEventType = 17
+    	    UNION
+    	    SELECT *, Num2 FROM ReplayEvents
+    	    WHERE ReplayEventType = 18
+    	    UNION
+    	    SELECT *, Num3 FROM ReplayEvents
+    	    WHERE ReplayEventType = 18
+    	    UNION
+    	    SELECT *, Num4 FROM ReplayEvents
+    	    WHERE ReplayEventType = 18
+    	    UNION
+    	    SELECT *, Num5 FROM ReplayEvents
+    	    WHERE ReplayEventType = 18
+    	    UNION
+    	    SELECT *, Num2 FROM ReplayEvents
+    	    WHERE ReplayEventType = 19
+    	    UNION
+    	    SELECT *, Num3 FROM ReplayEvents
+    	    WHERE ReplayEventType = 19
+    	)
+    	where value <> -1
+      ) using(BeliefID)
+    JOIN GameSeeds using(gameseed)
+    JOIN Games using(gameid, playerid)
+    JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = Games.PlayerID
+    JOIN CivKeys ON CivKeys.CivID = Players.CivID
+    join belieftypes using(typeid)
+    JOIN tmp 
+    JOIN tmp2 USING(beliefid)
+    WHERE Standing = 1
+    GROUP BY beliefID
+    ORDER BY typeid, ROUND(COUNT(*)*100.0/ngames2, 2) DESC
+    ;
 	
 	DROP TABLE IF EXISTS T2;
 	
@@ -980,6 +1054,7 @@ const sqlQueries = {
   ["table-belief-adoption-CACHE"]: `
     WITH config(tableName) AS (
 		VALUES('config'),
+		('Belief Winrate'),
 		('Average Turn of Belief Adoption'),
 		('Median Turn of Belief Adoption'),
 		('Minimum Turn of Belief Adoption'),
@@ -987,6 +1062,7 @@ const sqlQueries = {
 	)
 	SELECT * FROM config;
 	
+	SELECT * FROM _cached_BA_BW;
 	SELECT * FROM _cached_BA_AToBA;
 	SELECT * FROM _cached_BA_MedToBA;
 	SELECT * FROM _cached_BA_MinToBA;
