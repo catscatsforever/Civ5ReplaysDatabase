@@ -561,8 +561,9 @@ function onWorkerMessage(event) {
 				if (!classList.contains('cached')) {
 					classList.add('cached');
 					let query = `
-							SELECT * FROM (VALUES('GameID${results[0].values[i][1]}'),('Players'));
-							SELECT Player||' ('||CivKey||')'||IIF(Standing = 1, ' *Winner*', ''), GameID, PlayerID FROM Games
+							SELECT * FROM (VALUES('GameID${results[0].values[i][1]}'),('Player'));
+							SELECT 'GameID'||GameID||'PlayerID'||PlayerID as NodeID,
+							Player||' ('||CivKey||')'||IIF(Standing = 1, ' *Winner*', '') as Label, GameID, PlayerID FROM Games
 							JOIN GameSeeds USING(GameID)
 							JOIN Players USING(GameSeed, PlayerID)
 							JOIN CivKeys USING(CivID)
@@ -695,22 +696,28 @@ function onWorkerMessage(event) {
 		Plotly.newPlot('plotOut', data, layout);
 	}
 	// events tree node update
+	// events tree node update
 	else if (id === "tree-node-update") {
-		let nodeID = results[0].values[0][0];
+		let parentNodeID = results[0].values[0][0];
 		let tag = results[0].values[1][0];
-		console.log('nodeid', nodeID, tag)
-		document.querySelectorAll('.'+nodeID).forEach((li,ind) => {
-			if (tag === 'Constructions') {
-				li.replaceChildren(li.firstElementChild, tableCreate(null, results[1].columns, results[1].values));
+		let components = ['Constructions','Technologies','Policies','Beliefs'];
+		console.log('nodeid', parentNodeID, tag)
+		document.querySelectorAll('.'+parentNodeID).forEach((li) => {
+			if (components.includes(tag)) {
+				if (results[1]) {
+					li.replaceChildren(li.firstElementChild, tableCreate(null, results[1].columns, results[1].values));
+				} else {
+					li.replaceChildren(li.firstElementChild, tableCreate(null, ['No Entries'], []));
+				}
 			}
 			else {
 				li.replaceChildren(li.firstElementChild, ...results[1].values.map((el) => {
 					let li2 = document.createElement("li");
 					let ul = document.createElement("ul");
 					ul.appendChild(li2);
-					let nodeID2 = results[1].columns.slice(1).reduce((a,c,i)=>a+c+el[i+1],'');
-					li2.classList.add(nodeID2);
-					li2.innerHTML = `<a href="#">${el[0]}</a><ul><li><a href="#">Loading...</a></li></ul>`;
+					let nodeID = el[0];
+					li2.classList.add(nodeID);
+					li2.innerHTML = `<a href="#">${el[1]}</a><ul><li><a href="#">Loading...</a></li></ul>`;
 					li2.addEventListener('click', function(e) {
 						if (e.target.localName !== 'a') {
 							e.stopPropagation();
@@ -728,44 +735,120 @@ function onWorkerMessage(event) {
 						}
 						if (!classList.contains('cached')) {
 							classList.add('cached');
-							if (tag === 'Players') {
-								let query = `
-									SELECT * FROM (VALUES('${nodeID2}'),('Cities'));
-									select CityName, GameID, PlayerID, PlotIndex AS CityID FROM (
-										select GameID, PlayerID, CivKey, Player, Turn, TimeStamp, num1 as PlotIndex, IFNULL(Text, str) as CityName, iif(count(*)=1, iif(str = 'NO_CITY', 'raze',''), 'conquest') as remark, max(ReplayEvents.rowid) as mx from ReplayEvents
+							let query = '';
+							if (tag === 'Player') {
+								query = `
+									SELECT * FROM (VALUES('${nodeID}'),('Tag'));
+									SELECT 0 AS NodeID, 0 AS Label, 0 AS GameID, 0 AS PlayerID WHERE 0 UNION ALL
+									SELECT * FROM (VALUES('GameID${el[2]}PlayerID${el[3]}TagCities','Cities',${el[2]},${el[3]}),
+									('GameID${el[2]}PlayerID${el[3]}TagTechnologies','Technologies',${el[2]},${el[3]}),
+									('GameID${el[2]}PlayerID${el[3]}TagPolicies','Policies',${el[2]},${el[3]}),
+									('GameID${el[2]}PlayerID${el[3]}TagBeliefs','Beliefs',${el[2]},${el[3]}))
+								`;
+							}
+							else if (tag === 'Tag') {
+								if (el[0].endsWith('Cities')) {
+									query = `
+										SELECT * FROM (VALUES('${nodeID}'),('Cities'));
+										select 'GameID'||GameID||'PlayerID'||PlayerID||'TagCitiesCityID'||PlotIndex as NodeID,
+										CityName||' (T'||Turn||')' as Label, GameID, PlayerID, PlotIndex AS CityID FROM (
+											select GameID, PlayerID, Turn, TimeStamp, num1 as PlotIndex, IFNULL(Text, str) as CityName,
+											iif(str = 'NO_CITY', 'raze', iif(count(*)=1, '', 'conquest')) as remark, row_number() over() as rn, max(ReplayEvents.rowid) from ReplayEvents
+											join ReplayEventKeys on ReplayEventKeys.ReplayEventID = ReplayEvents.ReplayEventType
+											join GameSeeds using(GameSeed)
+											join Games using(GameID, PlayerID)
+											left join CityNames on str = CityName
+											where ReplayEventID in (101) and GameID = ${el[2]} and PlayerID = ${el[3]}
+											group by GameID, PlayerID, timestamp 
+											order by GameID, PlayerID, Turn, timestamp desc
+										) where remark != 'raze'
+										group by GameID, PlayerID, PlotIndex
+										order by Turn
+									`;
+								}
+								else if (el[0].endsWith('Technologies')) {
+									query = `
+										SELECT * FROM (VALUES('${nodeID}'),('Technologies'));
+										select turn,
+										iif(ReplayEventID=64,'FREE TECH '||TechnologyKey,
+										iif(ReplayEventID=65,'STEALS '||TechnologyKey,
+										iif(ReplayEventID=91,TechnologyKey,
+										'???'))) as Event from ReplayEvents
 										join ReplayEventKeys on ReplayEventKeys.ReplayEventID = ReplayEvents.ReplayEventType
 										join GameSeeds using(GameSeed)
 										join Games using(GameID, PlayerID)
-										join Players using(GameSeed, PlayerID)
-										join CivKeys using(CivID)
-										left join CityNames on str = CityName
-										where ReplayEventID in (101) and GameID = ${el[1]} and PlayerID = ${el[2]}
-										group by GameSeed, PlotIndex, Turn, TimeStamp
-										order by GameID, PlayerID, Turn, TimeStamp
-									) where remark = ''
-								`;
-								worker.postMessage({action: 'exec', sql: query, id: 'tree-node-update'});
+										join TechnologyKeys on TechnologyId=iif(ReplayEventType=91,num2,num1)
+										where ReplayEventID in (91,64,65) and GameID = ${el[2]} and PlayerID = ${el[3]}
+										order by Turn, timestamp
+									`;
+								}
+								else if (el[0].endsWith('Policies')) {
+									query = `
+										SELECT * FROM (VALUES('${nodeID}'),('Technologies'));
+										select turn,
+										PolicyBranch||': '||PolicyKey as Event from ReplayEvents
+										join ReplayEventKeys on ReplayEventKeys.ReplayEventID = ReplayEvents.ReplayEventType
+										join GameSeeds using(GameSeed)
+										join Games using(GameID, PlayerID)
+										join PolicyKeys on PolicyID=num2
+										join PolicyBranches using(BranchID)
+										where ReplayEventID = 61 and GameID = ${el[2]} and PlayerID = ${el[3]}
+										order by Turn, timestamp
+									`;
+								}
+								else if (el[0].endsWith('Beliefs')) {
+									query = `
+										SELECT * FROM (VALUES('${nodeID}'),('Beliefs'));
+										SELECT Turn, BeliefType||': '||BeliefKey AS Event FROM (
+    										SELECT Turn, GameSeed, PlayerID, Num1 AS Value FROM ReplayEvents
+    										WHERE ReplayEventType = 17
+    										UNION
+    										SELECT Turn, GameSeed, PlayerID, Num2 FROM ReplayEvents
+    										WHERE ReplayEventType = 18
+    										UNION
+    										SELECT Turn, GameSeed, PlayerID, Num3 FROM ReplayEvents
+    										WHERE ReplayEventType = 18
+    										UNION
+    										SELECT Turn, GameSeed, PlayerID, Num4 FROM ReplayEvents
+    										WHERE ReplayEventType = 18
+    										UNION
+    										SELECT Turn, GameSeed, PlayerID, Num5 FROM ReplayEvents
+    										WHERE ReplayEventType = 18
+    										UNION
+    										SELECT Turn, GameSeed, PlayerID, Num2 FROM ReplayEvents
+    										WHERE ReplayEventType = 19
+    										UNION
+    										SELECT Turn, GameSeed, PlayerID, Num3 FROM ReplayEvents
+    										WHERE ReplayEventType = 19
+    									)
+    									JOIN BeliefKeys ON BeliefID = Value
+    									JOIN BeliefTypes ON BeliefTypes.TypeID = BeliefKeys.TypeID
+										join GameSeeds using(GameSeed)
+										join Games using(GameID, PlayerID)
+										where GameID = ${el[2]} and PlayerID = ${el[3]}
+										order by Turn, BeliefTypes.TypeID
+									`;
+								}
 							}
 							else if (tag === 'Cities') {
-								let query = `
-									SELECT * FROM (VALUES('${nodeID2}'),('Constructions'));
+								query = `
+									SELECT * FROM (VALUES('${nodeID}'),('Constructions'));
 									select turn,
-									iif(replayeventid=62,'purchased '||UnitKey,
-									iif(replayeventid=63,'purchased '||BuildingKey,
-									iif(replayeventid=77,UnitKey,
-									iif(replayeventid=78,BuildingKey,
-									'???')))) as Event from replayevents
-									join replayeventkeys on replayeventkeys.replayeventid = replayevents.replayeventtype
-									join gameseeds using(gameseed)
-									join games using(gameid, playerid)
-									join players using(gameseed, playerid)
-									join civkeys using(civid)
-									left join BuildingKeys on iif(replayeventid=78,BuildingID = num2,BuildingID=num3)
+									iif(ReplayEventID=62,'purchased'||iif(num5=2,' [ICON_GOLD] ',iif(num5=5,' [ICON_PEACE] ',' '))||UnitKey,
+									iif(ReplayEventID=63,'purchased'||iif(num5=2,' [ICON_GOLD] ',iif(num5=5,' [ICON_PEACE] ',' '))||BuildingKey,
+									iif(ReplayEventID=77,UnitKey,
+									iif(ReplayEventID=78,BuildingKey,
+									'???')))) as Event from ReplayEvents
+									join ReplayEventKeys on ReplayEventKeys.ReplayEventID = ReplayEvents.ReplayEventType
+									join GameSeeds using(GameSeed)
+									join Games using(GameID, PlayerID)
+									left join BuildingKeys on iif(ReplayEventID=78,BuildingID = num2,BuildingID=num3)
 									left join UnitKeys on UnitID = num2
-									where replayeventid in (62,63,77,78) and gameid = ${el[1]} and playerid = ${el[2]} and num1 = ${el[3]}
+									where ReplayEventID in (62,63,77,78) and GameID = ${el[2]} and PlayerID = ${el[3]} and num1 = ${el[4]}
+									order by Turn, timestamp
 								`;
-								worker.postMessage({action: 'exec', sql: query, id: 'tree-node-update'});
 							}
+							worker.postMessage({action: 'exec', sql: query, id: 'tree-node-update'});
 						}
 						e.stopPropagation();
 						e.preventDefault();
