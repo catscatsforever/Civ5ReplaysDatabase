@@ -678,7 +678,7 @@ worker.onmessage = function (event) {
 	else if (id === "tree-node-update") {
 		let parentNodeID = results[0].values[0][0];
 		let tag = results[0].values[1][0];
-		let components = ['Constructions','Technologies','Policies','Beliefs'];
+		let components = ['Constructions','Technologies','Policies','GoodyHuts'];
 		console.log('nodeid', parentNodeID, tag)
 		document.querySelectorAll('.'+parentNodeID).forEach((li) => {
 			if (components.includes(tag)) {
@@ -718,10 +718,13 @@ worker.onmessage = function (event) {
 								query = `
 									SELECT * FROM (VALUES('${nodeID}'),('Tag'));
 									SELECT 0 AS NodeID, 0 AS Label, 0 AS GameID, 0 AS PlayerID WHERE 0 UNION ALL
-									SELECT * FROM (VALUES('GameID${el[2]}PlayerID${el[3]}TagCities','Cities',${el[2]},${el[3]}),
-									('GameID${el[2]}PlayerID${el[3]}TagTechnologies','Technologies',${el[2]},${el[3]}),
-									('GameID${el[2]}PlayerID${el[3]}TagPolicies','Policies',${el[2]},${el[3]}),
-									('GameID${el[2]}PlayerID${el[3]}TagBeliefs','Beliefs',${el[2]},${el[3]}))
+									SELECT * FROM (VALUES
+										('GameID${el[2]}PlayerID${el[3]}TagCities','Cities',${el[2]},${el[3]}),
+										('GameID${el[2]}PlayerID${el[3]}TagTechnologies','Technologies',${el[2]},${el[3]}),
+										('GameID${el[2]}PlayerID${el[3]}TagPolicies','Policies',${el[2]},${el[3]}),
+										('GameID${el[2]}PlayerID${el[3]}TagBeliefs','Beliefs',${el[2]},${el[3]}),
+										('GameID${el[2]}PlayerID${el[3]}TagGoodyHuts','Ancient Ruins',${el[2]},${el[3]})
+									)
 								`;
 							}
 							else if (tag === 'Tag') {
@@ -762,7 +765,7 @@ worker.onmessage = function (event) {
 								}
 								else if (el[0].endsWith('Policies')) {
 									query = `
-										SELECT * FROM (VALUES('${nodeID}'),('Technologies'));
+										SELECT * FROM (VALUES('${nodeID}'),('Policies'));
 										select turn,
 										PolicyBranch||': '||PolicyKey as Event from ReplayEvents
 										join ReplayEventKeys on ReplayEventKeys.ReplayEventID = ReplayEvents.ReplayEventType
@@ -805,6 +808,42 @@ worker.onmessage = function (event) {
 										join Games using(GameID, PlayerID)
 										where GameID = ${el[2]} and PlayerID = ${el[3]}
 										order by Turn, BeliefTypes.TypeID
+									`;
+								}
+								else if (el[0].endsWith('GoodyHuts')) {
+									query = `
+										SELECT * FROM (VALUES('${nodeID}'),('GoodyHuts'));
+										select turn,
+										column2 as Event from ReplayEvents
+										join ReplayEventKeys on ReplayEventKeys.ReplayEventID = ReplayEvents.ReplayEventType
+										join GameSeeds using(GameSeed)
+										join Games using(GameID, PlayerID)
+										join (
+											SELECT * FROM (VALUES
+											(0, 'Warrior'),
+											(1, '[ICON_FOOD] Food'),
+											(2, '[ICON_CULTURE] Culture'),
+											(3, 'Pantheon [ICON_PEACE] Faith'),
+											(4, 'Prophet [ICON_PEACE] Faith'),
+											(5, 'Barbarians reveal'),
+											(6, '[ICON_GOLD] Gold'),
+											(7, 'Map reveal'),
+											(8, '[ICON_RESEARCH] Science'),
+											(9, 'Resource reveal'),
+											(10, 'Unit upgrade'),
+											(11, 'Barbarians'),
+											(12, 'Barbarians'),
+											(13, '[ICON_GOLD] Gold'),
+											(14, '[ICON_GOLD] Gold'),
+											(15, 'Settler'),
+											(16, 'Scout'),
+											(17, 'Worker'),
+											(18, 'Unit mobility'),
+											(19, 'Unit healing'),
+											(20, 'City border expansion'))
+										) on column1=num1
+										where ReplayEventID = 87 and GameID = ${el[2]} and PlayerID = ${el[3]}
+										order by Turn, timestamp
 									`;
 								}
 							}
