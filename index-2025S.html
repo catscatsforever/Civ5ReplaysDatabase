@@ -34,6 +34,7 @@
   </label>
 
   <main>
+    <div id="error" class="error"></div>
     <div id="inputs" style="display: none">
       <label class="labelTab TabsFiller"> </label>
       <input class="radioTab plot-clk" id="tab0" type="radio" name="tabs" checked>
@@ -46,9 +47,10 @@
       <label class="labelTab" for="tab3">Compare Average</label>
       <input class="radioTab plot-clk" id="tab4" type="radio" name="tabs">
       <label class="labelTab" for="tab4">Plot Distribution</label>
-      <input class="radioTab plot-clk" id="tab5" type="radio" name="tabs">
+      <input class="radioTab" id="tab5" type="radio" name="tabs">
       <label class="labelTab" for="tab5">Tables</label>
-      <div id="error" class="error"></div>
+      <input class="radioTab" id="tab6" type="radio" name="tabs">
+      <label class="labelTab" for="tab6">Events</label>
       <section id="content0">
       </section>
       <section id="content1">
@@ -155,6 +157,10 @@
         <br>
         <pre id="output"></pre>
       </section>
+      <section id="content6">
+        <span class="sp">Cities, Technologies, Policies, Beliefs Ledger:</span>
+        <ul id="tree-root" class="tree"></ul>
+      </section>
 
       <div id="plotOut"><!-- Plotly chart will be drawn inside this DIV --></div>
     </div>
@@ -167,14 +173,14 @@
   <footer>
     <label id="dbsize"></label>
     <a href='index.html' class="sref">Spring 2026 Tournament</a>
-    <a href='index-2025S.html' class="sref">Summer 2025 Tournament</a>
+    <span class="sttl">Summer 2025 Tournament</span>
     <a href='index-2024F.html' class="sref">Fall 2024 Tournament</a>
     <a href='index-2024W.html' class="sref">Winter 2024 Tournament</a>
-    <span class="sttl">Summer 2023 Tournament</span>
+    <a href='index-2023S.html' class="sref">Summer 2023 Tournament</a>
   </footer>
 
   <script type="text/javascript" src="data.js"></script>
-  <script type="text/javascript" src="gui-2023S.js"></script>
+  <script type="text/javascript" src="gui-2025S.js"></script>
 </body>
 
 </html>

@@ -258,8 +258,7 @@ function onWorkerMessage(event) {
 					target: arrT,
 					value: arrV,
 					color: arrCl,
-					customdata: Array.from({length: arrLL.length},
-						(el,i)=>{return {extra:(arrV[i] / results[2].values.length * 100).toFixed(1) + '%', value: arrV[i], label: arrLL[i]}}),
+					customdata: Array.from({length: arrLL.length}, (el,i)=>{return {extra:(arrV[i] / results[2].values.length * 100).toFixed(1) + '%', value: arrV[i], label: arrLL[i]}}),
 					hovertemplate: `<b>%{customdata.label}</b><br><br>source: %{source.label}<br>target: %{target.label}<extra>%{customdata.value}<br>%{customdata.extra}</extra>`
 				},
 				textfont: { size: 12 }
@@ -518,8 +517,7 @@ function onWorkerMessage(event) {
 				else {
 					let sp = document.createElement("span");
 					sp.value = results[n].values[i][1];
-					sp.innerHTML = `${results[n].values[i][0].replace(/\[([^\]]+)\]/g,
-						(_, a) => IconMarkups[a] ? `<img class="ico" src="images/${IconMarkups[a]}"/>` : `[${a}]`)}`;
+					sp.innerHTML = `${results[n].values[i][0].replace(/\[([^\]]+)\]/g, (_, a) => IconMarkups[a] ? `<img class="ico" src="images/${IconMarkups[a]}"/>` : `[${a}]`)}`;
 					sp.classList.add('sp', 'dropdownItem');
 					sp.addEventListener('mousedown', (e) => {
 						el.innerHTML = sp.innerHTML;
@@ -697,6 +695,7 @@ function onWorkerMessage(event) {
 		};
 		Plotly.newPlot('plotOut', data, layout);
 	}
+	// events tree node update
 	// events tree node update
 	else if (id === "tree-node-update") {
 		let parentNodeID = results[0].values[0][0];
@@ -947,8 +946,7 @@ let tableCreate = function () {
 	function valconcat(vals, tagName) {
 		if (vals.length === 0) return '';
 		let open = '<' + tagName + '>', close = '</' + tagName + '>';
-		return open + vals.join(close + open).replace(/\[([^\]]+)\]/g,
-			(_, a) => IconMarkups[a] ? `<img class="ico" src="images/${IconMarkups[a]}"/>` : `[${a}]`) + close;
+		return open + vals.join(close + open).replace(/\[([^\]]+)\]/g, (_, a) => IconMarkups[a] ? `<img class="ico" src="images/${IconMarkups[a]}"/>` : `[${a}]`) + close;
 	}
 	return function (name, columns, values) {
 		let div = document.createElement('div');
@@ -1032,14 +1030,14 @@ resizeWatcher.observe(document.getElementById("sqlBox"));
 // Load a db from URL
 function fetchdb() {
 	let r = new XMLHttpRequest();
-	r.open('GET', 'sample5.zip', true);
+	r.open('GET', 'sample4.zip', true);
 	r.responseType = 'arraybuffer';
 	r.onload = function () {
 		toc('loading DB');
 		inputsElm.style.display = 'block';
 		const uInt8Array = new Uint8Array(r.response);
 		tic();
-		const unzipped = fflate.unzipSync(uInt8Array)['sample5.db'];
+		const unzipped = fflate.unzipSync(uInt8Array)['sample4.db'];
 		DBConfig = JSON.parse(String.fromCharCode.apply(null, fflate.unzipSync(uInt8Array)['config.json']));
 		toc('decompression finished');
 		let b = uInt8Array.length;
@@ -1088,7 +1086,7 @@ function doPlot(e) {
 	let compareGroup = compareSelHead.value ? compareSelHead : {value: JSON.stringify(DBConfig.DefaultCompareGroup), textContent: DBConfig.DefaultCompareGroupKey};
 	let dataset3 = datasetSelHead3.value ? datasetSelHead3 : {value: DBConfig.DefaultDatasetID, textContent: DBConfig.DefaultDatasetKey};
 	let condition1 = `Games.GameID = 1`;
-	let condition2 = `ReplayDataSetsChanges.ReplayDataSetID = ${DBConfig.DefaultDatasetID}`;
+	let condition2 = `ReplayDataSetKeys.ReplayDataSetID = ${DBConfig.DefaultDatasetID}`;
 	let traceName = `Games.Player`;
 	let yaxisName = ``;
 	let aggregate, aggregateMethod, supplement, groupID;
