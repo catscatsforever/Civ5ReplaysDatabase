@@ -1,0 +1,151 @@
+@import "tailwindcss";
+
+:root {
+    --civ-bg:               #05080B;
+    --civ-surface:          #0A1412;
+    --civ-border:           #DCBD88;
+    --civ-text:             #FFFFC8;
+    --civ-muted:            #8BA89E;
+    --civ-glow:             #174A3E;
+    --civ-bkg-color-alt:    #0F2E26;
+    --civ-bkg-color-alt2:   #0A1E1A;
+}
+
+html {
+    background-color: var(--civ-bg);
+}
+body {
+    background-color: var(--civ-bg);
+    color: var(--civ-text);
+    font-family: 'Futura PT', 'Century Gothic', 'Trebuchet MS', 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 450;
+}
+
+code, pre, .font-mono, .cm-editor {
+    font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace !important;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #05080B; }
+::-webkit-scrollbar-thumb { background: #DCBD88; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #F0D9A8; }
+
+tbody tr:hover {
+    background-color: var(--civ-glow) !important;
+}
+
+
+.civ-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 7px 16px;
+    font-weight: 400;
+    font-size: 1.2rem;
+    letter-spacing: 0.06em;
+    cursor: pointer;
+    white-space: nowrap;
+    user-select: none;
+    transition: all 0.15s ease;
+    border: 1px solid #DCBD88;
+    outline-offset: -4px;
+    background: linear-gradient(180deg, #102E28 0%, #0A1C18 40%, #071412 100%);
+    box-shadow:
+        inset 0  1px 0 0 rgba(220,189,136,0.18),
+        inset 0 -1px 0 0 rgba(0,0,0,0.40),
+        0 1px 3px 0 rgba(0,0,0,0.55);
+    color: #FFFFC8;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+    border-radius: 10px;
+}
+
+.civ-btn:hover {
+    background: linear-gradient(180deg, #174A3E 0%, #0F2E26 40%, #0A1E1A 100%);
+    border-color: #F0D9A8;
+    color: #FFFFC8;
+    box-shadow:
+        inset 0  1px 0 0 rgba(240,217,168,0.28),
+        inset 0 -1px 0 0 rgba(0,0,0,0.30),
+        0 0 8px 0 rgba(220,189,136,0.18),
+        0 2px 6px 0 rgba(0,0,0,0.40);
+}
+
+.civ-btn:active {
+    background: linear-gradient(180deg, #081814 0%, #060F0D 50%, #050A09 100%);
+    box-shadow:
+        inset 0  2px 4px 0 rgba(0,0,0,0.5),
+        inset 0 -1px 0 0 rgba(220,189,136,0.10);
+    transform: translateY(1px);
+}
+
+.civ-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: saturate(0.4);
+}
+
+.civ-btn-active {
+    background: linear-gradient(180deg, #1F5040 0%, #144030 40%, #0E3024 100%);
+    border-color: #F0D9A8;
+    color: #FFFFC8;
+    box-shadow:
+        inset 0  1px 0 0 rgba(240,217,168,0.25),
+        inset 0 -1px 0 0 rgba(0,0,0,0.30),
+        0 0 10px 0 rgba(220,189,136,0.15);
+}
+
+.civ-btn-active:hover {
+    background: linear-gradient(180deg, #256850 0%, #1A5040 40%, #134030 100%);
+}
+
+.civ-btn-chip {
+    padding: 4px 12px;
+    font-size: 0.9rem;
+    border-width: 1px;
+    outline-offset: -3px;
+}
+
+.civ-btn-primary {
+    background: linear-gradient(180deg, #3A6830 0%, #1E4820 40%, #143018 100%);
+    border-color: #B0D890;
+    color: #D0FFB0;
+    outline-color: #5A7844;
+}
+
+.civ-btn-primary:hover {
+    background: linear-gradient(180deg, #4A8040 0%,  #285830 40%, #1C4020 100%);
+    border-color: #C0E8A0;
+    color: #E0FFD0;
+    box-shadow:
+        inset 0  1px 0 0 rgba(180,220,140,0.28),
+        inset 0 -1px 0 0 rgba(0,0,0,0.30),
+        0 0 10px 0 rgba(180,220,140,0.15),
+        0 2px 6px 0 rgba(0,0,0,0.40);
+}
+
+.civ-btn-danger {
+    border-color: #D05050;
+    color: #FF9090;
+    outline-color: #6B2020;
+}
+
+.civ-btn-danger:hover {
+    background: linear-gradient(180deg, #402020 0%, #301818 40%, #201010 100%);
+    border-color: #FF6060;
+    color: #FFB0B0;
+    box-shadow:
+        inset 0  1px 0 0 rgba(255,100,100,0.20),
+        inset 0 -1px 0 0 rgba(0,0,0,0.30),
+        0 0 8px 0 rgba(208,80,80,0.18);
+}
+
+.civ-btn-tag {
+    padding: 3px 10px;
+    font-size: 0.6875rem;
+    border-width: 1.5px;
+    outline-offset: -3px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, #1A3E34 0%, #102E24 100%);
+}
