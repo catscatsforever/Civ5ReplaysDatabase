@@ -810,7 +810,7 @@ resizeWatcher.observe(document.getElementById("sqlBox"));
 // Load a db from URL
 function fetchdb() {
 	let r = new XMLHttpRequest();
-	r.open('GET', 'sample.zip', true);
+	r.open('GET', '../public/samples/sample.zip', true);
 	r.responseType = 'arraybuffer';
 	r.onload = function () {
 		toc('loading DB');
