@@ -11,7 +11,7 @@ const __dirname = path.dirname(__filename);
 // https://vite.dev/config/
 export default defineConfig({
     plugins: [react(), tailwindcss(), viteSingleFile()],
-    base: "https://catscatsforever.github.io/Civ5ReplaysDatabase/",
+    base: "/Civ5ReplaysDatabase",
     resolve: {
         alias: {
             "@": path.resolve(__dirname, "src"),
