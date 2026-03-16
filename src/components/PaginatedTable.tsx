@@ -267,7 +267,7 @@ export default function PaginatedTable({ columns, values }: PaginatedTableProps)
                         {row.map((cell: any, j: number) => (
                             <td
                                 key={j}
-                                className="py-2 px-4 whitespace-nowrap font-mono text-xs"
+                                className="py-2 px-4 whitespace-nowrap text-s"
                                 style={{
                                     color: CIV.text,
                                     ...(j < columns.length - 1 ? colBorderStyle : lastColStyle),
