@@ -4,10 +4,8 @@ import { CIV } from "../civPalette";
 import { useLang } from "../LangContext";
 import PaginatedTable from "./PaginatedTable";
 
-type Category = "hof" | "belief" | "policy" | "tech" | "wonder";
+type Category = "hof" | "belief" | "policy" | "tech" | "wonder" | "cs";
 interface TableBlock { titleKey: string; sql: string; }
-
-// ── New schema: ReplayEvents uses ReplayEventType (TEXT) and GameSeed ─────────
 
 const hallOfFameBlocks: TableBlock[] = [
     { titleKey: "TXT_KEY_TABLES_HOF_GWB_TITLE", sql: `SELECT * FROM _cached_HoF_GWB;` },
@@ -43,9 +41,16 @@ const wonderBlocks: TableBlock[] = [
     { titleKey: "TXT_KEY_TABLES_WONDER_MINTOWC_TITLE", sql: `SELECT * FROM _cached_WC_MinToWC;` },
     { titleKey: "TXT_KEY_TABLES_WONDER_NTOWC_TITLE", sql: `SELECT * FROM _cached_WC_NToWC;` },
 ];
+const CSRelationsBlocks: TableBlock[] = [
+    { titleKey: "TXT_KEY_TABLES_CS_CSC_TITLE", sql: `SELECT * FROM _cached_CSR_CSC;` },
+    { titleKey: "TXT_KEY_TABLES_CS_CSL_TITLE", sql: `SELECT * FROM _cached_CSR_CSL;` },
+    { titleKey: "TXT_KEY_TABLES_CS_TCSD_TITLE", sql: `SELECT * FROM _cached_CSR_TCSD;` },
+    { titleKey: "TXT_KEY_TABLES_CS_TCSR_TITLE", sql: `SELECT * FROM _cached_CSR_TCSR;` },
+    { titleKey: "TXT_KEY_TABLES_CS_QM_TITLE", sql: `SELECT * FROM _cached_CSR_QM;` },
+];
 
 const CATEGORY_BLOCKS: Record<Category, TableBlock[]> = {
-    hof: hallOfFameBlocks, belief: beliefBlocks, policy: policyBlocks, tech: techBlocks, wonder: wonderBlocks,
+    hof: hallOfFameBlocks, belief: beliefBlocks, policy: policyBlocks, tech: techBlocks, wonder: wonderBlocks, cs: CSRelationsBlocks,
 };
 
 function SummaryCard({ titleKey, sql }: { titleKey: string; sql: string }) {
@@ -89,6 +94,7 @@ export default function TablesView() {
         { id: "policy", labelKey: "TXT_KEY_TABLES_CAT_POLICY" },
         { id: "tech", labelKey: "TXT_KEY_TABLES_CAT_TECH" },
         { id: "wonder", labelKey: "TXT_KEY_TABLES_CAT_WONDER" },
+        { id: "cs", labelKey: "TXT_KEY_TABLES_CAT_CS" },
     ];
 
     return (
