@@ -15,7 +15,7 @@ export const ICON_MARKUPS: Record<string, IconDef> = {
     ICON_DENOUNCE: { url: '/images/Civ5Icon.Denounce.png', label: 'Denounce' },
     ICON_FLOWER: { url: '/images/Civ5Icon.Flower.png', label: 'Flower' },
     ICON_FOOD: { url: '/images/Civ5Icon.Food.png', label: 'Food' },
-    ICON_GOLD: { url: '/images/Civ5Icon.Gold.png', label: 'Gold' },
+    ICON_GOLD: { url: './images/Civ5Icon.Gold.png', label: 'Gold' },
     ICON_GOLDEN_AGE: { url: '/images/Civ5Icon.GoldenAge.png', label: 'GoldenAge' },
     ICON_GREAT_ADMIRAL: { url: '/images/Civ5Icon.GreatAdmiral.png', label: 'GreatAdmiral' },
     ICON_GREAT_ARTIST: { url: '/images/Civ5Icon.GreatArtist.png', label: 'GreatArtist' },

@@ -349,9 +349,10 @@ function BannedCivsChart() {
     }, [t]);
 
     const zoom = useChartZoom(data, "Civ", ["Count123"]);
-    console.log('zoom', zoom)
+    //console.log('zoom', zoom)
 
     return (
+        (zoom.zoomedData.length > 0) && (
         <Card title={t("TXT_KEY_SUMMARY_BANNED_TITLE")}>
             <div onDoubleClick={zoom.resetZoom} style={{ cursor: zoom.isZoomed ? "zoom-out" : "crosshair" }}>
                 <ResponsiveContainer width="100%" height={240}>
@@ -369,6 +370,7 @@ function BannedCivsChart() {
                 </ResponsiveContainer>
             </div>
         </Card>
+        )
     );
 }
 
