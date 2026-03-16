@@ -203,7 +203,7 @@ export const translations = {
         TXT_KEY_MAP_TT_HILLS:               "Hills",
         TXT_KEY_MAP_TT_OCEAN:               "Ocean",
 
-        TXT_KEY_QUERY_TITLE:                "SQL Query Explorer",
+        TXT_KEY_QUERY_TITLE:                "SQL Sanbox",
         TXT_KEY_QUERY_SUBTITLE:             "Run any SQL query · Ctrl+Enter to execute",
         TXT_KEY_QUERY_EXAMPLES_LABEL:       "Example Queries",
         TXT_KEY_QUERY_PLACEHOLDER:          "Enter your SQL query...",
