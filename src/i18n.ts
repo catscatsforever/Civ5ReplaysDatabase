@@ -22,7 +22,7 @@ export const translations = {
         TXT_KEY_NAV_TABLES:                 "Tables",
         TXT_KEY_NAV_EXPLORER:               "Events Explorer",
         TXT_KEY_NAV_MAP:                    "Map Replay",
-        TXT_KEY_NAV_QUERY:                  "SQL Explorer",
+        TXT_KEY_NAV_QUERY:                  "SQL Sandbox",
 
         TXT_KEY_LANG_LABEL:                 "Language",
         TXT_KEY_LANG_EN:                    "EN",
