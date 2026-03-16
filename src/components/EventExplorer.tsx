@@ -376,17 +376,10 @@ function GameNode({ game, depth }: { game: GameRow; depth: number }) {
         } finally { setLoading(false); }
     }, [game.gameSeed]);
 
-    const winner = players.find(p => p.winType);
-
     return (
         <TreeNode label={`${game.gameName}`} depth={depth}
                   badge={game.winType ?? undefined} onOpen={load}>
             {loading && <div className="py-1 px-4 text-xs" style={{ color: CIV.muted }}>{t("TXT_KEY_LOADING")}</div>}
-            {!loading && winner && (
-                <div className="px-4 py-1 text-xs" style={{ color: CIV.tick }}>
-                    {t("TXT_KEY_EXPLORER_STANDING")} 1: {winner.playerName} ({winner.civId.replace("CIVILIZATION_", "")})
-                </div>
-            )}
             {players.map(p => (
                 <PlayerNode key={playerKey(game.gameSeed, p.playerId)} gameSeed={game.gameSeed} player={p} depth={depth + 1} />
             ))}

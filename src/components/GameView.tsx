@@ -151,14 +151,14 @@ export default function GameView({ initialHash = {} }: Props) {
                 <h3 className="text-base tracking-wide mb-0.5" style={{ color: CIV.text }}>{t("TXT_KEY_GAME_TITLE")}</h3>
                 <div className="flex flex-wrap gap-4">
                     <CivSelect
-                        label={t("TXT_KEY_SELECT_GAME")}
+                        label={t("TXT_KEY_GAME")}
                         value={selGame}
                         onChange={setSelGame}
                         options={gameIds.map((label, id) => ({ value: String(id), label: `Game ${id} (${label})` }))}
                         minWidth={450}
                     />
                     <CivSelect
-                        label={t("TXT_KEY_SELECT_DATASET")}
+                        label={t("TXT_KEY_DATASET")}
                         value={selDs}
                         onChange={setSelDs}
                         options={datasets.map((ds) => ({ value: String(ds.id), label: `${ds.key}` }))}
@@ -178,7 +178,7 @@ export default function GameView({ initialHash = {} }: Props) {
                                        onMouseDown={zoom.onMouseDown} onMouseMove={zoom.onMouseMove} onMouseUp={zoom.onMouseUp}>
                                 <CartesianGrid strokeDasharray="3 3" stroke={CIV.grid} />
                                 <XAxis dataKey="turn" tick={<CivXTick />}
-                                       label={<CivAxisLabel value={t("TXT_KEY_CHART_LABEL")} fontSize={18} offset0={8} />}
+                                       label={<CivAxisLabel value={t("TXT_KEY_TURN")} fontSize={18} offset0={8} />}
                                        domain={zoom.isZoomed ? ["dataMin", "dataMax"] : undefined} />
                                 <YAxis tick={<CivYTick />} domain={zoom.yDomain ?? ["auto", "auto"]}
                                        label={<CivAxisLabel value={datasetName} fontSize={18} offset0={8} angle0={-90} />} />

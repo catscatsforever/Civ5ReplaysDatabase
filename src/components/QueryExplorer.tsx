@@ -385,7 +385,7 @@ export default function QueryExplorer({ onDbChanged }: QueryExplorerProps) {
                               {results.length} {t("TXT_KEY_QUERY_RESULT_SETS_RETURNED")}
                             </span>
                             <span className="text-sm" style={{ color: CIV.muted }}>
-                              ({totalRows} {totalRows === 1 ? t("TXT_KEY_QUERY_RESULTS_ROW") : t("TXT_KEY_QUERY_RESULTS_ROWS")} {t("TXT_KEY_PAGING_OF").toLowerCase()} total)
+                              ({totalRows} {totalRows === 1 ? t("TXT_KEY_QUERY_RESULTS_ROW") : t("TXT_KEY_QUERY_RESULTS_ROWS")} {t("TXT_KEY_TOTAL").toLowerCase()})
                             </span>
                             <span className="text-xs font-mono ml-auto" style={{ color: CIV.muted }}>
                               {queryTime.toFixed(2)} ms
