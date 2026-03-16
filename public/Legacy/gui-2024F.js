@@ -517,7 +517,7 @@ function onWorkerMessage(event) {
 				else {
 					let sp = document.createElement("span");
 					sp.value = results[n].values[i][1];
-					sp.innerHTML = `${results[n].values[i][0].replace(/\[([^\]]+)\]/g, (_, a) => IconMarkups[a] ? `<img class="ico" src="images/${IconMarkups[a]}"/>` : `[${a}]`)}`;
+					sp.innerHTML = `${results[n].values[i][0].replace(/\[([^\]]+)\]/g, (_, a) => IconMarkups[a] ? `<img class="ico" src="../images/${IconMarkups[a]}"/>` : `[${a}]`)}`;
 					sp.classList.add('sp', 'dropdownItem');
 					sp.addEventListener('mousedown', (e) => {
 						el.innerHTML = sp.innerHTML;
@@ -946,7 +946,7 @@ let tableCreate = function () {
 	function valconcat(vals, tagName) {
 		if (vals.length === 0) return '';
 		let open = '<' + tagName + '>', close = '</' + tagName + '>';
-		return open + vals.join(close + open).replace(/\[([^\]]+)\]/g, (_, a) => IconMarkups[a] ? `<img class="ico" src="images/${IconMarkups[a]}"/>` : `[${a}]`) + close;
+		return open + vals.join(close + open).replace(/\[([^\]]+)\]/g, (_, a) => IconMarkups[a] ? `<img class="ico" src="../images/${IconMarkups[a]}"/>` : `[${a}]`) + close;
 	}
 	return function (name, columns, values) {
 		let div = document.createElement('div');
@@ -1030,7 +1030,7 @@ resizeWatcher.observe(document.getElementById("sqlBox"));
 // Load a db from URL
 function fetchdb() {
 	let r = new XMLHttpRequest();
-	r.open('GET', '../public/samples/sample3.zip', true);
+	r.open('GET', '../samples/sample3.zip', true);
 	r.responseType = 'arraybuffer';
 	r.onload = function () {
 		toc('loading DB');

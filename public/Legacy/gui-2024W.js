@@ -26,14 +26,12 @@ let tab2Rad = document.getElementById("tab2");
 let tab3Rad = document.getElementById("tab3");
 let tab4Rad = document.getElementById("tab4");
 let tab5Rad = document.getElementById("tab5");
-let tab6Rad = document.getElementById("tab6");
 
 let tableHallOfFameBtn = document.getElementById('tableHallOfFame');
 let tableBeliefAdoptionBtn = document.getElementById('tableBeliefAdoption');
 let tablePolicyAdoptionBtn = document.getElementById('tablePolicyAdoption');
 let tableTechResearchBtn = document.getElementById('tableTechResearch');
 let tableWonderConstructionBtn = document.getElementById('tableWonderConstruction');
-let tableCSRelationsBtn = document.getElementById('tableCSRelations');
 
 let gameSelHead = document.getElementById('gameID-select-head');
 let datasetSelHead = document.getElementById('dataset-select-head');
@@ -83,11 +81,11 @@ btn.addEventListener("click", function () {
 
 // Start the worker in which sql.js will run
 let worker = new Worker("worker.sql-wasm.js");
-let worker2 = new Worker("worker.sql-wasm.js");  // extra worker for tables
 worker.onerror = error;
-worker2.onerror = error;
 worker.onmessage = function (event) {
 	console.log("e", event);
+	let results = event.data.results;
+	let id = event.data.id;
 	// on db load
 	if (event.data.ready === true) {
 		toc("Loading database from file");
@@ -95,20 +93,6 @@ worker.onmessage = function (event) {
 		fillSelects();
 		doPlot();
 		tableHallOfFameBtn.click();
-	}
-	else {
-		onWorkerMessage(event);
-	}
-}
-worker2.onmessage = function (event) {
-	console.log("e2", event);
-	onWorkerMessage(event);
-}
-
-function onWorkerMessage(event) {
-	let results = event.data.results;
-	let id = event.data.id;
-	if (event.data.ready === true) {
 		return;
 	}
 	// export db
@@ -258,8 +242,7 @@ function onWorkerMessage(event) {
 					target: arrT,
 					value: arrV,
 					color: arrCl,
-					customdata: Array.from({length: arrLL.length},
-						(el,i)=>{return {extra:(arrV[i] / results[2].values.length * 100).toFixed(1) + '%', value: arrV[i], label: arrLL[i]}}),
+					customdata: Array.from({length: arrLL.length}, (el,i)=>{return {extra:(arrV[i] / results[2].values.length * 100).toFixed(1) + '%', value: arrV[i], label: arrLL[i]}}),
 					hovertemplate: `<b>%{customdata.label}</b><br><br>source: %{source.label}<br>target: %{target.label}<extra>%{customdata.value}<br>%{customdata.extra}</extra>`
 				},
 				textfont: { size: 12 }
@@ -347,10 +330,6 @@ function onWorkerMessage(event) {
 						conf.aggregate.name = conf.aggregate.id + ' builders';
 						groupId = tracesData[i].GroupID;
 					}
-					else if (conf.aggregate.group === 'policies') {
-						conf.aggregate.name = conf.aggregate.id + ' finishers';
-						groupId = tracesData[i].GroupID;
-					}
 					arrY[i].forEach((j,k)=>{
 						if (blob[groupId][k] === undefined)
 							blob[groupId][k] = [k, []];
@@ -419,20 +398,20 @@ function onWorkerMessage(event) {
 						arrY = Array.from({length: group.length}, (el, i)=>blob[n][i][1].reduce((acc,it)=>acc+it,0)/blob[n][i][1].length);
 					}
 					else if (conf.aggregate.method === 1) {  // 20% winsorized mean
-						arrY = Array.from({length: group.length}, (el, i) => {
+						arrY = Array.from({length: group.length}, (el, i)=> {
 							let s = [...blob[n][i][1]].sort((a,b)=>a-b);
 							let LBound = Math.trunc(s.length * 0.2);
 							let UBound = s.length - LBound - 1;
-							return s.reduce((acc,it,wi,arr) => {
+							return s.reduce((acc,it,wi,arr)=>{
 								let r = (wi < LBound) ? arr[LBound] : ((wi > UBound) ? arr[UBound] : it);
 								return acc + r;
 							})/s.length;
 						});
 					}
 					else if (conf.aggregate.method === 2) {  // Median
-						arrY = Array.from({length: group.length}, (el, i) => {
+						arrY = Array.from({length: group.length}, (el, i)=>{
 							let s = [...blob[n][i][1]].sort((a,b)=>a-b);
-							return (s[Math.floor((s.length - 1) / 2)] + s[Math.ceil((s.length - 1) / 2)]) / 2;
+							return (s[Math.floor(s.length / 2) - 1] + s[Math.ceil(s.length / 2) - 1]) / 2;
 						});
 					}
 					data.push({
@@ -451,7 +430,6 @@ function onWorkerMessage(event) {
 			}
 		}
 		let layout = {
-			title: (conf.aggregate) ? `<b>${conf.aggregate.name} vs All average<br>${conf.yaxis ?? 'TODO'}</b>` : undefined,
 			hovermode: "x unified",
 			barmode: 'relative',
 			xaxis: {
@@ -516,10 +494,9 @@ function onWorkerMessage(event) {
 					el.nextElementSibling.appendChild(b);
 				}
 				else {
-					let sp = document.createElement("span");
+					const sp = document.createElement("span");
 					sp.value = results[n].values[i][1];
-					sp.innerHTML = `${results[n].values[i][0].replace(/\[([^\]]+)\]/g,
-						(_, a) => IconMarkups[a] ? `<img class="ico" src="images/${IconMarkups[a]}"/>` : `[${a}]`)}`;
+					sp.innerHTML = `${results[n].values[i][0].replace(/\[([^\]]+)\]/g, (_, a) => IconMarkups[a] ? `<img class="ico" src="../images/${IconMarkups[a]}"/>` : `[${a}]`)}`;
 					sp.classList.add('sp', 'dropdownItem');
 					sp.addEventListener('mousedown', (e) => {
 						el.innerHTML = sp.innerHTML;
@@ -701,7 +678,7 @@ function onWorkerMessage(event) {
 	else if (id === "tree-node-update") {
 		let parentNodeID = results[0].values[0][0];
 		let tag = results[0].values[1][0];
-		let components = ['Constructions','Technologies','Policies','Beliefs','GoodyHuts'];
+		let components = ['Constructions','Technologies','Policies','GoodyHuts'];
 		console.log('nodeid', parentNodeID, tag)
 		document.querySelectorAll('.'+parentNodeID).forEach((li) => {
 			if (components.includes(tag)) {
@@ -916,10 +893,34 @@ function onWorkerMessage(event) {
 		Object.entries(blob).forEach((t, _)=>{
 			outputElm.appendChild(tableCreate(t[0], t[1].columns, t[1].values));
 		});
+		const allTables = document.querySelectorAll("table");
+
+		for (const table of allTables) {
+			const tBody = table.tBodies[0];
+			const rows = Array.from(tBody.rows);
+			const headerCells = table.tHead.rows[0].cells;
+
+			for (const th of headerCells) {
+				const cellIndex = th.cellIndex;
+
+				th.addEventListener("click", () => {
+					let dir = th.classList.contains("sort-desc");
+					th.parentElement.childNodes.forEach(el=>el.classList.remove("sort-asc", "sort-desc"));
+					th.classList.add(dir === true ? "sort-asc" : "sort-desc");
+					rows.sort((tr1, tr2) => {
+						const tr1Text = tr1.cells[cellIndex].textContent;
+						const tr2Text = tr2.cells[cellIndex].textContent;
+						return dir ? 1 : -1 * tr2Text.localeCompare(tr1Text, undefined, { numeric: true });
+					});
+
+					tBody.append(...rows);
+				});
+			}
+		}
 
 	}
 	toc("Displaying results");
-}
+};
 
 function error(e) {
 	console.log(e);
@@ -935,7 +936,7 @@ function noerror() {
 function execute(commands) {
 	tic();
 	SQLLoadingElm.textContent = "Fetching results...";
-	worker2.postMessage({ action: 'exec', id: 'table', sql: commands });
+	worker.postMessage({ action: 'exec', sql: commands });
 }
 
 function fillSelects() {
@@ -947,47 +948,25 @@ let tableCreate = function () {
 	function valconcat(vals, tagName) {
 		if (vals.length === 0) return '';
 		let open = '<' + tagName + '>', close = '</' + tagName + '>';
-		return open + vals.join(close + open).replace(/\[([^\]]+)\]/g,
-			(_, a) => IconMarkups[a] ? `<img class="ico" src="images/${IconMarkups[a]}"/>` : `[${a}]`) + close;
+		return open + vals.join(close + open).replace(/\[([^\]]+)\]/g, (_, a) => IconMarkups[a] ? `<img class="ico" src="../images/${IconMarkups[a]}"/>` : `[${a}]`) + close;
 	}
 	return function (name, columns, values) {
 		let div = document.createElement('div');
 		div.classList.add('table-cont');
-		if (name) {
-			let ttl = document.createElement('span');
-			ttl.textContent = name;
-			ttl.classList.add('sp');
-			ttl.style.fontSize = '22px';
-			div.appendChild(ttl);
-		}
+		let ttl = document.createElement('span');
+		ttl.textContent = name;
+		ttl.classList.add('sp');
+		ttl.style.fontSize = '22px';
+		div.appendChild(ttl);
 		let tbl = document.createElement('table');
 		let html = '<thead>' + valconcat(columns, 'th') + '</thead>';
 		let rows = values.map(function (v) { return valconcat(v, 'td'); });
 		html += '<tbody>' + valconcat(rows, 'tr') + '</tbody>';
 		tbl.innerHTML = html;
-		rows = Array.from(tbl.tBodies[0].rows);
-		for (const th of tbl.tHead.rows[0].cells) {
-			const cellIndex = th.cellIndex;
-
-			th.addEventListener("click", () => {
-				let dir = th.classList.contains("sort-desc");
-				th.parentElement.childNodes.forEach(el=>el.classList.remove("sort-asc", "sort-desc"));
-				th.classList.add(dir === true ? "sort-asc" : "sort-desc");
-				rows.sort((tr1, tr2) => {
-					return tr1.cells[cellIndex].textContent.localeCompare(tr2.cells[cellIndex].textContent, undefined, { numeric: true });
-				});
-				if (!dir) rows.reverse();
-
-				tbl.tBodies[0].append(...rows);
-			});
-		}
 		div.appendChild(tbl);
 		return div;
 	}
 }();
-
-function populateTreeNode(tag, id) {
-}
 
 // Execute the commands when the button is clicked
 function execEditorContents() {
@@ -1032,14 +1011,14 @@ resizeWatcher.observe(document.getElementById("sqlBox"));
 // Load a db from URL
 function fetchdb() {
 	let r = new XMLHttpRequest();
-	r.open('GET', '../public/samples/sample5.zip', true);
+	r.open('GET', '../samples/sample2.zip', true);
 	r.responseType = 'arraybuffer';
 	r.onload = function () {
 		toc('loading DB');
 		inputsElm.style.display = 'block';
 		const uInt8Array = new Uint8Array(r.response);
 		tic();
-		const unzipped = fflate.unzipSync(uInt8Array)['sample5.db'];
+		const unzipped = fflate.unzipSync(uInt8Array)['sample2.db'];
 		DBConfig = JSON.parse(String.fromCharCode.apply(null, fflate.unzipSync(uInt8Array)['config.json']));
 		toc('decompression finished');
 		let b = uInt8Array.length;
@@ -1051,11 +1030,9 @@ function fetchdb() {
 		tic();
 		try {
 			worker.postMessage({ action: 'open', buffer: unzipped }, [unzipped]);
-			worker2.postMessage({ action: 'open', buffer: unzipped }, [unzipped]);
 		}
 		catch (exception) {
 			worker.postMessage({ action: 'open', buffer: unzipped });
-			worker2.postMessage({ action: 'open', buffer: unzipped });
 		}
 	};
 	tic();
@@ -1076,7 +1053,7 @@ function doPlot(e) {
 		worker.postMessage({ action: 'exec', sql: sqlQueries["plot-games-victories"], id: "plot-games-victories" });
 		return;
 	}
-	if (tab5Rad.checked || tab6Rad.checked)
+	if (tab5Rad.checked)
 		return;
 	tic();
 	noerror();
@@ -1150,45 +1127,11 @@ function doPlot(e) {
 			supplement = `
 				LEFT JOIN (
 					SELECT GameID, PlayerID, 0 AS GroupID FROM ReplayEvents
-					JOIN BuildingKeys ON BuildingID = Num2
-					JOIN BuildingClassKeys USING(BuildingClassID)
-					JOIN GameSeeds USING(GameSeed)
-					WHERE ReplayEventType = 78 AND BuildingClassKeys.TypeID = 2 AND BuildingClassKey IN ("${val.id}")
-				) USING(GameID, PlayerID)
-			`;
-			groupID = 'IFNULL(GroupID, 1)';
-		}
-		else if (val.group === 'policies') {
-			traceName = `Games.Player`;
-			aggregate = `{"group":"policies","method":${aggregateMethod},"id":"${val.id}"}`;
-			supplement = `
-				LEFT JOIN (
-					SELECT GameID, PlayerID, 0 AS GroupID FROM (
-  						SELECT BranchID, 111 AS "PolicyID", PolicyBranch AS "Policy Branch", PolicyBranch||' Finisher' AS "Policy", *
-  						FROM (
-  							SELECT * FROM (
-								SELECT *, COUNT(Num2) AS "Cnt_2", MAX(Turn)
-								FROM (
-    								SELECT *, ROW_NUMBER() OVER (PARTITION BY Value ORDER BY Turn) AS Rnk,
-        							COUNT(*) OVER (PARTITION BY PolicyID) AS Cnt
-        							FROM (
-        							    SELECT *, Num2 AS Value FROM ReplayEvents
-        							    WHERE ReplayEventType = 61
-        							) AS T1
-        							JOIN PolicyKeys ON PolicyID = Value
-        							JOIN PolicyBranches ON PolicyBranches.BranchID = PolicyKeys.BranchID
-        							JOIN GameSeeds ON GameSeeds.GameSeed = T1.GameSeed
-        							JOIN Games ON Games.GameID = GameSeeds.GameID AND Games.PlayerID = T1.PlayerID
-        							JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = T1.PlayerID
-        							JOIN CivKeys ON CivKeys.CivID = Players.CivID
-  								)
-								GROUP BY GameSeed, PlayerID, BranchID
-							)
-  							WHERE Cnt_2 = 5 AND BranchID < 9
-  						)
-   						WHERE PolicyBranch IN ("${val.id}")
-					)
-				) USING(GameID, PlayerID)
+					JOIN BuildingKeys ON BuildingKeys.BuildingID = Num2
+					JOIN BuildingClassKeys ON BuildingClassKeys.BuildingClassID = BuildingKeys.BuildingClassID
+					JOIN GameSeeds ON GameSeeds.GameSeed = ReplayEvents.GameSeed
+					WHERE ReplayEventType = 78 AND BuildingClassKeys.TypeID = 2 AND BuildingClassKeys.BuildingClassKey = "${val.id}"
+				) T1 ON T1.GameID = Games.GameID AND T1.PlayerID = Games.PlayerID
 			`;
 			groupID = 'IFNULL(GroupID, 1)';
 		}
@@ -1227,9 +1170,9 @@ function doPlot(e) {
 			tracesData AS (
 				SELECT Games.GameID, Games.rowid, ${traceName} AS TraceName, Standing, PlayerQuitTurn AS QuitTurn ${groupID ? `, ${groupID} AS GroupID` : ''}
 				FROM Games
-				JOIN GameSeeds USING(GameID)
-        		JOIN Players USING(GameSeed, PlayerID)
-				JOIN CivKeys USING(CivID)
+				JOIN GameSeeds ON GameSeeds.GameID = Games.GameID
+        		JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = Games.PlayerID
+				JOIN CivKeys ON CivKeys.CivID = Players.CivID
 				${supplement || ''}
 				${condition1 ? `WHERE ${condition1}` : ''}
 			)
@@ -1257,9 +1200,6 @@ function doBarPlot(e) {
 	}
 	else if (target === 'techs-time') {
 		msg = sqlQueries["plot-bar-techs-time"];
-	}
-	else if (target === 'wonders-time') {
-		msg = sqlQueries["plot-bar-wonders-time"];
 	}
 	else if (tab4Rad.checked || target === 'beliefs-time') {
 		msg = sqlQueries["plot-bar-beliefs-time"];
@@ -1454,14 +1394,12 @@ document.querySelectorAll(".sankey-clk").forEach(el => {
 	el.addEventListener("click", doSankeyPlot, true);
 });
 
-tableHallOfFameBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-hall-of-fame-CACHE"]; execute(r); editor.setValue(r); }, true);
+tableHallOfFameBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-hall-of-fame"]; execute(r); editor.setValue(r); }, true);
 
-tableBeliefAdoptionBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-belief-adoption-CACHE"]; execute(r); editor.setValue(r); }, true);
+tableBeliefAdoptionBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-belief-adoption"]; execute(r); editor.setValue(r); }, true);
 
-tablePolicyAdoptionBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-policy-adoption-CACHE"]; execute(r); editor.setValue(r); }, true);
+tablePolicyAdoptionBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-policy-adoption"]; execute(r); editor.setValue(r); }, true);
 
-tableTechResearchBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-tech-research-CACHE"]; execute(r); editor.setValue(r); }, true);
+tableTechResearchBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-tech-research"]; execute(r); editor.setValue(r); }, true);
 
-tableWonderConstructionBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-wonder-construction-CACHE"]; execute(r); editor.setValue(r); }, true);
-
-tableCSRelationsBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-cs-relations-CACHE"]; execute(r); editor.setValue(r); }, true);
+tableWonderConstructionBtn.addEventListener("click", () => { noerror(); let r = sqlQueries["table-wonder-construction"]; execute(r); editor.setValue(r); }, true);
