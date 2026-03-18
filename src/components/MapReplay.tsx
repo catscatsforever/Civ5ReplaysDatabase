@@ -845,16 +845,6 @@ export default function MapReplay({ initialHash = {} }: Props) {
 
                     {/* Legend sidebar */}
                     <div className="flex flex-col gap-4 shrink-0 w-36">
-                        <div className="rounded-lg p-3" style={{ background: CIV.surface, border: `2px solid ${CIV.border}` }}>
-                            <p className="text-xs tracking-widest mb-2" style={{ color: CIV.gold }}>{t("TXT_KEY_MAP_LEGEND_TERRAIN")}</p>
-                            {terrainLegend.map(item => (
-                                <div key={item.label} className="flex items-center gap-2 mb-1">
-                                    <div className="w-3 h-3 rounded-sm shrink-0" style={{ background: item.color, border: `1px solid ${CIV.border}44` }} />
-                                    <span className="text-xs" style={{ color: CIV.muted }}>{item.label}</span>
-                                </div>
-                            ))}
-                        </div>
-
                         {playerNamesRef.current.length > 0 && (
                             <div className="rounded-lg p-3" style={{ background: CIV.surface, border: `2px solid ${CIV.border}` }}>
                                 <p className="text-xs tracking-widest mb-2" style={{ color: CIV.gold }}>{t("TXT_KEY_MAP_LEGEND_PLAYERS")}</p>
@@ -866,6 +856,16 @@ export default function MapReplay({ initialHash = {} }: Props) {
                                 ))}
                             </div>
                         )}
+
+                        <div className="rounded-lg p-3" style={{ background: CIV.surface, border: `2px solid ${CIV.border}` }}>
+                            <p className="text-xs tracking-widest mb-2" style={{ color: CIV.gold }}>{t("TXT_KEY_MAP_LEGEND_TERRAIN")}</p>
+                            {terrainLegend.map(item => (
+                                <div key={item.label} className="flex items-center gap-2 mb-1">
+                                    <div className="w-3 h-3 rounded-sm shrink-0" style={{ background: item.color, border: `1px solid ${CIV.border}44` }} />
+                                    <span className="text-xs" style={{ color: CIV.muted }}>{item.label}</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
             )}
