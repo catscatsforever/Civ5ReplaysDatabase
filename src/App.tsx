@@ -242,7 +242,7 @@ function AppInner() {
                             {LANGS.map((l) => (
                                 <button
                                     key={l}
-                                    onClick={() => {localStorage.setItem("locale", lang); setLang(l)}}
+                                    onClick={() => {localStorage.setItem("locale", l); setLang(l)}}
                                     className="px-3 py-1 rounded text-xs tracking-widest uppercase transition-all"
                                     style={lang === l
                                         ? { background: CIV.border, color: CIV.body }
