@@ -16,7 +16,7 @@ function Card({ children, title }: { children: React.ReactNode; title: string })
     return (
         <div className="rounded-xl overflow-hidden flex flex-col"
              style={{ background: CIV.surface, border: `2px solid ${CIV.border}`, boxShadow: "0 4px 24px #00000060" }}>
-            <div className="px-5 py-4" style={{ borderBottom: `2px solid ${CIV.border}` }}>
+            <div className="px-5 py-4" style={{ background: `linear-gradient(180deg, var(--civ-glow) 0%, var(--civ-bkg-color-alt) 40%, var(--civ-bg-alt) 100%)`, borderBottom: `2px solid ${CIV.border}` }}>
                 <h3 className="text-3xl tracking-wide" style={{ color: CIV.text }}>{title}</h3>
             </div>
             <div className="p-4 flex-1">{children}</div>

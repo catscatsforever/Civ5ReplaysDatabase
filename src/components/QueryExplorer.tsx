@@ -395,7 +395,7 @@ export default function QueryExplorer({ onDbChanged }: QueryExplorerProps) {
                     <div className="flex flex-wrap gap-0 lg:gap-6" style={{ justifyContent: 'center' }}>
                     {results.map((rs, idx) => (
                         <Card key={idx}>
-                            <div className="px-5 py-3 flex items-center justify-between" style={{ borderBottom: `2px solid ${CIV.border}` }}>
+                            <div className="px-5 py-3 flex items-center justify-between" style={{ background: `linear-gradient(180deg, var(--civ-glow) 0%, var(--civ-bkg-color-alt) 40%, var(--civ-bg-alt) 100%)`, borderBottom: `2px solid ${CIV.border}` }}>
                                 <div className="flex items-center gap-3">
                                     <h4 className="tracking-wide" style={{ color: CIV.text }}>
                                         {results.length > 1

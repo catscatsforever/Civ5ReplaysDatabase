@@ -67,7 +67,7 @@ function SummaryCard({ titleKey, sql }: { titleKey: string; sql: string }) {
 
     return (
         <div className="rounded-xl overflow-hidden mb-6" style={{ border: `2px solid ${CIV.border}`, background: CIV.surface }}>
-            <div className="px-5 py-3" style={{ background: CIV.navBg, borderBottom: `2px solid ${CIV.border}` }}>
+            <div className="px-5 py-3" style={{ background: `linear-gradient(180deg, var(--civ-glow) 0%, var(--civ-bkg-color-alt) 40%, var(--civ-bg-alt) 100%)`, borderBottom: `2px solid ${CIV.border}` }}>
                 <h3 className="tracking-wide text-2xl" style={{ color: CIV.text }}>{t(titleKey as any)}</h3>
             </div>
             {loading ? (
