@@ -509,7 +509,7 @@ export const translations = {
 
         TXT_KEY_REPLAY_TITLE:               "Распределение событий",
         TXT_KEY_REPLAY_HISTOGRAM:           "Гистограммы",
-        TXT_KEY_REPLAY_CAT_BELIEFS:         "Верование-Время",
+        TXT_KEY_REPLAY_CAT_BELIEFS:         "Верования-Время",
         TXT_KEY_REPLAY_CAT_POLICIES:        "Институты-Время",
         TXT_KEY_REPLAY_CAT_TECHS:           "Технологии-Время",
         TXT_KEY_REPLAY_CAT_WONDERS:         "Чудеса-Время",
