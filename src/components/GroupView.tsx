@@ -450,7 +450,7 @@ export default function GroupView({ initialHash = {} }: Props) {
             <div className="rounded-xl p-5" style={{ background: CIV.surface, border: `2px solid ${CIV.border}` }}>
                 <h3 className="text-base tracking-wide mb-0.5" style={{ color: CIV.text }}>{t("TXT_KEY_GROUP_TITLE" as any)}</h3>
                 <p className="text-sm mb-4" style={{ color: CIV.muted }}>{t("TXT_KEY_GROUP_SUBTITLE" as any)}</p>
-                <div className="flex flex-wrap gap-4 items-end">
+                <div className="flex flex-wrap gap-4 items-end" style={{alignItems: "flex-start"}}>
                     <CivSelect
                         label={t("TXT_KEY_GROUP_DATASET")}
                         value={selDs}
