@@ -126,6 +126,7 @@ function tileColor(plotType: number, terrain: number): string {
 }
 
 interface TerrainTile { plotType: number; terrain: number; }
+interface RoadEvent    { turn: number; x: number; y: number; routeType: number; bPillaged: boolean; }
 interface FeatureEvent { turn: number; x: number; y: number; feature: number; }
 interface BorderEvent  { turn: number; tileIdx: number; owner: number; }
 interface CityEvent    { turn: number; razedTurn: number; x: number; y: number; owner: number; name: string; }
@@ -154,6 +155,7 @@ export default function MapReplay({ initialHash = {} }: Props) {
     const [cursor, setCursor]     = useState<string>("grab");
 
     const terrainRef    = useRef<Map<number, TerrainTile>>(new Map());
+    const roadsRef      = useRef<RoadEvent[]>([]);
     const featureEventsRef    = useRef<FeatureEvent[]>([]);
     const bordersRef    = useRef<BorderEvent[]>([]);
     const citiesRef = useRef<CityEvent[]>([]);
@@ -281,6 +283,9 @@ export default function MapReplay({ initialHash = {} }: Props) {
 
         // terrain
         ctx.drawImage(terrainCanvas, 0, 0);
+
+        // roads
+        drawRoads(ctx, currentTurn, tR);
 
         // features
         const features = new Uint8Array(COLS * ROWS).fill(255);
@@ -478,6 +483,169 @@ export default function MapReplay({ initialHash = {} }: Props) {
         }, RERENDER_DEBOUNCE_MS);
     }, [drawTerrain, drawFrame]);
 
+    const getEdgeMidpoint = useCallback((cx: number, cy: number, r: number, edge: number): [number,number] => {
+        const a0 = (Math.PI / 180) * (60 * edge       - 30);
+        const a1 = (Math.PI / 180) * (60 * (edge + 1) - 30);
+        return [
+            cx + r * (Math.cos(a0) + Math.cos(a1)) / 2,
+            cy + r * (Math.sin(a0) + Math.sin(a1)) / 2,
+        ];
+    }, []);
+
+    const drawRoads = useCallback((ctx: CanvasRenderingContext2D, currentTurn: number, tR: number) => {
+        const roadMap = new Map<number, number>();
+        for (const ev of roadsRef.current) {
+            if (ev.turn > currentTurn) continue;
+            const idx = ev.x + ev.y * COLS;
+            if (ev.routeType === -1) {
+                roadMap.delete(idx);
+            } else {
+                roadMap.set(idx, ev.routeType + (ev.bPillaged ? 1000 : 0));
+            }
+        }
+
+        if (roadMap.size === 0) return;
+
+        ctx.save();
+        ctx.lineWidth   = Math.max(0.8, tR * 0.20);
+        ctx.lineCap     = "round";
+        ctx.lineJoin    = "round";
+
+        for (const [tileIdx, routeType] of roadMap) {
+            if (routeType % 1000 === 0) {
+                ctx.setLineDash([]);
+                ctx.strokeStyle = routeType >= 1000 ? "rgb(136,40,40)" : "rgb(49,49,49)";
+            } else {
+                ctx.setLineDash([tR / 6, tR / 3]);
+                ctx.strokeStyle = routeType >= 1000 ? "rgb(136,40,40)" : "rgb(49,49,49)";
+            }
+            const tx = tileIdx % COLS;
+            const ty = Math.floor(tileIdx / COLS);
+            const [cx, cy] = hexCenter(tx, ty, tR);
+
+            const connectedEdges: number[] = [];
+            for (let edge = 0; edge < 6; edge++) {
+                const [nx, ny] = hexNeighbor(tx, ty, edge);
+                if (nx < 0 || nx >= COLS || ny < 0 || ny >= ROWS) continue;
+                if (roadMap.has(nx + ny * COLS)) connectedEdges.push((edge + 5) % 6);
+            }
+
+            if (connectedEdges.length === 0) {  // isolated road
+                ctx.beginPath();
+                ctx.arc(cx, cy, Math.max(1, tR * 0.08), 0, Math.PI * 2);
+                ctx.fillStyle = "rgb(49,49,49)";
+                ctx.fill();
+                continue;
+            }
+
+            if (connectedEdges.length === 1) {  // dead end
+                const [mx, my] = getEdgeMidpoint(cx, cy, tR, connectedEdges[0]);
+                ctx.beginPath();
+                ctx.moveTo(mx, my);
+                ctx.lineTo(cx + (mx - cx) * 0.30, cy + (my - cy) * 0.30);
+                ctx.stroke();
+                continue;
+            }
+
+            if (connectedEdges.length === 3) {  // special case: source non-even triple joint roads from the farthest edge
+                const a = connectedEdges[0];
+                const b = connectedEdges[1];
+                const c = connectedEdges[2];
+                let source = -1;
+                let d1, d2 = -1;
+                if ([1, 5].includes(Math.abs(a - b))) {
+                    source = c; d1 = a; d2 = b;
+                }
+                else if ([1, 5].includes(Math.abs(b - c))) {
+                    source = a; d1 = b; d2 = c;
+                }
+                else if ([1, 5].includes(Math.abs(a - c))) {
+                    source = b; d1 = a; d2 = c;
+                }
+                if (source !== -1) {
+                    const [x0, y0] = getEdgeMidpoint(cx, cy, tR, source as number);
+                    const [x1, y1] = getEdgeMidpoint(cx, cy, tR, d1 as number);
+                    const [x2, y2] = getEdgeMidpoint(cx, cy, tR, d2 as number);
+                    const PULL = 0.85;
+                    const cp01x = x0 + (cx - x0) * PULL;
+                    const cp01y = y0 + (cy - y0) * PULL;
+                    const cp12x = x1 + (cx - x1) * PULL;
+                    const cp12y = y1 + (cy - y1) * PULL;
+                    const cp22x = x2 + (cx - x2) * PULL;
+                    const cp22y = y2 + (cy - y2) * PULL;
+                    ctx.beginPath();
+                    ctx.moveTo(x0, y0);
+                    ctx.bezierCurveTo(cp01x, cp01y, cp12x, cp12y, x1, y1);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(x0, y0);
+                    ctx.bezierCurveTo(cp01x, cp01y, cp22x, cp22y, x2, y2);
+                    ctx.stroke();
+                    continue;
+                }
+            }
+
+            if (connectedEdges.length === 4) {  // special case: X crossroad
+                const [a, b] = [0,1,2,3,4,5].filter(x => !connectedEdges.includes(x));
+                if (Math.abs(a - b) === 3) {
+                    connectedEdges.sort();
+                    ctx.beginPath();
+                    ctx.moveTo(...getEdgeMidpoint(cx, cy, tR, connectedEdges[0]));
+                    ctx.lineTo(...getEdgeMidpoint(cx, cy, tR, connectedEdges[2]));
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(...getEdgeMidpoint(cx, cy, tR, connectedEdges[1]));
+                    ctx.lineTo(...getEdgeMidpoint(cx, cy, tR, connectedEdges[3]));
+                    ctx.stroke();
+                    continue;
+                }
+            }
+
+            if (connectedEdges.length === 6) {  // special case: * crossroad
+                for (let a = 0; a < 3; a++) {
+                    const b = a + 3;
+                    const [ax, ay] = getEdgeMidpoint(cx, cy, tR, connectedEdges[a]);
+                    const [bx, by] = getEdgeMidpoint(cx, cy, tR, connectedEdges[b]);
+                    const PULL = 0.55;
+                    const cp1x = ax + (cx - ax) * PULL;
+                    const cp1y = ay + (cy - ay) * PULL;
+                    const cp2x = bx + (cx - bx) * PULL;
+                    const cp2y = by + (cy - by) * PULL;
+                    ctx.beginPath();
+                    ctx.moveTo(ax, ay);
+                    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, bx, by);
+                    ctx.stroke();
+                }
+                continue;
+            }
+
+            let connected: number[][] = new Array(6).fill([]);  // track joints to prevent inner loops
+            for (let a = 0; a < connectedEdges.length; a++) {
+                for (let b = a + 1; b < connectedEdges.length; b++) {
+                    if (connected[connectedEdges[a]].includes(connectedEdges[b]) && connected[connectedEdges[b]].includes(connectedEdges[a])) continue;
+                    let a0 = a;
+                    const [ax, ay] = getEdgeMidpoint(cx, cy, tR, connectedEdges[a0]);
+                    const [bx, by] = getEdgeMidpoint(cx, cy, tR, connectedEdges[b]);
+                    const PULL = 0.65;
+                    const cp1x = ax + (cx - ax) * PULL;
+                    const cp1y = ay + (cy - ay) * PULL;
+                    const cp2x = bx + (cx - bx) * PULL;
+                    const cp2y = by + (cy - by) * PULL;
+                    ctx.beginPath();
+                    ctx.moveTo(ax, ay);
+                    ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, bx, by);
+                    ctx.stroke();
+                    connected[connectedEdges[a0]].push(connectedEdges[b]);
+                    connected[connectedEdges[b]].push(connectedEdges[a0]);
+                    connected[connectedEdges[a0]].forEach(x => connected[x].push(connectedEdges[b]));
+                    connected[connectedEdges[b]].forEach(x => connected[x].push(connectedEdges[a0]));
+                }
+            }
+        }
+
+        ctx.restore();
+    }, [getEdgeMidpoint]);
+
     const fullRedraw = useCallback(() => {
         computeLayout();
         drawTerrain(hexSizeRef.current);
@@ -547,6 +715,11 @@ export default function MapReplay({ initialHash = {} }: Props) {
                         WHERE GameSeed=${gameSeed} AND ReplayEventType=107
                     `),
                     w.exec(`
+                        SELECT Turn, Num1, Num2, Num3, Num4
+                        FROM ReplayEvents
+                        WHERE GameSeed=${gameSeed} AND ReplayEventType=109
+                    `),
+                    w.exec(`
                         SELECT Turn, Num1, Num2, Num3
                         FROM ReplayEvents
                         WHERE GameSeed=${gameSeed} AND ReplayEventType=110
@@ -579,7 +752,7 @@ export default function MapReplay({ initialHash = {} }: Props) {
                         WHERE ReplayEventType IN (101) AND GameSeed=${gameSeed}
                         GROUP BY PlayerID
                     `),
-                ]).then(([terrRows, featureRows, borderRows, cityRows, nameRows, capitalRows]) => {
+                ]).then(([terrRows, featureRows, roadRows, borderRows, cityRows, nameRows, capitalRows]) => {
                     if (!terrRows.length || !terrRows[0].values.length) {
                         setNoData(true);
                         setLoading(false);
@@ -605,6 +778,14 @@ export default function MapReplay({ initialHash = {} }: Props) {
                         turn:    Number(v[0]),
                         tileIdx: Number(v[2] * COLS + v[1]),
                         owner:   Number(v[3]),
+                    }));
+
+                    roadsRef.current = (roadRows[0]?.values ?? []).map(v => ({
+                        turn:      Number(v[0]),
+                        x:         Number(v[1]),
+                        y:         Number(v[2]),
+                        routeType: Number(v[3]),
+                        bPillaged: Number(v[3]) === 1,
                     }));
 
                     const razes: number[][] = new Array(64).fill([]);
@@ -750,7 +931,7 @@ export default function MapReplay({ initialHash = {} }: Props) {
         const baseR = hexSizeRef.current;
         const tR    = terrainRRef.current;
         const ds    = (baseR * cam.scale) / tR;
-        // Convert screen coords → terrain-canvas coords
+        // Convert screen coords -> terrain-canvas coords
         const wx    = (sx - cam.x) / ds;
         const wy    = (sy - cam.y) / ds;
 
