@@ -350,6 +350,7 @@ export default function MapReplay({ initialHash = {} }: Props) {
                     break;
                 case 17:  // atoll
                     ctx.lineWidth = s*12;
+                    ctx.lineCap     = 'round';
                     ctx.strokeStyle = '#f6e1af'
                     s *= 2
                     const p6 = new Path2D(`M${cx+s*7.5} ${cy+s*7}a${s*10} ${s*10} 0 1 1 ${s*0}${s*-14}`);
