@@ -144,9 +144,9 @@ interface Props { initialHash?: HashParams; }
 export default function MapReplay({ initialHash = {} }: Props) {
     const { t } = useLang();
 
-    const [selGame, setSelGame]   = useState<number>(1);
-    const [turn, setTurn]         = useState(0);
     const [games, setGames]       = useState<string[]>([]);
+    const [selGame, setSelGame]   = useState<number>(Number(initialHash.GameID) ?? 1);
+    const [turn, setTurn]         = useState(Number(initialHash.Turn) ?? 0);
     const [endTurn, setEndTurn]           = useState(MAX_TURN);
     const [playing, setPlaying]   = useState(false);
     const [loading, setLoading]   = useState(false);
@@ -662,15 +662,6 @@ export default function MapReplay({ initialHash = {} }: Props) {
 
     // game list load
     useEffect(() => {
-                if (initialHash.GameID) {
-                    const fromHash = Number(initialHash.GameID);
-                    if (ids.includes(fromHash)) setSelGame(fromHash);
-                }
-                if (initialHash.Turn) {
-                    const t = Math.max(0, Math.min(MAX_TURN, Number(initialHash.Turn)));
-                    if (!isNaN(t)) setTurnSynced(t);
-                }
-            }).catch(() => {});
         getSqlWorker().exec(`
             SELECT DISTINCT GameID, REPLACE(GROUP_CONCAT(Player ORDER BY PlayerID),',',', ') FROM Games
             LEFT JOIN GameSeeds USING(GameID)
@@ -683,6 +674,15 @@ export default function MapReplay({ initialHash = {} }: Props) {
             const ids: string[] = [];
             r[0].values.forEach((v) => ids[v[0]] = String(v[1]));
             setGames(ids);
+            if (initialHash.GameID) {
+                const fromHash = Number(initialHash.GameID);
+                if (ids[fromHash]) setSelGame(fromHash);
+            }
+            if (initialHash.Turn) {
+                const t = Math.max(0, Math.min(MAX_TURN, Number(initialHash.Turn)));
+                if (!isNaN(t)) setTurnSynced(t);
+            }
+        }).catch(() => {});
     }, []);
 
     useEffect(() => {
@@ -698,7 +698,7 @@ export default function MapReplay({ initialHash = {} }: Props) {
     useEffect(() => {
         setLoading(true);
         setNoData(false);
-        setTurnSynced(0);
+        setTurn(0);
         setPlaying(false);
         terrainRef.current.clear();
         featureEventsRef.current  = [];
