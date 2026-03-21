@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+@font-face {
+    font-family: 'Futura';
+    font-style: normal;
+    font-weight: 400;
+    src: local('Futura'), url('https://fonts.cdnfonts.com/s/37773/FUTURA55REGULAR.woff') format('woff');
+}
+
 :root {
     --civ-bg:               #05080B;
     --civ-bg-alt:           #041514;
