@@ -144,9 +144,9 @@ interface Props { initialHash?: HashParams; }
 export default function MapReplay({ initialHash = {} }: Props) {
     const { t } = useLang();
 
-    const [games, setGames]       = useState<number[]>([]);
     const [selGame, setSelGame]   = useState<number>(1);
     const [turn, setTurn]         = useState(0);
+    const [games, setGames]       = useState<string[]>([]);
     const [endTurn, setEndTurn]           = useState(MAX_TURN);
     const [playing, setPlaying]   = useState(false);
     const [loading, setLoading]   = useState(false);
@@ -662,11 +662,6 @@ export default function MapReplay({ initialHash = {} }: Props) {
 
     // game list load
     useEffect(() => {
-        getSqlWorker().exec("SELECT DISTINCT GameID FROM GameSeeds WHERE GameSeed NOT NULL ORDER BY GameID")
-            .then(r => {
-                if (!r.length) return;
-                const ids = r[0].values.map(v => Number(v[0]));
-                setGames(ids);
                 if (initialHash.GameID) {
                     const fromHash = Number(initialHash.GameID);
                     if (ids.includes(fromHash)) setSelGame(fromHash);
@@ -676,6 +671,18 @@ export default function MapReplay({ initialHash = {} }: Props) {
                     if (!isNaN(t)) setTurnSynced(t);
                 }
             }).catch(() => {});
+        getSqlWorker().exec(`
+            SELECT DISTINCT GameID, REPLACE(GROUP_CONCAT(Player ORDER BY PlayerID),',',', ') FROM Games
+            LEFT JOIN GameSeeds USING(GameID)
+            WHERE GameSeed NOT NULL
+            GROUP BY GameID
+            ORDER BY GameID
+        `)
+        .then(r => {
+            if (!r.length) return;
+            const ids: string[] = [];
+            r[0].values.forEach((v) => ids[v[0]] = String(v[1]));
+            setGames(ids);
     }, []);
 
     useEffect(() => {
@@ -1055,7 +1062,7 @@ export default function MapReplay({ initialHash = {} }: Props) {
                 <div className="flex items-center gap-2">
                     <label className="text-xs tracking-wide" style={{ color: CIV.muted }}>{t("TXT_KEY_MAP_SELECT_GAME")}</label>
                     <select style={selStyle} value={selGame} onChange={e => { setSelGame(Number(e.target.value)); setPlaying(false); }}>
-                        {games.map(g => <option key={g} value={g}>#{g}</option>)}
+                        {games.map((g, i) => <option key={i} value={i}>#{`${i} (${g})`}</option>)}
                     </select>
                 </div>
 
