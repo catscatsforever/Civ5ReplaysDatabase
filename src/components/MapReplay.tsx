@@ -305,10 +305,12 @@ export default function MapReplay({ initialHash = {} }: Props) {
             let s = tR/50  // adjusted base scale
             switch (feature) {
                 case 0:  // ice
-                    ctx.fillStyle = '#d8e6ff'
-                    s *= 3
-                    const p = new Path2D(`M${cx+s*9} ${cy+s*4.5}c0 ${s*0.38} ${s*-0.21} ${s*0.71} ${s*-0.53} ${s*0.88}l${s*-7.9} ${s*4.44}c${s*-0.16} ${s*0.12} ${s*-0.36} ${s*0.18} ${s*-0.57} ${s*0.18}s ${s*-0.41} ${s*-0.06} ${s*-0.57} ${s*-0.18}l${s*-7.9} ${s*-4.44}A${s*0.99} ${s*0.99} 0 0 1 ${cx+s*-9} ${cy+s*4.5}v${s*-9}c0 ${s*-0.38} ${s*0.21} ${s*0.71} ${s*0.53} ${s*-0.88}l${s*7.9} ${s*-4.44}c${s*0.16} ${s*-0.12} ${s*0.36} ${s*-0.18} ${s*0.57} ${s*-0.18}s${s*0.41} ${s*0.06} ${s*0.57} ${s*0.18}l${s*7.9} ${s*4.44}c${s*0.32} ${s*0.17} ${s*0.53} ${s*0.5} ${s*0.53} ${s*0.88}zM${cx+s*0} ${cy+s*-7.85}L${cx+s*-7} ${cy+s*-3.91}v${s*7.82}l${s*7} ${s*3.94}l${s*7} ${s*-3.94}V${cy+s*-3.91}z`);
-                    ctx.fill(p);
+                    ctx.strokeStyle = '#d8e6ff'
+                    ctx.lineWidth = s * 35
+                    ctx.lineJoin = 'round'
+                    s *= 2
+                    const p = new Path2D(`M${cx+s*0} ${cy+s*-7.85}L${cx+s*-7} ${cy+s*-3.91}v${s*7.82}l${s*7} ${s*3.94}l${s*7} ${s*-3.94}V${cy+s*-3.91}z`);
+                    ctx.stroke(p);
                     break;
                 case 1:  // jungle
                     ctx.fillStyle = '#3a912a'
