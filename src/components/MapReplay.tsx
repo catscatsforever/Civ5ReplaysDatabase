@@ -785,7 +785,7 @@ export default function MapReplay({ initialHash = {} }: Props) {
                         x:         Number(v[1]),
                         y:         Number(v[2]),
                         routeType: Number(v[3]),
-                        bPillaged: Number(v[3]) === 1,
+                        bPillaged: Number(v[4]) === 1,
                     }));
 
                     const razes: number[][] = new Array(64).fill([]);
