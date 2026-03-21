@@ -311,7 +311,7 @@ function CategoryNode({ gameSeed, playerId, cat, depth }: { gameSeed: number; pl
                 {loading && <div className="py-1 px-4 text-xs" style={{ color: CIV.muted }}>{t("TXT_KEY_LOADING")}</div>}
                 {cityRows.length > 0 ? cityRows.map(city => (
                     <CityNode key={cityKey(gameSeed, playerId, city.cityId)} gameSeed={gameSeed} playerId={playerId} city={city} depth={depth + 1} />
-                )) :
+                )) : !loading &&
                 <div className="py-2 px-4 text-sm" style={{ color: CIV.muted }}>{t("TXT_KEY_EXPLORER_NO_EVENTS")}</div>}
             </TreeNode>
         );
