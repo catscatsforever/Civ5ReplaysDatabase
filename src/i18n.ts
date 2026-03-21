@@ -172,6 +172,7 @@ export const translations = {
         TXT_KEY_EXPLORER_NO_EVENTS:         "No events recorded.",
 
         TXT_KEY_MAP_TITLE:                  "Map Replay",
+        TXT_KEY_MAP_SUBTITLE:               "Mouse wheel to zoom in & out · drag to move the view.",
         TXT_KEY_MAP_SELECT_GAME:            "Game",
         TXT_KEY_MAP_TURN_LABEL:             "Turn",
         TXT_KEY_MAP_RESET_VIEW:             "Reset View",
@@ -563,6 +564,7 @@ export const translations = {
         TXT_KEY_EXPLORER_NO_EVENTS:         "Нет событий.",
 
         TXT_KEY_MAP_TITLE:                  "Повтор Карты",
+        TXT_KEY_MAP_SUBTITLE:               "Меняйте масштаб колёсиком мыши · потяните для перемещения.",
         TXT_KEY_MAP_SELECT_GAME:            "Игра",
         TXT_KEY_MAP_TURN_LABEL:             "Ход",
         TXT_KEY_MAP_RESET_VIEW:             "Сбросить Вид",

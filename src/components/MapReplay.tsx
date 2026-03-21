@@ -819,7 +819,7 @@ export default function MapReplay({ initialHash = {} }: Props) {
                     for (const v of (capitalRows[0]?.values ?? [])) {
                         const pid = Number(v[0]);
                         civs[pid] = cityNameToCiv(String(v[1]));
-                        console.log('pid cn civ', pid, v[1], cityNameToCiv(String(v[1])))
+                        //console.log('pid cn civ', pid, v[1], cityNameToCiv(String(v[1])))
                     }
                     playerCivsRef.current = civs;
                     setLoading(false);
@@ -1045,7 +1045,8 @@ export default function MapReplay({ initialHash = {} }: Props) {
         <div style={{ color: CIV.text }}>
             {/* Header */}
             <div className="mb-4">
-                <h2 className="text-xl tracking-wide" style={{ color: CIV.text }}>{t("TXT_KEY_MAP_TITLE")}</h2>
+                <h2 className="text-xl tracking-wide" style={{color: CIV.text}}>{t("TXT_KEY_MAP_TITLE")}</h2>
+                <p className="text-sm mt-1" style={{color: CIV.muted}}>{t("TXT_KEY_MAP_SUBTITLE")}</p>
             </div>
 
             {/* Controls */}
