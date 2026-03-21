@@ -162,10 +162,10 @@ export default function DistributionView() {
                                       onMouseDown={zoom.onMouseDown} onMouseMove={zoom.onMouseMove} onMouseUp={zoom.onMouseUp}>
                                 <CartesianGrid strokeDasharray="3 3" stroke={CIV.grid} />
                                 <XAxis dataKey="turn" tick={<CivXTick />}
-                                       label={<CivAxisLabel value={t("TXT_KEY_REPLAY_X_TURN")} offset={16} />} />
+                                       label={<CivAxisLabel value={t("TXT_KEY_REPLAY_X_TURN")} fontSize={18} offset0={8} />} />
                                 <YAxis tick={<CivYTick />} allowDecimals={false}
                                        domain={zoom.yDomain ?? [0, "auto"]}
-                                       label={<CivAxisLabel value={t("TXT_KEY_REPLAY_Y_COUNT")} angle={-90} offset={-8} />} />
+                                       label={<CivAxisLabel value={t("TXT_KEY_REPLAY_Y_COUNT")} fontSize={18} offset0={8} angle0={-90} />} />
                                 <Tooltip content={<CivTooltip labelStyle={{ color: CIV.gold }} />} />
                                 {itemKeys.map((key, i) =>
                                     legend.isVisible(key) ? (

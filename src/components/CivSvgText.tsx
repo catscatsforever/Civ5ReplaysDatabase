@@ -75,7 +75,7 @@ export function CivXTick({ x = 0, y = 0, payload, fill = CIV.tick, fontSize = 11
                 }
                 return (
                     <text key={i} x={sx} y={midY} fill={fill} fontSize={fontSize}
-                          dominantBaseline="auto" textAnchor="start">
+                          dominantBaseline="auto" textAnchor="start" style={{ userSelect: 'none' }} >
                         {seg.value}
                     </text>
                 );
@@ -116,13 +116,13 @@ export function CivYTick({ x = 0, y = 0, payload, fill = CIV.tick, fontSize = 11
                             height={ICON_SIZE}
                             preserveAspectRatio="xMidYMid meet"
                         >
-                            <title>{seg.alt}</title>
+                            <title style={{ userSelect: 'none' }}>{seg.alt}</title>
                         </image>
                     );
                 }
                 return (
                     <text key={i} x={sx} y={midY} fill={fill} fontSize={fontSize}
-                          dominantBaseline="central" textAnchor="start">
+                          dominantBaseline="central" textAnchor="start" style={{ userSelect: 'none' }}>
                         {seg.value}
                     </text>
                 );
@@ -176,13 +176,13 @@ export function CivAxisLabel({
                                    y={lx - ICON_SIZE / 2}
                                    width={ICON_SIZE} height={ICON_SIZE}
                                    preserveAspectRatio="xMidYMid meet">
-                                <title>{seg.alt}</title>
+                                <title style={{ userSelect: 'none' }} >{seg.alt}</title>
                             </image>
                         );
                     }
                     return (
                         <text key={i} x={sx} y={lx} fill={fill} fontSize={fontSize}
-                              dominantBaseline="central" textAnchor="start">
+                              dominantBaseline="central" textAnchor="start" style={{ userSelect: 'none' }} >
                             {seg.value}
                         </text>
                     );
@@ -206,13 +206,13 @@ export function CivAxisLabel({
                                x={sx} y={by - ICON_SIZE}
                                width={ICON_SIZE} height={ICON_SIZE}
                                preserveAspectRatio="xMidYMid meet">
-                            <title>{seg.alt}</title>
+                            <title style={{ userSelect: 'none' }} >{seg.alt}</title>
                         </image>
                     );
                 }
                 return (
                     <text key={i} x={sx} y={by} fill={fill} fontSize={fontSize}
-                          dominantBaseline="auto" textAnchor="start">
+                          dominantBaseline="auto" textAnchor="start" style={{ userSelect: 'none' }} >
                         {seg.value}
                     </text>
                 );
