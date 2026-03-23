@@ -41,6 +41,33 @@ function hexCenter(x: number, y: number, r: number): [number, number] {
     return [cx, cy];
 }
 
+const PlotTypes = {
+    NO_PLOT: -1,
+
+    PLOT_MOUNTAIN: 0,
+    PLOT_HILLS: 1,
+    PLOT_LAND: 2,
+    PLOT_OCEAN: 3,
+
+    NUM_PLOT_TYPES: 4
+}
+
+const TerrainTypes = {
+    NO_TERRAIN: -1,
+
+    TERRAIN_GRASS: 0,
+    TERRAIN_PLAINS: 1,
+    TERRAIN_DESERT: 2,
+    TERRAIN_TUNDRA: 3,
+    TERRAIN_SNOW: 4,
+    TERRAIN_COAST: 5,
+    TERRAIN_OCEAN: 6,
+    TERRAIN_MOUNTAIN: 7,
+    TERRAIN_HILL: 8,
+
+    NUM_TERRAIN_TYPES: 9
+}
+
 const ODD_NEIGHBORS: [number, number][] = [
     [1, 1], // NE
     [1, 0], // E
@@ -101,26 +128,26 @@ function pixelToHex(wx: number, wy: number, r: number): [number, number] | null 
 // TERRAIN_MOUNTAIN 7a7a80
 
 function tileColor(plotType: number, terrain: number): string {
-    if (plotType === 0 || terrain === 7) {  // PLOT_MOUNTAIN / TERRAIN_MOUNTAIN
+    if (plotType === PlotTypes.PLOT_MOUNTAIN || terrain === TerrainTypes.TERRAIN_MOUNTAIN) {
         return "#7a7a80";
     }
-    if (plotType === 1) {  // PLOT_HILLS
-        if (terrain === 0) return "#6aaa4a"; // TERRAIN_GRASS
-        if (terrain === 1) return "#cdba57"; // TERRAIN_PLAINS
-        if (terrain === 2) return "#f6e1af"; // TERRAIN_DESERT
-        if (terrain === 3) return "#7b7162"; // TERRAIN_TUNDRA
-        if (terrain === 4) return "#e6f5ff"; // TERRAIN_SNOW
+    if (plotType === PlotTypes.PLOT_HILLS) {
+        if (terrain === TerrainTypes.TERRAIN_GRASS) return "#6aaa4a";
+        if (terrain === TerrainTypes.TERRAIN_PLAINS) return "#cdba57";
+        if (terrain === TerrainTypes.TERRAIN_DESERT) return "#f6e1af";
+        if (terrain === TerrainTypes.TERRAIN_TUNDRA) return "#7b7162";
+        if (terrain === TerrainTypes.TERRAIN_SNOW) return "#e6f5ff";
     }
-    if (plotType === 2) {  // PLOT_LAND
-        if (terrain === 0) return "#6aaa4a"; // TERRAIN_GRASS
-        if (terrain === 1) return "#cdba57"; // TERRAIN_PLAINS
-        if (terrain === 2) return "#f6e1af"; // TERRAIN_DESERT
-        if (terrain === 3) return "#7b7162"; // TERRAIN_TUNDRA
-        if (terrain === 4) return "#e6f5ff"; // TERRAIN_SNOW
+    if (plotType === PlotTypes.PLOT_LAND) {
+        if (terrain === TerrainTypes.TERRAIN_GRASS) return "#6aaa4a";
+        if (terrain === TerrainTypes.TERRAIN_PLAINS) return "#cdba57";
+        if (terrain === TerrainTypes.TERRAIN_DESERT) return "#f6e1af";
+        if (terrain === TerrainTypes.TERRAIN_TUNDRA) return "#7b7162";
+        if (terrain === TerrainTypes.TERRAIN_SNOW) return "#e6f5ff";
     }
-    if (plotType === 3) {  // PLOT_OCEAN
-        if (terrain === 5) return "#1e5078"; // TERRAIN_COAST
-        if (terrain === 6) return "#1a3a5c"; // TERRAIN_OCEAN
+    if (plotType === PlotTypes.PLOT_OCEAN) {
+        if (terrain === TerrainTypes.TERRAIN_COAST) return "#1e5078";
+        if (terrain === TerrainTypes.TERRAIN_OCEAN) return "#1a3a5c";
     }
     return "#555";
 }
@@ -242,12 +269,12 @@ export default function MapReplay({ initialHash = {} }: Props) {
                 ctx.lineWidth   = 0.5;
                 ctx.stroke();
 
-                if (tile.plotType === 0 || tile.plotType === 1) {
+                if (tile.plotType === PlotTypes.PLOT_MOUNTAIN || tile.plotType === PlotTypes.PLOT_HILLS) {
                     ctx.fillStyle   = "rgb(255,255,255)";
                     ctx.font        = `${Math.max(6, r - 2)}px sans-serif`;
                     ctx.textAlign   = "center";
                     ctx.textBaseline = "middle";
-                    ctx.fillText(tile.plotType === 0 ? "▲" : "△", cx, cy);
+                    ctx.fillText(tile.plotType === PlotTypes.PLOT_MOUNTAIN ? "▲" : "△", cx, cy);
                 }
             }
         }
@@ -403,7 +430,7 @@ export default function MapReplay({ initialHash = {} }: Props) {
         ownershipRef.current = ownership;
 
         for (let tileIdx = 0; tileIdx < COLS * ROWS; tileIdx++) {
-            if (terrainRef.current.get(tileIdx)?.plotType == 3) continue;  // skip water
+            if (terrainRef.current.get(tileIdx)?.plotType == PlotTypes.PLOT_OCEAN) continue;
             const owner = ownership[tileIdx];
             if (owner === 255) continue;
             const x = tileIdx % COLS;
