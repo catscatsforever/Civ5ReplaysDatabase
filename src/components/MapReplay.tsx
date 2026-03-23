@@ -801,14 +801,50 @@ export default function MapReplay({ initialHash = {} }: Props) {
                             terrain:  Number(tr),
                         });
                     }
+                    // remove any mountains from coastal plots
+                    for (let y = 0; y < ROWS; y++) {
+                        for (let x = 0; x < COLS; x++) {
+                            const plot = tmap.get(y * COLS + x);
+                            if (plot?.plotType == PlotTypes.PLOT_MOUNTAIN) {
+                                let bCoastal = false;
+                                for (let edge = 0; edge < 6; edge++) {
+                                    const [nx, ny] = hexNeighbor(x, y, edge);
+                                    if (tmap.get(ny * COLS + nx)?.plotType === PlotTypes.PLOT_OCEAN) {
+                                        bCoastal = true;
+                                        break;
+                                    }
+                                }
+                                if (bCoastal) {
+                                    plot.plotType = PlotTypes.PLOT_HILLS;
+                                }
+                            }
+                        }
+                    }
                     terrainRef.current = tmap;
 
+                    let Gibraltar: { x: number, y: number } = { x: -1, y: -1 };
                     featureEventsRef.current = (featureRows[0]?.values ?? []).map(v => ({
                         turn:    Number(v[0]),
                         x: Number(v[1]),
                         y: Number(v[2]),
-                        feature:   Number(v[3]),
+                        feature: Number(v[3]) == 12 ? (Gibraltar = {x: v[1], y: v[2]}) && Number(v[3]) : Number(v[3]),
                     }));
+                    if (Gibraltar.x !== -1 && Gibraltar.y !== -1) {
+                        for (let edge = 0; edge < 6; edge++) {
+                            const [nx, ny] = hexNeighbor(Gibraltar.x, Gibraltar.y, edge);
+                            const adjPlot = terrainRef.current.get(ny * COLS + nx);
+                            if (!adjPlot) continue;
+                            if (adjPlot?.plotType === PlotTypes.PLOT_OCEAN) {
+                                adjPlot.terrain = TerrainTypes.TERRAIN_COAST;
+                                terrainRef.current.set(ny * COLS + nx, adjPlot);
+                            } else {
+                                if (adjPlot?.plotType !== PlotTypes.PLOT_MOUNTAIN) {
+                                    adjPlot.plotType = PlotTypes.PLOT_MOUNTAIN;
+                                    terrainRef.current.set(ny * COLS + nx, adjPlot);
+                                }
+                            }
+                        }
+                    }
 
                     bordersRef.current = (borderRows[0]?.values ?? []).map(v => ({
                         turn:    Number(v[0]),
