@@ -179,7 +179,6 @@ export default function MapReplay({ initialHash = {} }: Props) {
     const [loading, setLoading]   = useState(false);
     const [noData, setNoData]     = useState(false);
     const [tooltip, setTooltip]   = useState<TooltipData | null>(null);
-    const [cursor, setCursor]     = useState<string>("grab");
 
     const terrainRef    = useRef<Map<number, TerrainTile>>(new Map());
     const roadsRef      = useRef<RoadEvent[]>([]);
@@ -196,7 +195,8 @@ export default function MapReplay({ initialHash = {} }: Props) {
     const hexSizeRef        = useRef(12);
     const rafRef            = useRef<number>(0);
     const cameraRef = useRef<Camera>({ x: 0, y: 0, scale: 1 });
-    const dragRef   = useRef<{ active: boolean; lastX: number; lastY: number }>({ active: false, lastX: 0, lastY: 0 });
+    const dragRef   = useRef<{ active: boolean; lastX: number; lastY: number; touch: boolean; }>({ active: false, lastX: 0, lastY: 0, touch: false });
+    const touchRef = useRef<{ id0: number; id1: number; x0: number; y0: number; x1: number; y1: number } | null>(null);
     const turnRef = useRef(0);
     const terrainRRef = useRef(12);
     const terrainRerenderTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -971,7 +971,9 @@ export default function MapReplay({ initialHash = {} }: Props) {
 
     const handleMouseDown = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
         if (e.button !== 0) return;
-        dragRef.current = { active: true, lastX: e.clientX, lastY: e.clientY };
+        dragRef.current.active = true;
+        dragRef.current.lastX = e.clientX;
+        dragRef.current.lastY = e.clientY;
         setCursor("grabbing");
     }, []);
 
@@ -1038,6 +1040,100 @@ export default function MapReplay({ initialHash = {} }: Props) {
         dragRef.current.active = false;
         setCursor("grab");
         setTooltip(null);
+    }, []);
+
+    const onTouchStart = useCallback((e: React.TouchEvent) => {
+        e.preventDefault();
+        if (e.touches.length === 1) {
+            const t0 = e.touches[0];
+            dragRef.current.lastX = t0.clientX;
+            dragRef.current.lastY = t0.clientY;
+            dragRef.current.touch = true;
+            touchRef.current = null;
+        } else if (e.touches.length >= 2) {
+            dragRef.current.touch = false;
+            const t0 = e.touches[0];
+            const t1 = e.touches[1];
+            touchRef.current = {
+                id0: t0.identifier, id1: t1.identifier,
+                x0: t0.clientX, y0: t0.clientY,
+                x1: t1.clientX, y1: t1.clientY,
+            };
+        }
+    }, []);
+
+    const onTouchMove = useCallback((e: React.TouchEvent) => {
+        e.preventDefault();
+        if (e.touches.length === 1 && dragRef.current.touch) {
+            const t0 = e.touches[0];
+            const dx = t0.clientX - dragRef.current.lastX;
+            const dy = t0.clientY - dragRef.current.lastY;
+            dragRef.current.lastX = t0.clientX;
+            dragRef.current.lastY = t0.clientY;
+            cameraRef.current.x += dx;
+            cameraRef.current.y += dy;
+            renderFrame(turnRef.current);
+            setTooltip(null);
+            return;
+        } else if (e.touches.length >= 2 && touchRef.current !== null) {
+            let cur0: React.Touch | null = null;
+            let cur1: React.Touch | null = null;
+            for (let i = 0; i < e.touches.length; i++) {
+                const t = e.touches[i];
+                if (t.identifier === touchRef.current.id0) cur0 = t;
+                if (t.identifier === touchRef.current.id1) cur1 = t;
+            }
+            if (!cur0 || !cur1) return;
+
+            const prev = touchRef.current;
+            const prevDist = Math.hypot(prev.x1 - prev.x0, prev.y1 - prev.y0);
+            const curDist  = Math.hypot(cur1.clientX - cur0.clientX, cur1.clientY - cur0.clientY);
+            const factor   = prevDist > 0 ? curDist / prevDist : 1;
+
+            const midX = (cur0.clientX + cur1.clientX) / 2;
+            const midY = (cur0.clientY + cur1.clientY) / 2;
+            const prevMidX = (prev.x0 + prev.x1) / 2;
+            const prevMidY = (prev.y0 + prev.y1) / 2;
+
+            const cam = cameraRef.current;
+            cam.x += midX - prevMidX;
+            cam.y += midY - prevMidY;
+
+            cam.x = midX - (midX - cam.x) * factor;
+            cam.y = midY - (midY - cam.y) * factor;
+            cam.scale = Math.min(8, Math.max(0.2, cam.scale * factor));
+
+            touchRef.current = {
+                id0: cur0.identifier, id1: cur1.identifier,
+                x0: cur0.clientX, y0: cur0.clientY,
+                x1: cur1.clientX, y1: cur1.clientY,
+            };
+            scheduleTerrainRerender();
+        }
+    }, [scheduleTerrainRerender]);
+
+    const onTouchEnd = useCallback((e: React.TouchEvent) => {
+        e.preventDefault();
+        if (e.touches.length < 2) touchRef.current = null;
+        if (e.touches.length === 0) dragRef.current.touch = false;
+        if (e.touches.length === 1) {
+            const t0 = e.touches[0];
+            dragRef.current.lastX = t0.clientX;
+            dragRef.current.lastY = t0.clientY;
+            dragRef.current.touch = true;
+        }
+    }, []);
+
+    const [isDragging, setIsDragging] = useState(false);
+    useEffect(() => {
+        const onDown = () => setIsDragging(true);
+        const onUp   = () => setIsDragging(false);
+        window.addEventListener("mousedown", onDown);
+        window.addEventListener("mouseup", onUp);
+        return () => {
+            window.removeEventListener("mousedown", onDown);
+            window.removeEventListener("mouseup", onUp);
+        };
     }, []);
 
     const plotTypeLabel = useCallback((pt: number) => {
@@ -1199,11 +1295,15 @@ export default function MapReplay({ initialHash = {} }: Props) {
                             onMouseDown={handleMouseDown}
                             onMouseUp={handleMouseUp}
                             onWheel={handleWheel}
+                            onTouchStart={onTouchStart}
+                            onTouchMove={onTouchMove}
+                            onTouchEnd={onTouchEnd}
+                            onTouchCancel={onTouchEnd}
                             style={{
                                 display: "block",
                                 width: "100%",
                                 height: "100%",
-                                cursor,
+                                cursor: isDragging ? "grabbing" : "grab",
                                 userSelect: "none",
                                 touchAction: "none",
                             }}
