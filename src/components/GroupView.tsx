@@ -214,7 +214,7 @@ export default function GroupView({ initialHash = {} }: Props) {
 
             if (initialHash.Dataset && ds.length) {
                 const match = ds.find(
-                    (d) => d.key.toLowerCase() === initialHash.Dataset!.toLowerCase() || String(d.id) === initialHash.Dataset
+                    (d) => String(d.id) === initialHash.Dataset
                 );
                 setSelDs(match ? String(match.id) : String(ds[0].id));
             } else if (ds.length) {
@@ -233,11 +233,10 @@ export default function GroupView({ initialHash = {} }: Props) {
 
     useEffect(() => {
         if (!selDs || !datasets.length) return;
-        const dsKey = datasets.find((d) => String(d.id) === selDs)?.key ?? selDs;
         const groupsStr = mode === "single"
             ? Array.from(singleSelected).join(",")
             : matchGroups.map(mg => `mg${mg.id}:${Array.from(mg.selected).join("+")}`).join(",");
-        mergeHash({ Dataset: dsKey, Method: avgMethod, Groups: groupsStr });
+        mergeHash({ Dataset: selDs, Method: avgMethod, Groups: groupsStr });
     }, [selDs, avgMethod, singleSelected, matchGroups, datasets, mode]);
 
     const groups: GroupDef[] = useMemo(() => {

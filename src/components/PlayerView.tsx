@@ -68,7 +68,7 @@ export default function PlayerView({ initialHash = {} }: Props) {
 
             if (initialHash.Dataset && ds.length) {
                 const match = ds.find(
-                    (d) => d.key.toLowerCase() === initialHash.Dataset!.toLowerCase() || String(d.id) === initialHash.Dataset
+                    (d) => String(d.id) === initialHash.Dataset
                 );
                 setSelDs(match ? String(match.id) : String(ds[0].id));
             } else if (ds.length) {
@@ -79,8 +79,7 @@ export default function PlayerView({ initialHash = {} }: Props) {
 
     useEffect(() => {
         if (!selPlayer || !selDs || !players.length || !datasets.length) return;
-        const dsKey = datasets.find((d) => String(d.id) === selDs)?.key ?? selDs;
-        mergeHash({ Player: selPlayer, Dataset: dsKey });
+        mergeHash({ Player: selPlayer, Dataset: selDs });
     }, [selPlayer, selDs, players, datasets]);
 
     useEffect(() => {
