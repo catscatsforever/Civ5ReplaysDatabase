@@ -253,7 +253,7 @@ export function CivTooltip({
             <p style={{ marginBottom: 4, fontSize: 18, ...labelStyle }}>
                 <CivText text={`${label0} ${rawLabel}`} iconSize={14} />
             </p>
-            {payload.map((entry, i) => {
+            {payload.sort((a,b) => b.value - a.value).map((entry, i) => {
                 const color = entry.color ?? entry.stroke ?? "#fff";
                 let displayName = entry.name;
                 let displayValue = String(entry.value ?? "");
@@ -268,7 +268,7 @@ export function CivTooltip({
                 }
 
                 return (
-                    <p key={i} style={{ color, margin: "2px 0", fontSize: 16 }}>
+                    <p key={i} style={{ color, margin: "2px 0", fontSize: 16, textAlign: "end" }}>
                         <CivText text={`${displayName}: ${displayValue}`} iconSize={13} />
                     </p>
                 );
