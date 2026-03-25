@@ -388,7 +388,7 @@ export default function QueryExplorer({ onDbChanged }: QueryExplorerProps) {
                               ({totalRows} {totalRows === 1 ? t("TXT_KEY_QUERY_RESULTS_ROW") : t("TXT_KEY_QUERY_RESULTS_ROWS")} {t("TXT_KEY_TOTAL").toLowerCase()})
                             </span>
                             <span className="text-xs font-mono ml-auto" style={{ color: CIV.muted }}>
-                              {queryTime.toFixed(2)} ms
+                              {queryTime.toFixed()}ms
                             </span>
                         </div>
                     )}
@@ -396,7 +396,7 @@ export default function QueryExplorer({ onDbChanged }: QueryExplorerProps) {
                     {results.map((rs, idx) => (
                         <Card key={idx}>
                             <div className="px-5 py-3 flex items-center justify-between" style={{ background: `linear-gradient(180deg, var(--civ-glow) 0%, var(--civ-bkg-color-alt) 40%, var(--civ-bg-alt) 100%)`, borderBottom: `2px solid ${CIV.border}` }}>
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-3 items-end">
                                     <h4 className="tracking-wide" style={{ color: CIV.text }}>
                                         {results.length > 1
                                             ? `${t("TXT_KEY_QUERY_RESULT_SET")} ${idx + 1} ${t("TXT_KEY_QUERY_RESULT_OF")} ${results.length}`
@@ -407,13 +407,13 @@ export default function QueryExplorer({ onDbChanged }: QueryExplorerProps) {
                                         {rs.values.length}{" "}
                                         {rs.values.length === 1 ? t("TXT_KEY_QUERY_RESULTS_ROW") : t("TXT_KEY_QUERY_RESULTS_ROWS")}
                                     </span>
-                                </div>
-                                {/* Show time only on single result or first result */}
-                                {(results.length === 1 || idx === 0) && (
-                                    <span className="text-xs font-mono" style={{ color: CIV.muted }}>
-                                        {results.length === 1 ? `${queryTime.toFixed(2)} ms` : ""}
+                                    {/* Show time only on single result or first result */}
+                                    {(results.length === 1 || idx === 0) && (
+                                        <span className="text-xs font-mono" style={{ color: CIV.muted }}>
+                                        {results.length === 1 ? `${queryTime.toFixed()}ms` : ""}
                                     </span>
-                                )}
+                                    )}
+                                </div>
                             </div>
                             {rs.values.length > 0 ? (
                                 <PaginatedTable columns={rs.columns} values={rs.values} />
