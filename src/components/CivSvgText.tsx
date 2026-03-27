@@ -1,5 +1,6 @@
 import { parseIconMarkup } from "../icons";
 import { CIV } from "../civPalette";
+import { RGBAColor, HSLAColor, ColorAdjuster} from "../utils/color"
 
 const ICON_SIZE = 14;
 const FONT = '18px Futura PT';
@@ -247,6 +248,7 @@ export function CivTooltip({
     if (!active || !payload?.length) return null;
 
     const rawLabel = labelFormatter ? labelFormatter(label) : String(label ?? "");
+    const c = new ColorAdjuster(TOOLTIP_STYLE.backgroundColor, 1, 3);
 
     return (
         <div style={{ ...TOOLTIP_STYLE, padding: "8px 12px", minWidth: 120 }}>
@@ -254,7 +256,7 @@ export function CivTooltip({
                 <CivText text={`${label0} ${rawLabel}`} iconSize={14} />
             </p>
             {payload.sort((a,b) => b.value - a.value).map((entry, i) => {
-                const color = entry.color ?? entry.stroke ?? "#fff";
+                const color = c.process(entry.color ?? entry.stroke ?? "#fff")!;
                 let displayName = entry.name;
                 let displayValue = String(entry.value ?? "");
 
