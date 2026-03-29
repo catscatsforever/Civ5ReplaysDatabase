@@ -974,12 +974,10 @@ export default function MapReplay({ initialHash = {} }: Props) {
         dragRef.current.active = true;
         dragRef.current.lastX = e.clientX;
         dragRef.current.lastY = e.clientY;
-        setCursor("grabbing");
     }, []);
 
     const handleMouseUp = useCallback(() => {
         dragRef.current.active = false;
-        setCursor("grab");
     }, []);
 
     const handleMouseMove = useCallback((e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -1038,7 +1036,6 @@ export default function MapReplay({ initialHash = {} }: Props) {
 
     const handleMouseLeave = useCallback(() => {
         dragRef.current.active = false;
-        setCursor("grab");
         setTooltip(null);
     }, []);
 
@@ -1102,6 +1099,7 @@ export default function MapReplay({ initialHash = {} }: Props) {
             cam.x = midX - (midX - cam.x) * factor;
             cam.y = midY - (midY - cam.y) * factor;
             cam.scale = Math.min(8, Math.max(0.2, cam.scale * factor));
+            cameraRef.current = cam;
 
             touchRef.current = {
                 id0: cur0.identifier, id1: cur1.identifier,

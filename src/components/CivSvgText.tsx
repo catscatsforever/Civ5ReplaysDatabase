@@ -1,6 +1,6 @@
 import { parseIconMarkup } from "../icons";
 import { CIV } from "../civPalette";
-import { RGBAColor, HSLAColor, ColorAdjuster} from "../utils/color"
+import { ColorAdjuster } from "../utils/color"
 
 const ICON_SIZE = 14;
 const FONT = '18px Futura PT';
