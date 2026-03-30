@@ -10,7 +10,7 @@ import { useChartZoom } from "../hooks/useChartZoom";
 import { useLegendToggle, InteractiveLegend } from "../hooks/useLegendToggle";
 import { CivXTick, CivYTick, CivAxisLabel, CivTooltip } from "./CivSvgText";
 
-type Category = "beliefs" | "policies" | "techs" | "wonders";
+type Category = string;
 const CHART_HEIGHT = 460;
 
 export default function DistributionView() {
@@ -86,6 +86,44 @@ export default function DistributionView() {
                         GROUP BY Turn, BuildingKeys.BuildingID
                     `;
                     break;
+                case "nat_wonders":
+                    query = `
+                        SELECT BuildingKey, Turn, COUNT(*) FROM (
+                        SELECT Turn, ReplayEventType, Num2 AS Value FROM ReplayEvents
+                        WHERE ReplayEventType = 78
+                        )
+                        JOIN BuildingKeys ON BuildingID = Value
+                        WHERE TypeID = 1
+                        GROUP BY Turn, BuildingKeys.BuildingID
+                    `;
+                    break;
+                case "buildings":
+                    query = `
+                        SELECT BuildingKey, Turn, COUNT(*) FROM (
+                        SELECT Turn, ReplayEventType, Num2 AS Value FROM ReplayEvents
+                        WHERE ReplayEventType = 78
+                        UNION ALL
+                        SELECT Turn, ReplayEventType, Num3 AS Value FROM ReplayEvents
+                        WHERE ReplayEventType = 63
+                        )
+                        JOIN BuildingKeys ON BuildingID = Value
+                        WHERE TypeID = 0
+                        GROUP BY Turn, BuildingKeys.BuildingID
+                    `;
+                    break;
+                case "units":
+                    query = `
+                        SELECT UnitKey, Turn, COUNT(*) FROM (
+                        SELECT Turn, ReplayEventType, Num2 AS Value FROM ReplayEvents
+                        WHERE ReplayEventType = 77
+                        UNION ALL
+                        SELECT Turn, ReplayEventType, Num2 AS Value FROM ReplayEvents
+                        WHERE ReplayEventType = 62
+                        )
+                        JOIN UnitKeys ON UnitID = Value
+                        GROUP BY Turn, UnitKeys.UnitID
+                    `;
+                    break;
             }
             // New schema: ReplayEventType is text, no JOIN needed with ReplayEventKeys
             const res = await getSqlWorker().exec(query);
@@ -128,6 +166,9 @@ export default function DistributionView() {
         { id: "policies", labelKey: "TXT_KEY_REPLAY_CAT_POLICIES" },
         { id: "techs",    labelKey: "TXT_KEY_REPLAY_CAT_TECHS"    },
         { id: "wonders",  labelKey: "TXT_KEY_REPLAY_CAT_WONDERS"  },
+        { id: "nat_wonders",  labelKey: "TXT_KEY_REPLAY_CAT_NAT_WONDERS"  },
+        { id: "buildings",  labelKey: "TXT_KEY_REPLAY_CAT_BUILDINGS"  },
+        { id: "units",  labelKey: "TXT_KEY_REPLAY_CAT_UNITS"  },
     ];
 
     return (
