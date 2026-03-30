@@ -1093,20 +1093,27 @@ export default function MapReplay({ initialHash = {} }: Props) {
             const prevMidY = (prev.y0 + prev.y1) / 2;
 
             const cam = cameraRef.current;
+            const _factor = (cam.scale * factor < MIN_SCALE || cam.scale * factor > MAX_SCALE) ? 1 : factor;
+
+            cam.scale *= _factor;
             cam.x += midX - prevMidX;
             cam.y += midY - prevMidY;
 
-            cam.x = midX - (midX - cam.x) * factor;
-            cam.y = midY - (midY - cam.y) * factor;
-            cam.scale = Math.min(8, Math.max(0.2, cam.scale * factor));
-            cameraRef.current = cam;
+            cam.x = midX - (midX - cam.x) * _factor;
+            cam.y = midY - (midY - cam.y) * _factor;
 
             touchRef.current = {
                 id0: cur0.identifier, id1: cur1.identifier,
                 x0: cur0.clientX, y0: cur0.clientY,
                 x1: cur1.clientX, y1: cur1.clientY,
             };
-            scheduleTerrainRerender();
+            renderFrame(turnRef.current);
+            const clampedEffective = Math.max(MIN_RENDER_R, Math.min(hexSizeRef.current * cam.scale * _factor, MAX_RENDER_R));
+            const ratio = clampedEffective / terrainRRef.current;
+            if (ratio > RERENDER_RATIO || ratio < 1 / RERENDER_RATIO) {
+                scheduleTerrainRerender();
+            }
+            setTooltip(null);
         }
     }, [scheduleTerrainRerender]);
 
