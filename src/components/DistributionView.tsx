@@ -157,7 +157,7 @@ export default function DistributionView() {
     const visibleKeys = useMemo(() => itemKeys.filter((k) => legend.isVisible(k)), [itemKeys, legend.isVisible]);
     const zoom = useChartZoom(rawData, "turn", visibleKeys);
     const legendItems = useMemo(() =>
-            itemKeys.map((key, i) => ({ key, color: CHART_COLORS[i % CHART_COLORS.length], label: key })),
+            itemKeys.map((key, i) => ({ key, color: CHART_COLORS[i % CHART_COLORS.length], label: key })).sort((a,b) => a.label > b.label ? 1 : -1),
         [itemKeys],
     );
 
