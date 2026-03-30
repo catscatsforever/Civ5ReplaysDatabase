@@ -207,7 +207,7 @@ export default function DistributionView() {
                                 <YAxis tick={<CivYTick />} allowDecimals={false}
                                        domain={zoom.yDomain ?? [0, "auto"]}
                                        label={<CivAxisLabel value={t("TXT_KEY_REPLAY_Y_COUNT")} fontSize={18} offset0={8} angle0={-90} />} />
-                                <Tooltip content={<CivTooltip labelStyle={{ color: CIV.gold }} />} />
+                                <Tooltip content={<CivTooltip labelStyle={{ color: CIV.gold }} label0={t('TXT_KEY_MAP_TURN_LABEL')} />} />
                                 {itemKeys.map((key, i) =>
                                     legend.isVisible(key) ? (
                                         <Bar key={key} dataKey={key} stackId="a" fill={CHART_COLORS[i % CHART_COLORS.length]} isAnimationActive={false} />
