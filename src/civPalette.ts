@@ -23,13 +23,32 @@ export const CIV = {
 export const CHART_COLORS = [
     "#DCBD88",  // gold/border
     "#3ECFB2",  // teal
-    "#E8A030",  // amber
+    "#e8ae30",  // amber
     "#A08AD0",  // purple
     "#D05050",  // red
     "#4A9ABF",  // steel blue
-    "#78B04A",  // olive green
+    "#83b955",  // olive green
     "#D07080",  // dusty rose
+    "#1f77b4",
+    "#ff6e0b",
+    "#d53aff",
+    "#27d227",
+    "#8c564b",
+    "#fffe35",
+    "#7f7f7f",
+    "#6ec388",
+    "#a83651",
 ];
+
+export const WIN_COLORS = {
+    anyWin: 'rgba(223,207,36,0.5)',
+    0: 'rgba(148,148,148,0.59)',
+    1: 'rgba(132,87,45,0.5)',
+    2: 'rgba(0,137,173,0.5)',
+    3: 'rgba(190,22,0,0.5)',
+    4: 'rgba(173,0,123,0.5)',
+    5: 'rgba(126,115,211,0.5)',
+};
 
 export const TOOLTIP_STYLE = {
     backgroundColor: "#0A1412",
