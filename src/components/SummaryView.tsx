@@ -243,17 +243,6 @@ function VictoryIdeologyChart() {
         })();
     }, []);
 
-    //const allPieKeys = useMemo(() => data.map((d) => d.name), [data]);
-    //const legend = useLegendToggle(allPieKeys);
-    //useEffect(() => { setActiveIndex(null); }, [legend.hiddenKeys]);
-    //const visibleData = useMemo(() => data.filter((d) => legend.isVisible(d.name)), [data, legend.isVisible]);
-    //console.log('vd', visibleData)
-    //const legendItems = useMemo(() =>
-    //      //data.map((d) => ({ key: d.name, color: WIN_COLORS[d.name] ?? CIV.gold, label: winLabel[d.name] ?? d.name })),
-    //  // eslint-disable-next-line react-hooks/exhaustive-deps
-    //    [data, t],
-    //);
-
     const renderActiveShape = (props: any) => {
         const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, fill, payload, value } = props;
         return (
@@ -268,42 +257,45 @@ function VictoryIdeologyChart() {
 
     return (
         <Card title={t("TXT_KEY_SUMMARY_WIN_TITLE")}>
-            <ResponsiveContainer width="100%" height={450} className="flex gap-2 flex-wrap" style={{ justifyContent: 'center' }}>
+            <ResponsiveContainer width="100%" height={450} className="flex gap-2 flex-wrap" style={{justifyContent: 'center'}}>
                 <SunBurstChart data={data} size={450}
-                               dataKey="value" nameKey="name"
-                               {...(activeIndex !== null ? { activeIndex } : {} as any)}
-                               activeShape={renderActiveShape}
-                               onMouseEnter={(_: any, i: number) => setActiveIndex(i)}
-                               onMouseLeave={() => setActiveIndex(null)}
-                               isAnimationActive={false}>
+                    dataKey="value" nameKey="name"
+                    {...(activeIndex !== null ? {activeIndex} : {} as any)}
+                    activeShape={renderActiveShape}
+                    onMouseEnter={(_: any, i: number) => setActiveIndex(i)}
+                    onMouseLeave={() => setActiveIndex(null)}
+                    isAnimationActive={false}>
                 </SunBurstChart>
             </ResponsiveContainer>
-            {/*<InteractiveLegend items={legendItems} hiddenKeys={legend.hiddenKeys} onClick={legend.handleClick} hint={t("TXT_KEY_LEGEND_HINT")} />*/}
         </Card>
     );
 }
 
 function GamesPlayedChart() {
-    const { t } = useLang();
-    const [data, setData] = useState<{ game: string; pct: number }[]>([]);
+    const {t} = useLang();
+    const [data, setData] = useState<{ game: string; num: number }[]>([]);
 
     useEffect(() => {
         (async () => {
             const res = await getSqlWorker().exec(`
-                SELECT PlayerGameNumber, COUNT(DISTINCT Player) AS players
-                FROM Games WHERE PlayerGameNumber <= 5 GROUP BY PlayerGameNumber ORDER BY PlayerGameNumber
+                SELECT ngames, COUNT(*) AS nplayers FROM (
+                    SELECT player, COUNT(*) AS ngames FROM Games
+                    WHERE PlayerGameNumber <= 5
+                    GROUP BY player
+                )
+                GROUP BY ngames
+                ORDER BY ngames
              `);
             if (!res[0]) return;
             const rows = res[0].values as [number, number][];
-            const total = rows[0][1];
             setData(rows.map(([pgn, cnt]) => ({
-                game: `${t("TXT_KEY_SUMMARY_GAMES_GAME")} ${pgn}`,
-                pct: total > 0 ? Math.round((cnt / total) * 1000) / 10 : 0,
+                game: `${pgn} ${t("TXT_KEY_SUMMARY_GAMES_GAME")}`,
+                num: cnt,
             })));
         })();
     }, [t]);
 
-    const zoom = useChartZoom(data, "game", ["pct"]);
+    const zoom = useChartZoom(data, "game", ["num"]);
 
     return (
         <Card title={t("TXT_KEY_SUMMARY_GAMES_TITLE")}>
@@ -313,9 +305,9 @@ function GamesPlayedChart() {
                               onMouseDown={zoom.onMouseDown} onMouseMove={zoom.onMouseMove} onMouseUp={zoom.onMouseUp}>
                         <CartesianGrid strokeDasharray="3 3" stroke={CIV.grid} />
                         <XAxis dataKey="game" tick={{ fill: CIV.tick, fontSize: 12 }} />
-                        <YAxis tick={{ fill: CIV.tick, fontSize: 11 }} tickFormatter={(v) => `${v}%`} domain={zoom.yDomain ?? [0, 100]} />
-                        <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(val: any) => [`${val}% ${t("TXT_KEY_SUMMARY_GAMES_TOOLTIP")}`, ""]} />
-                        <Bar dataKey="pct" fill={CIV.teal} radius={[4, 4, 0, 0]} />
+                        <YAxis tick={{ fill: CIV.tick, fontSize: 11 }} tickFormatter={(v) => `${v}`} />
+                        <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(val: any) => [`${val}`, `${t("TXT_KEY_SUMMARY_GAMES_TOOLTIP")}`]} />
+                        <Bar dataKey="num" fill={CIV.teal} radius={[4, 4, 0, 0]} />
                         {zoom.showRef && <ReferenceArea {...zoom.refAreaProps} />}
                     </BarChart>
                 </ResponsiveContainer>
@@ -363,7 +355,7 @@ function BannedCivsChart() {
                                minTickGap={-200}
                                axisLine={false}/>
                         <YAxis tick={{fill: CIV.tick, fontSize: 11}}/>
-                        <Tooltip contentStyle={TOOLTIP_STYLE}/>
+                        <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(val: any) => [`${val}`, `${t("TXT_KEY_SUMMARY_BANNED_Y_LABEL")}`]} />
                         <Bar dataKey="Count" fill={CIV.red} radius={[4, 4, 0, 0]} />
                         {zoom.showRef && <ReferenceArea {...zoom.refAreaProps} />}
                     </BarChart>
@@ -379,13 +371,13 @@ export default function SummaryView() {
         <div className="flex flex-col lg:flex-row gap-6">
             <div className="lg:w-3/5 flex flex-col">
                 <div className="flex-1">
-                    <CivStandingsChart />
+                    <CivStandingsChart/>
                 </div>
             </div>
             <div className="lg:w-2/5 flex flex-col gap-6">
-                <VictoryIdeologyChart />
-                <BannedCivsChart />
-                <GamesPlayedChart />
+                <VictoryIdeologyChart/>
+                <BannedCivsChart/>
+                <GamesPlayedChart/>
             </div>
         </div>
     );
