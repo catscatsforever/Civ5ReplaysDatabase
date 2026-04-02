@@ -16,7 +16,7 @@ const CHART_HEIGHT = 460;
 export default function DistributionView() {
     const { t } = useLang();
     const [category, setCategory] = useState<string>("beliefs");
-    const [sankeyCategory, setSankeyCategory] = useState<string>("sankey_units");
+    const [sankeyCategory, setSankeyCategory] = useState<string>("");
     const [sankeyNumGroups, setSankeyNumGroups] = useState<number>(1);
     const [sankeyLinkColors, setSankeyLinkColors] = useState<string[]>([]);
     const [sankeyNodeColors, setSankeyNodeColors] = useState<string[]>([]);
@@ -161,6 +161,7 @@ export default function DistributionView() {
     }, [category]);
 
     useEffect(() => {
+        if (category !== '') return;
         setLoading(true);
         (async () => {
             let query = '';
