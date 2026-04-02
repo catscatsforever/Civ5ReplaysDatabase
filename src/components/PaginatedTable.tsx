@@ -12,15 +12,60 @@ interface PaginatedTableProps {
     values: any[][];
 }
 
-/* ── Helpers ─────────────────────────────────────────────────────────────── */
+function PaginationControls({ position, page, totalPages, colLen, startRow, endRow, setPage, t, sortedValuesLen }:
+                                { position: "top" | "bottom", page: number, totalPages: number, colLen: number, startRow: number, endRow: number, setPage: any, t: any, sortedValuesLen: number }) {
+    return (
+        <tr>
+            <td colSpan={colLen} style={{ padding: 0, ...(position === "top" ? { borderBottom: `2px solid ${CIV.border}` } : { borderTop: `2px solid ${CIV.border}` }) }}>
+                <div className="flex items-center justify-between px-5 py-2.5" style={{ background: CIV.navBg }}>
+                    <span className="text-xs" style={{ color: CIV.muted }}>
+                        {position === "top"
+                            ? `${t("TXT_KEY_PAGING_SHOWING")} ${startRow}–${endRow} ${t("TXT_KEY_PAGING_OF")} ${sortedValuesLen} ${t("TXT_KEY_PAGING_ROWS")}`
+                            : `${t("TXT_KEY_PAGING_PAGE")} ${page + 1} ${t("TXT_KEY_PAGING_OF")} ${totalPages}`}
+                    </span>
+                    <div className="flex items-center gap-1">
+                        <button onClick={() => setPage(0)} disabled={page === 0} className="civ-btn civ-btn-chip" style={{ padding: "3px 7px", fontSize: "0.7rem" }}>
+                            ⟪
+                        </button>
+                        <button onClick={() => setPage(Math.max(0, page - 1))} disabled={page === 0} className="civ-btn civ-btn-chip" style={{ padding: "3px 7px", fontSize: "0.7rem" }}>
+                            ◀
+                        </button>
 
-/** Returns true when a value looks numeric (handles stringified numbers too). */
+                        {(() => {
+                            const buttons: React.ReactElement[] = [];
+                            const maxBtns = 7;
+                            let start = Math.max(0, page - Math.floor(maxBtns / 2));
+                            let end = Math.min(totalPages, start + maxBtns);
+                            if (end - start < maxBtns) start = Math.max(0, end - maxBtns);
+
+                            for (let i = start; i < end; i++) {
+                                buttons.push(
+                                    <button key={i} onClick={() => setPage(i)} className={`civ-btn civ-btn-chip ${i === page ? "civ-btn-active" : ""}`} style={{ padding: "3px 8px", fontSize: "0.7rem" }}>
+                                        {i + 1}
+                                    </button>
+                                );
+                            }
+                            return buttons;
+                        })()}
+
+                        <button onClick={() => setPage(Math.min(totalPages - 1, page + 1))} disabled={page >= totalPages - 1} className="civ-btn civ-btn-chip" style={{ padding: "3px 7px", fontSize: "0.7rem" }}>
+                            ▶
+                        </button>
+                        <button onClick={() => setPage(totalPages - 1)} disabled={page >= totalPages - 1} className="civ-btn civ-btn-chip" style={{ padding: "3px 7px", fontSize: "0.7rem" }}>
+                            ⟫
+                        </button>
+                    </div>
+                </div>
+            </td>
+        </tr>
+    );
+}
+
 function isNumeric(v: any): boolean {
     if (v === null || v === undefined || v === "") return false;
     return !isNaN(Number(v));
 }
 
-/** Detects whether the majority of a column's non-null values are numeric. */
 function isColumnNumeric(values: any[][], colIdx: number): boolean {
     let numeric = 0;
     let total = 0;
@@ -34,7 +79,6 @@ function isColumnNumeric(values: any[][], colIdx: number): boolean {
     return total > 0 && numeric / total > 0.5;
 }
 
-/** Compare function: numeric-aware, null-safe. */
 function compareValues(a: any, b: any, numeric: boolean): number {
     // Nulls always sort to the end
     if (a === null && b === null) return 0;
@@ -53,15 +97,12 @@ function compareValues(a: any, b: any, numeric: boolean): number {
     });
 }
 
-/* ── Component ───────────────────────────────────────────────────────────── */
-
 export default function PaginatedTable({ columns, values }: PaginatedTableProps) {
     const { t } = useLang();
     const [page, setPage] = useState(0);
     const [sortCol, setSortCol] = useState<number | null>(null);
     const [sortDir, setSortDir] = useState<SortDir>(null);
 
-    // Track data identity to reset state when data changes
     const prevValuesRef = useRef(values);
     useEffect(() => {
         if (prevValuesRef.current !== values) {
@@ -72,13 +113,11 @@ export default function PaginatedTable({ columns, values }: PaginatedTableProps)
         }
     }, [values]);
 
-    // Pre-compute which columns are numeric (for sort comparisons)
     const numericCols = useMemo(
         () => columns.map((_, i) => isColumnNumeric(values, i)),
         [columns, values]
     );
 
-    // Sort the full dataset
     const sortedValues = useMemo(() => {
         if (sortCol === null || sortDir === null) return values;
         const col = sortCol;
@@ -98,14 +137,11 @@ export default function PaginatedTable({ columns, values }: PaginatedTableProps)
     const startRow = page * PAGE_SIZE + 1;
     const endRow = Math.min((page + 1) * PAGE_SIZE, sortedValues.length);
 
-    /* ── Sort click handler ─────────────────────────────────────────────── */
     function handleSortClick(colIdx: number) {
         if (sortCol !== colIdx) {
-            // New column: start ascending
             setSortCol(colIdx);
             setSortDir("asc");
         } else {
-            // Same column: cycle asc → desc → reset
             if (sortDir === "asc") {
                 setSortDir("desc");
             } else if (sortDir === "desc") {
@@ -118,7 +154,6 @@ export default function PaginatedTable({ columns, values }: PaginatedTableProps)
         setPage(0); // reset to first page on sort change
     }
 
-    /* ── Sort indicator ─────────────────────────────────────────────────── */
     function SortIndicator({ colIdx }: { colIdx: number }) {
         if (sortCol === colIdx && sortDir === "asc") {
             return <span style={{ color: CIV.gold, marginLeft: 4 }}>▲</span>;
@@ -137,102 +172,17 @@ export default function PaginatedTable({ columns, values }: PaginatedTableProps)
         );
     }
 
-    /* ── Column border style ────────────────────────────────────────────── */
     const colBorderStyle: React.CSSProperties = {
         borderRight: `1px solid ${CIV.border}40`,
     };
     const lastColStyle: React.CSSProperties = {}; // no right border on last column
 
-    /* ── Pagination bar ─────────────────────────────────────────────────── */
-    function PaginationControls({ position }: { position: "top" | "bottom" }) {
-        return (
-            <tr>
-                <td
-                    colSpan={columns.length}
-                    style={{
-                        padding: 0,
-                        ...(position === "top"
-                            ? { borderBottom: `2px solid ${CIV.border}` }
-                            : { borderTop: `2px solid ${CIV.border}` }),
-                    }}
-                >
-                    <div
-                        className="flex items-center justify-between px-5 py-2.5"
-                        style={{ background: CIV.navBg }}
-                    >
-            <span className="text-xs" style={{ color: CIV.muted }}>
-              {position === "top"
-                  ? `${t("TXT_KEY_PAGING_SHOWING")} ${startRow}–${endRow} ${t("TXT_KEY_PAGING_OF")} ${sortedValues.length} ${t("TXT_KEY_PAGING_ROWS")}`
-                  : `${t("TXT_KEY_PAGING_PAGE")} ${page + 1} ${t("TXT_KEY_PAGING_OF")} ${totalPages}`}
-            </span>
-                        <div className="flex items-center gap-1">
-                            <button
-                                onClick={() => setPage(0)}
-                                disabled={page === 0}
-                                className="civ-btn civ-btn-chip"
-                                style={{ padding: "3px 7px", fontSize: "0.7rem" }}
-                            >
-                                ⟪
-                            </button>
-                            <button
-                                onClick={() => setPage((p) => Math.max(0, p - 1))}
-                                disabled={page === 0}
-                                className="civ-btn civ-btn-chip"
-                                style={{ padding: "3px 7px", fontSize: "0.7rem" }}
-                            >
-                                ◀
-                            </button>
-
-                            {(() => {
-                                const buttons: React.ReactElement[] = [];
-                                const maxBtns = 7;
-                                let start = Math.max(0, page - Math.floor(maxBtns / 2));
-                                let end = Math.min(totalPages, start + maxBtns);
-                                if (end - start < maxBtns) start = Math.max(0, end - maxBtns);
-
-                                for (let i = start; i < end; i++) {
-                                    buttons.push(
-                                        <button
-                                            key={i}
-                                            onClick={() => setPage(i)}
-                                            className={`civ-btn civ-btn-chip ${i === page ? "civ-btn-active" : ""}`}
-                                            style={{ padding: "3px 8px", fontSize: "0.7rem" }}
-                                        >
-                                            {i + 1}
-                                        </button>
-                                    );
-                                }
-                                return buttons;
-                            })()}
-
-                            <button
-                                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                                disabled={page >= totalPages - 1}
-                                className="civ-btn civ-btn-chip"
-                                style={{ padding: "3px 7px", fontSize: "0.7rem" }}
-                            >
-                                ▶
-                            </button>
-                            <button
-                                onClick={() => setPage(totalPages - 1)}
-                                disabled={page >= totalPages - 1}
-                                className="civ-btn civ-btn-chip"
-                                style={{ padding: "3px 7px", fontSize: "0.7rem" }}
-                            >
-                                ⟫
-                            </button>
-                        </div>
-                    </div>
-                </td>
-            </tr>
-        );
-    }
-
     return (
         <div className="overflow-x-auto">
             <table className="w-full text-sm" style={{ borderCollapse: "separate", borderSpacing: 0 }}>
                 <thead>
-                {needsPagination && <PaginationControls position="top" />}
+                {needsPagination && <PaginationControls position="top" page={page} totalPages={totalPages} colLen={columns.length} startRow={startRow}
+                                                        endRow={endRow} setPage={setPage} t={t} sortedValuesLen={sortedValues.length} />}
                 <tr style={{ borderBottom: `2px solid ${CIV.border}`, background: CIV.navBg }}>
                     {columns.map((col, idx) => (
                         <th
@@ -285,7 +235,8 @@ export default function PaginatedTable({ columns, values }: PaginatedTableProps)
                 </tbody>
                 {needsPagination && (
                     <tfoot>
-                    <PaginationControls position="bottom" />
+                        <PaginationControls position="top" page={page} totalPages={totalPages} colLen={columns.length} startRow={startRow}
+                                            endRow={endRow} setPage={setPage} t={t} sortedValuesLen={sortedValues.length} />
                     </tfoot>
                 )}
             </table>
