@@ -388,12 +388,15 @@ export default function DistributionView() {
     ];
     const SankeyLink = (props: SankeyLinkProps) => {
         //console.log('props',props)
+        const midX = (props.sourceX + props.targetX) / 2;
+        const TLY = props.sourceY - props.linkWidth / 2;
+        const TRY = props.targetY - props.linkWidth / 2;
+        const BLY = props.sourceY + props.linkWidth / 2;
+        const BRY = props.targetY + props.linkWidth / 2;
         return <path
-            d={`M${props.sourceX},${props.sourceY}C${props.sourceControlX},${props.sourceY} ${props.targetControlX},${props.targetY} ${props.targetX},${props.targetY}`}
-            stroke={sankeyLinkColors[props.index] ?? CIV.muted}
-            strokeOpacity={linkHighlight.includes(props.index) ? 0.5 : 0.8}
-            strokeWidth={props.linkWidth}
-            fill="none"
+            d={`M${props.sourceX},${TLY}C${midX},${TLY} ${midX},${TRY} ${props.targetX},${TRY}L${props.targetX},${BRY}C${midX},${BRY} ${midX},${BLY} ${props.sourceX},${BLY}Z`}
+            fill={sankeyLinkColors[props.index] ?? CIV.muted}
+            fillOpacity={linkHighlight.includes(props.index) ? 0.5 : 0.8}
             onMouseEnter={() => setLinkHighlight([props.index])}
             onMouseLeave={() => setLinkHighlight([])}
         />
@@ -447,28 +450,26 @@ export default function DistributionView() {
                 </div>
                 <br/>
                 <span className="tracking-widest uppercase text-xs" style={{ color: CIV.muted }}>{t("TXT_KEY_DIST_SANKEY")}</span>
-                {sankeyCategory !== '' && (
-                    <div className="flex gap-5 flex-wrap m-5" style={{alignItems: "center"}}>
-                        <span className="tracking-widest uppercase text-[12px]"
-                              style={{color: CIV.muted}}>{t("TXT_KEY_DIST_SANKEY_GROUP")}</span>
-                        <label>
-                            <input type="radio" name="sankeyGroups" value={1} onChange={() => setSankeyNumGroups(1)}
-                                   className="w-4 h-4 mx-1 text-neutral-primary border-default-medium rounded-full ring-inset checked:ring-3 focus:outline-none focus:ring-brand-subtle border border-default appearance-none"
-                                   defaultChecked={true} />
-                            {t("TXT_KEY_DIST_SANKEY_GROUP_1")}
-                        </label>
-                        <label>
-                            <input type="radio" name="sankeyGroups" value={2} onChange={() => setSankeyNumGroups(2)}
-                                   className="w-4 h-4 mx-1 text-neutral-primary border-default-medium rounded-full ring-inset checked:ring-3 focus:outline-none focus:ring-brand-subtle border border-default appearance-none" />
-                            {t("TXT_KEY_DIST_SANKEY_GROUP_2")}
-                        </label>
-                        <label>
-                            <input type="radio" name="sankeyGroups" value={3} onChange={() => setSankeyNumGroups(6)}
-                                   className="w-4 h-4 mx-1 text-neutral-primary border-default-medium rounded-full ring-inset checked:ring-3 focus:outline-none focus:ring-brand-subtle border border-default appearance-none" />
-                            {t("TXT_KEY_DIST_SANKEY_GROUP_3")}
-                        </label>
-                    </div>
-                )}
+                <div className="flex gap-5 flex-wrap m-5" style={{alignItems: "center"}}>
+                    <span className="tracking-widest uppercase text-[12px]"
+                          style={{color: CIV.muted}}>{t("TXT_KEY_DIST_SANKEY_GROUP")}</span>
+                    <label>
+                        <input type="radio" name="sankeyGroups" value={1} onChange={() => setSankeyNumGroups(1)}
+                               className="w-4 h-4 mx-1 text-neutral-primary border-default-medium rounded-full ring-inset checked:ring-3 focus:outline-none focus:ring-brand-subtle border border-default appearance-none"
+                               defaultChecked={true} />
+                        {t("TXT_KEY_DIST_SANKEY_GROUP_1")}
+                    </label>
+                    <label>
+                        <input type="radio" name="sankeyGroups" value={2} onChange={() => setSankeyNumGroups(2)}
+                               className="w-4 h-4 mx-1 text-neutral-primary border-default-medium rounded-full ring-inset checked:ring-3 focus:outline-none focus:ring-brand-subtle border border-default appearance-none" />
+                        {t("TXT_KEY_DIST_SANKEY_GROUP_2")}
+                    </label>
+                    <label>
+                        <input type="radio" name="sankeyGroups" value={3} onChange={() => setSankeyNumGroups(6)}
+                               className="w-4 h-4 mx-1 text-neutral-primary border-default-medium rounded-full ring-inset checked:ring-3 focus:outline-none focus:ring-brand-subtle border border-default appearance-none" />
+                        {t("TXT_KEY_DIST_SANKEY_GROUP_3")}
+                    </label>
+                </div>
                 <div className="flex gap-2 flex-wrap">
                     {sankey_cats.map((c) => (
                         <button key={c.id} onClick={() => {setCategory(''); setSankeyCategory(c.id);}}
@@ -516,7 +517,7 @@ export default function DistributionView() {
                         </p>
                     </div>
                         ) : (
-                        <ResponsiveContainer width="100%" height={CHART_HEIGHT +45}>
+                        <ResponsiveContainer width="100%" height={CHART_HEIGHT + 345}>
                             <Sankey
                                 data={rawSankeyData!}
                                 link={SankeyLink}
