@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { expandDeltas } from "../utils/expandDeltas";
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-    ResponsiveContainer, ReferenceArea,
+    ResponsiveContainer, ReferenceArea, ReferenceDot
 } from "recharts";
 import { getSqlWorker } from "../db";
 import { CIV, CHART_COLORS } from "../civPalette";
@@ -35,6 +35,7 @@ export default function PlayerView({ initialHash = {} }: Props) {
     const [selDs,     setSelDs]     = useState("");
     const [chartData, setChartData] = useState<any[]>([]);
     const [gameKeys,  setGameKeys]  = useState<string[]>([]);
+    const [gameWinners,  setGameWinners]  = useState<number[]>([]);
     const [civs,   setCivs]   = useState<string[]>([]);
     const [colors,   setColors]   = useState<number[]>([]);
     const [noData,    setNoData]    = useState(false);
@@ -43,7 +44,7 @@ export default function PlayerView({ initialHash = {} }: Props) {
         (async () => {
             const [pRes, dRes] = await Promise.all([
                 getSqlWorker().exec(`
-                    SELECT DISTINCT Player , REPLACE(GROUP_CONCAT(CivKey ORDER BY GameID),',',', ') FROM Games
+                    SELECT DISTINCT Player, REPLACE(GROUP_CONCAT(CivKey ORDER BY GameID),',',', ') FROM Games
                     LEFT JOIN GameSeeds USING(GameID)
                     LEFT JOIN Players USING(GameSeed, PlayerID)
                     LEFT JOIN CivKeys USING(CivID)
@@ -70,9 +71,9 @@ export default function PlayerView({ initialHash = {} }: Props) {
                 const match = ds.find(
                     (d) => String(d.id) === initialHash.Dataset
                 );
-                setSelDs(match ? String(match.id) : String(ds[0].id));
+                setSelDs(match ? String(match.id) : (ds.length >= 86 ? '86' : '1'));
             } else if (ds.length) {
-                setSelDs(String(ds[0].id));
+                setSelDs(ds.length >= 86 ? '86' : '1');
             }
         })();
     }, []);
@@ -86,7 +87,7 @@ export default function PlayerView({ initialHash = {} }: Props) {
         if (!selPlayer || !selDs) return;
         (async () => {
             const gRes = await getSqlWorker().exec(`
-                SELECT GameSeed, GameID, IFNULL(PlayerQuitTurn, EndTurn), CivID, CivKey
+                SELECT GameSeed, GameID, IFNULL(PlayerQuitTurn, EndTurn), CivID, CivKey, Standing
                 FROM Players
                 JOIN GameSeeds USING(GameSeed)
                 JOIN Games USING(GameID, PlayerID)
@@ -104,7 +105,7 @@ export default function PlayerView({ initialHash = {} }: Props) {
                 (gRes[0]?.values ?? []).map((r: any[]) => [r[0] as number, r[4] as string])
             );
             setCivs(Array.from(pMap3.values()));
-            const gameRows = gRes[0].values as [number, number, number][];
+            const gameRows = gRes[0].values as [number, number, number, number, number, number][];
 
             const pidRes = await getSqlWorker().exec(`
               SELECT GameSeed, PlayerID
@@ -117,14 +118,16 @@ export default function PlayerView({ initialHash = {} }: Props) {
             );
 
             const gKeys: string[] = [];
+            const gWinners: number[] = [];
             const allDeltaRows: [number, string, number][] = [];
             const playerQuitTurns: {[key: string]: number} = {};
 
-            for (const [gameSeed, gameId, playerQuitTurn] of gameRows) {
+            for (const [gameSeed, gameId, playerQuitTurn, _1, _2, standing] of gameRows) {
                 const pid = seedToPid.get(gameSeed);
                 if (pid === undefined) continue;
                 const gKey = `${t("TXT_KEY_GAME")} ${gameId}`;
                 gKeys.push(gKey);
+                gWinners.push(standing);
 
                 const res = await getSqlWorker().exec(`
                   SELECT Turn, Value
@@ -141,6 +144,7 @@ export default function PlayerView({ initialHash = {} }: Props) {
             if (gKeys.length === 0) { setChartData([]); setGameKeys([]); setNoData(true); return; }
             setNoData(false);
             setGameKeys(gKeys);
+            setGameWinners(gWinners);
             //console.log('playerQuitTurns', playerQuitTurns)
             setChartData(expandDeltas(allDeltaRows, playerQuitTurns));
         })();
@@ -200,6 +204,19 @@ export default function PlayerView({ initialHash = {} }: Props) {
                                         <Line key={key} type="monotone" dataKey={key}
                                               stroke={CivToColor(colors[i]) ?? CHART_COLORS[i % CHART_COLORS.length]} strokeWidth={2}
                                               dot={false} activeDot={{ r: 4 }} isAnimationActive={false} />
+                                    ) : null,
+                                )}
+                                {gameKeys.map((key, i) =>  // add X marker when player "dies"; mark winner
+                                    legend.isVisible(key) && zoom.zoomedData.find(x => x[`${key}-End`] !== undefined) !== undefined ? (
+                                        <ReferenceDot x={zoom.zoomedData.find(x => x[`${key}-End`] !== undefined).turn} y={zoom.zoomedData.find(x => x[`${key}-End`] !== undefined)[`${key}-End`]}
+                                            shape={(props) => (gameWinners[i] > 1) ? <path
+                                                fill={CivToColor(colors[i]) ?? CHART_COLORS[i % CHART_COLORS.length]}
+                                                d={`M${props.cx} ${props.cy}m8.278 5.42l-5.502-5.503l5.5-5.502l-2.827-2.83l-5.503 5.502l-5.502-5.502l-2.828 2.83l5.5 5.502l-5.5 5.502l2.83 2.828l5.5-5.502l5.5 5.502z`}
+                                            /> : <path fill={CivToColor(colors[i]) ?? CHART_COLORS[i % CHART_COLORS.length]}
+                                                d={`M${props.cx} ${props.cy}m0 4.5l-8 4.8l3.2-8.2096l-6.4-6.1904h8l3.2-8l3.2 8h8l-6.4 6.4l3.2 8z`}
+                                            />
+                                            }
+                                        />
                                     ) : null,
                                 )}
                                 {zoom.showRef && <ReferenceArea {...zoom.refAreaProps} />}

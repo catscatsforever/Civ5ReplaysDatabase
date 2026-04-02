@@ -32,9 +32,6 @@ export function expandDeltas(
         const row: Record<string, number | null> = { turn };
         let bEnd: boolean = true;
         for (const key of playerKeys) {
-            if (turn == maxTurns[key]) {
-                row[`${key}-End`] = lastKnown.get(key) ?? null;
-            }
             if (turn >= maxTurns[key]) continue;
             bEnd = false;
             const recorded = sparse.get(key)!.get(turn);
@@ -42,6 +39,9 @@ export function expandDeltas(
                 lastKnown.set(key, recorded);
             }
             row[key] = lastKnown.get(key) ?? null;
+            if (turn == maxTurns[key] - 1) {
+                row[`${key}-End`] = lastKnown.get(key) ?? null;
+            }
         }
         if (bEnd) break;
 

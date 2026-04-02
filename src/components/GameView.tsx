@@ -2,7 +2,7 @@ import {useEffect, useState, useMemo} from "react";
 import { expandDeltas } from "../utils/expandDeltas";
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-    ResponsiveContainer, ReferenceArea
+    ResponsiveContainer, ReferenceArea, ReferenceDot
 } from "recharts";
 import { getSqlWorker } from "../db";
 import {CIV, CHART_COLORS} from "../civPalette";
@@ -34,6 +34,7 @@ export default function GameView({ initialHash = {} }: Props) {
     const [selDs,     setSelDs]     = useState("");
     const [chartData, setChartData] = useState<any[]>([]);
     const [players,   setPlayers]   = useState<string[]>([]);
+    const [gameWinners,  setGameWinners]  = useState<number[]>([]);
     const [civs,   setCivs]   = useState<string[]>([]);
     const [colors,   setColors]   = useState<number[]>([]);
     const [noData,    setNoData]    = useState(false);
@@ -70,9 +71,9 @@ export default function GameView({ initialHash = {} }: Props) {
                 const match = ds.find(
                     (d) => String(d.id) === initialHash.Dataset
                 );
-                setSelDs(match ? String(match.id) : String(ds[0].id));
+                setSelDs(match ? String(match.id) : (ds.length >= 86 ? '86' : '1'));
             } else if (ds.length) {
-                setSelDs(String(ds[0].id));
+                setSelDs(ds.length >= 86 ? '86' : '1');
             }
         })();
     }, []);
@@ -92,7 +93,7 @@ export default function GameView({ initialHash = {} }: Props) {
             const gameSeed = gsRes[0].values[0][0] as number;
 
             const pRes = await getSqlWorker().exec(`
-                SELECT PlayerID, Player, IFNULL(PlayerQuitTurn, EndTurn), CivID, CivKey
+                SELECT PlayerID, Player, IFNULL(PlayerQuitTurn, EndTurn), CivID, CivKey, Standing
                 FROM Players
                 JOIN GameSeeds USING(GameSeed)
                 JOIN Games USING(GameID, PlayerID)
@@ -109,9 +110,13 @@ export default function GameView({ initialHash = {} }: Props) {
             const pMap3 = new Map<number, string>(
                 (pRes[0]?.values ?? []).map((r: any[]) => [r[0] as number, r[4] as string])
             );
+            const pMap4 = new Map<number, number>(
+                (pRes[0]?.values ?? []).map((r: any[]) => [r[0] as number, r[5] as number])
+            );
             setPlayers(Array.from(pMap.values()));
             setColors(Array.from(pMap2.values()));
             setCivs(Array.from(pMap3.values()));
+            setGameWinners(Array.from(pMap4.values()));
 
             const playerQuitTurns: {[key: string]: number} = {};
             for (const [_, player, playerQuitTurn] of pRes[0]?.values) {
@@ -187,6 +192,19 @@ export default function GameView({ initialHash = {} }: Props) {
                                         <Line key={name} type="monotone" dataKey={name}
                                               stroke={CivToColor(colors[i]) ?? CHART_COLORS[i % CHART_COLORS.length]} strokeWidth={2}
                                               dot={false} activeDot={{ r: 4 }} isAnimationActive={false} />
+                                    ) : null,
+                                )}
+                                {players.map((name, i) =>  // add X marker when player "dies"; mark winner
+                                    legend.isVisible(name) && zoom.zoomedData.find(x => x[`${name}-End`] !== undefined) !== undefined ? (
+                                        <ReferenceDot x={zoom.zoomedData.find(x => x[`${name}-End`] !== undefined).turn} y={zoom.zoomedData.find(x => x[`${name}-End`] !== undefined)[`${name}-End`]}
+                                                      shape={(props) => (gameWinners[i] > 1) ? <path
+                                                          fill={CivToColor(colors[i]) ?? CHART_COLORS[i % CHART_COLORS.length]}
+                                                          d={`M${props.cx} ${props.cy}m8.278 5.42l-5.502-5.503l5.5-5.502l-2.827-2.83l-5.503 5.502l-5.502-5.502l-2.828 2.83l5.5 5.502l-5.5 5.502l2.83 2.828l5.5-5.502l5.5 5.502z`}
+                                                      /> : <path fill={CivToColor(colors[i]) ?? CHART_COLORS[i % CHART_COLORS.length]}
+                                                                 d={`M${props.cx} ${props.cy}m0 4.5l-8 4.8l3.2-8.2096l-6.4-6.1904h8l3.2-8l3.2 8h8l-6.4 6.4l3.2 8z`}
+                                                      />
+                                                      }
+                                        />
                                     ) : null,
                                 )}
                                 {zoom.showRef && <ReferenceArea {...zoom.refAreaProps} />}
