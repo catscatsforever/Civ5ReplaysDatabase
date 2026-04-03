@@ -1,3 +1,5 @@
+-- The purpose of this file is to reduce the processing time of queries for end users: rather than calculating average values at runtime, we cache them during export.
+-- To update the cache, simply run this file as an SQL query against the replays database.
 DROP TABLE IF EXISTS _cached_HoF_GWB;
 DROP TABLE IF EXISTS _cached_HoF_DSL;
 DROP TABLE IF EXISTS _cached_HoF_PCG;
@@ -33,6 +35,7 @@ DROP TABLE IF EXISTS _cached_CSR_TCSD;
 DROP TABLE IF EXISTS _cached_CSR_TCSR;
 DROP TABLE IF EXISTS _cached_CSR_QM;
 
+-- Hall of Fame: Greatest Wonder Builders
 CREATE TABLE _cached_HoF_GWB AS SELECT * FROM (
 	SELECT DISTINCT T1.Player, IFNULL(T2.Wonders, 0) AS Wonders, Games FROM Games AS T1
 	LEFT JOIN (
@@ -49,6 +52,7 @@ CREATE TABLE _cached_HoF_GWB AS SELECT * FROM (
 	ORDER BY IFNULL(Wonders, 0) DESC
     LIMIT 15
 );
+-- Hall of Fame: Demographics Screen Lovers
 CREATE TABLE _cached_HoF_DSL AS SELECT * FROM (
 	SELECT Player, IFNULL(F9, 0) AS 'Times F9 Pressed', IFNULL(Games,0) AS Games FROM (
       SELECT *, Count(*) AS Games FROM (SELECT Games.Player FROM Games) AS T1
@@ -72,6 +76,7 @@ CREATE TABLE _cached_HoF_DSL AS SELECT * FROM (
     ORDER BY IFNULL(F9, 0) DESC
     LIMIT 15
 );
+-- Hall of Fame: Prominent City Governors
 CREATE TABLE _cached_HoF_PCG AS SELECT * FROM (
     SELECT Player, IFNULL(CS, 0) AS 'Times Entered City', IFNULL(Games,0) AS Games FROM (
       SELECT *, Count(*) AS Games FROM (SELECT Games.Player FROM Games) AS T1
@@ -95,6 +100,7 @@ CREATE TABLE _cached_HoF_PCG AS SELECT * FROM (
     ORDER BY IFNULL(CS, 0) DESC
     LIMIT 15
 );
+-- Hall of Fame: Total Turns spent In-Game
 CREATE TABLE _cached_HoF_TTSIG AS SELECT * FROM (
 	SELECT Games.Player AS Player, IFNULL(SUM(IFNULL(PlayerQuitTurn, EndTurn)), 0) AS Turns, COUNT(*) AS Games
 	FROM Games
@@ -114,12 +120,14 @@ DROP TABLE IF EXISTS T2;
     JOIN ReplayDataSetKeys USING(ReplayDataSetID)
     WHERE Turn <= IFNULL(PlayerQuitTurn, EndTurn)
     ;
+-- Hall of Fame: Global Replay Records
 CREATE TABLE _cached_HoF_GRR AS SELECT * FROM (
     SELECT ReplayDataSetKey AS "Replay Category",
     MAX(rsum)||' ('||Player||', Game #'||GameID||', Turn '||Turn||')' AS "Highest Value ever recorded"
     FROM T2
     GROUP BY ReplayDataSetID
 );
+-- Hall of Fame: Single Turn Replay Records
 CREATE TABLE _cached_HoF_STRR AS SELECT * FROM (
     SELECT ReplayDataSetKey AS "Replay Category",
     MAX(Value)||' ('||Player||', Game #'||GameID||', Turn '||Turn||')' AS "Max Change per Turn"
@@ -163,8 +171,8 @@ CREATE TEMPORARY TABLE T2 AS SELECT * FROM (
 	JOIN CivKeys ON CivKeys.CivID = Players.CivID
 );
 
+-- Belief Adoption: Belief Winrate
 CREATE TABLE _cached_BA_BW AS SELECT * FROM (
-	-- Beliefs winrate
     WITH tmp AS (
         SELECT COUNT(*) AS ngames
       	FROM GameSeeds
@@ -234,6 +242,7 @@ CREATE TABLE _cached_BA_BW AS SELECT * FROM (
     GROUP BY beliefID
     ORDER BY typeid, ROUND(COUNT(*)*100.0/ngames2, 2) DESC
 );
+-- Belief Adoption: Average Turn of Belief Adoption
 CREATE TABLE _cached_BA_AToBA AS SELECT * FROM (
 	SELECT BeliefType AS "Belief Type", BeliefKey AS "Belief",
 	ROUND(AVG(Turn), 1) AS "Average Turn"
@@ -241,6 +250,7 @@ CREATE TABLE _cached_BA_AToBA AS SELECT * FROM (
     GROUP BY BeliefID
     ORDER BY "Average Turn"
 );
+-- Belief Adoption: Median Turn of Belief Adoption
 CREATE TABLE _cached_BA_MedToBA AS SELECT * FROM (
 	SELECT BeliefType AS "Belief Type", BeliefKey AS "Belief",
     Median AS "Median Turn"
@@ -253,6 +263,7 @@ CREATE TABLE _cached_BA_MedToBA AS SELECT * FROM (
     GROUP BY BeliefID
     ORDER BY "Median Turn"
 );
+-- Belief Adoption: Minimum Turn of Belief Adoption
 CREATE TABLE _cached_BA_MinToBA AS SELECT * FROM (
 	SELECT BeliefType AS "Belief Type", BeliefKey AS "Belief",
     MIN(Turn)||' ('||Player||', '||CivKey||')' AS "Minimum Turn"
@@ -260,6 +271,7 @@ CREATE TABLE _cached_BA_MinToBA AS SELECT * FROM (
     GROUP BY BeliefID
     ORDER BY MIN(Turn)
 );
+-- Belief Adoption: Number of Times of Belief Adoption
 CREATE TABLE _cached_BA_NToBA AS SELECT * FROM (
 	SELECT BeliefTypes.BeliefType AS "Belief Type", ifnull("Belief", BeliefKeys.BeliefKey) AS "Belief", ifnull("Total Times Adopted", 0) AS "Total Times Adopted" FROM (
         SELECT BeliefKey AS "Belief",
@@ -316,6 +328,7 @@ CREATE TEMPORARY TABLE T4 AS SELECT * FROM (
 		WHERE Cnt_2 = 5 AND BranchID < 9
 );
 
+-- Policy Adoption: Average Turn of Policy Adoption
 CREATE TABLE _cached_PA_AToPA AS SELECT * FROM (
   SELECT "Policy Branch", "Policy", "Average Turn"
   FROM (
@@ -336,6 +349,7 @@ CREATE TABLE _cached_PA_AToPA AS SELECT * FROM (
     	ORDER BY BranchID
 	)
 );
+-- Policy Adoption: Median Turn of Policy Adoption
 CREATE TABLE _cached_PA_MedToPA AS SELECT * FROM (
 	SELECT "Policy Branch", "Policy", "Median Turn"
 	FROM (
@@ -371,6 +385,7 @@ CREATE TABLE _cached_PA_MedToPA AS SELECT * FROM (
     	ORDER BY BranchID
   )
 );
+-- Policy Adoption: Minimum Turn of Policy Adoption
 CREATE TABLE _cached_PA_MinToPA AS SELECT * FROM (
   SELECT "Policy Branch", "Policy", "Minimum Turn"
   FROM (
@@ -391,6 +406,7 @@ CREATE TABLE _cached_PA_MinToPA AS SELECT * FROM (
     	ORDER BY BranchID
   )
 );
+-- Policy Adoption: Number of Times of Policy Adoption
 CREATE TABLE _cached_PA_NToPA AS SELECT * FROM (
   SELECT "Policy Branch", "Policy", "Total Times Adopted"
   FROM (
@@ -430,6 +446,7 @@ CREATE TEMPORARY TABLE T2 AS SELECT * FROM (
 	JOIN CivKeys ON CivKeys.CivID = Players.CivID
 );
 
+-- Technology Research: Average Turn of Technology Research
 CREATE TABLE _cached_TR_AToTR AS SELECT * FROM (
 	SELECT EraKey AS "Era", TechnologyKey AS "Technology",
 	ROUND(AVG(Turn), 1) AS "Average Turn"
@@ -437,6 +454,7 @@ CREATE TABLE _cached_TR_AToTR AS SELECT * FROM (
     GROUP BY TechnologyID
     ORDER BY EraID
 );
+-- Technology Research: Median Turn of Technology Research
 CREATE TABLE _cached_TR_MedToTR AS SELECT * FROM (
 	SELECT EraKey AS "Era", TechnologyKey AS "Technology",
     Median AS "Median Turn"
@@ -449,6 +467,7 @@ CREATE TABLE _cached_TR_MedToTR AS SELECT * FROM (
     GROUP BY TechnologyID
     ORDER BY EraID
 );
+-- Technology Research: Minimum Turn of Technology Research
 CREATE TABLE _cached_TR_MinToTR AS SELECT * FROM (
 	SELECT EraKey AS "Era", TechnologyKey AS "Technology",
     MIN(Turn)||' ('||Player||', '||CivKey||')' AS "Minimum Turn"
@@ -456,6 +475,7 @@ CREATE TABLE _cached_TR_MinToTR AS SELECT * FROM (
     GROUP BY TechnologyID
     ORDER BY EraID
 );
+-- Technology Research: Number of Times of Technology Research
 CREATE TABLE _cached_TR_NToTR AS SELECT * FROM (
 	SELECT EraKey AS "Era", TechnologyKey AS "Technology",
 	COUNT(*) AS "Total Times Researched"
@@ -484,6 +504,7 @@ CREATE TEMPORARY TABLE T2 AS SELECT * FROM (
 	JOIN CivKeys ON CivKeys.CivID = Players.CivID
 );
 
+-- Wonder Construction: Wonder Winrate
 CREATE TABLE _cached_WC_WW AS SELECT * FROM (
 WITH tmp AS (
         SELECT COUNT(*) AS ngames FROM GameSeeds
@@ -508,6 +529,7 @@ WITH tmp AS (
     GROUP BY BuildingID
     ORDER BY ROUND(COUNT(*)*100.0/ngames2, 2) DESC
 );
+-- Wonder Construction: Average Turn of Wonder Construction
 CREATE TABLE _cached_WC_AToWC AS SELECT * FROM (
 	SELECT BuildingClassType AS "Wonder Type", BuildingClassKey AS "Building",
 	ROUND(AVG(Turn), 1) AS "Average Turn"
@@ -516,6 +538,7 @@ CREATE TABLE _cached_WC_AToWC AS SELECT * FROM (
     GROUP BY BuildingClassID
     ORDER BY TypeID, "Average Turn"
 );
+-- Wonder Construction: Median Turn of Wonder Construction
 CREATE TABLE _cached_WC_MedToWC AS SELECT * FROM (
 	SELECT BuildingClassType AS "Wonder Type", BuildingClassKey AS "Building",
     Median AS "Median Turn"
@@ -529,6 +552,7 @@ CREATE TABLE _cached_WC_MedToWC AS SELECT * FROM (
     GROUP BY BuildingClassID
     ORDER BY TypeID, Median
 );
+-- Wonder Construction: Minimum Turn of Wonder Construction
 CREATE TABLE _cached_WC_MinToWC AS SELECT * FROM (
 	SELECT BuildingClassType AS "Wonder Type", BuildingClassKey AS "Building",
     MIN(Turn)||' ('||Player||', '||CivKey||')' AS "Minimum Turn"
@@ -537,6 +561,7 @@ CREATE TABLE _cached_WC_MinToWC AS SELECT * FROM (
     GROUP BY BuildingClassID
     ORDER BY TypeID, MIN(Turn)
 );
+-- Wonder Construction: Number of Times of Wonder Construction
 CREATE TABLE _cached_WC_NToWC AS SELECT * FROM (
 	SELECT BuildingClassType AS "Wonder Type", BuildingClassKey AS "Building",
 	COUNT(*) AS "Total Times Constructed"
@@ -545,6 +570,8 @@ CREATE TABLE _cached_WC_NToWC AS SELECT * FROM (
     GROUP BY BuildingClassID
     ORDER BY TypeID, COUNT(*)
 );
+
+-- City-States Relations: City-State Coups
 CREATE TABLE _cached_CSR_CSC AS SELECT * FROM (
     select player, count(iif(replayeventtype = 93,1,null)) as 'City-State Coups', round(count(iif(num4=1,1,null))*1.0/count(iif(replayeventtype = 93,1,null)),2) as 'Success Rate' from replayevents
     join gameseeds using(gameseed)
@@ -554,6 +581,7 @@ CREATE TABLE _cached_CSR_CSC AS SELECT * FROM (
     order by count(iif(replayeventtype = 93,1,null)) desc
     LIMIT 20
 );
+-- City-States Relations: City-State Liberators
 CREATE TABLE _cached_CSR_CSL AS SELECT * FROM (
     select player, count(iif(replayeventtype = 35,1,null)) as 'City-States liberated' from replayevents
     join gameseeds using(gameseed)
@@ -563,6 +591,7 @@ CREATE TABLE _cached_CSR_CSL AS SELECT * FROM (
     order by count(iif(replayeventtype = 35,1,null)) desc
     LIMIT 20
 );
+-- City-States Relations: Top City-State Donators
 CREATE TABLE _cached_CSR_TCSD AS SELECT * FROM (
 select player, sum(num2) as 'Gold[ICON_GOLD] donated to City-States' from replayevents
 join gameseeds using(gameseed)
@@ -572,6 +601,7 @@ group by player
 order by sum(num2) desc
 LIMIT 20
 );
+-- City-States Relations: Top City-State Robbers
 CREATE TABLE _cached_CSR_TCSR AS SELECT * FROM (
 select player, sum(num2) as 'Gold[ICON_GOLD] seized from City-States' from replayevents
 join gameseeds using(gameseed)
@@ -581,6 +611,7 @@ group by player
 order by sum(num2) desc
 LIMIT 20
 );
+-- City-States Relations: Quest Masters
 CREATE TABLE _cached_CSR_QM AS SELECT * FROM (
 select player, count(iif(replayeventtype = 95,1,null)) as 'City-State Quests Completed' from replayevents
 join gameseeds using(gameseed)
@@ -595,3 +626,4 @@ LIMIT 20
 DROP TABLE IF EXISTS T2;
 DROP TABLE IF EXISTS T3;
 DROP TABLE IF EXISTS T4;
+VACUUM;
