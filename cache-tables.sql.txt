@@ -328,6 +328,36 @@ CREATE TEMPORARY TABLE T4 AS SELECT * FROM (
 		WHERE Cnt_2 = 5 AND BranchID < 9
 );
 
+-- Policy Adoption: Policy Winrate
+CREATE TABLE _cached_PA_PW AS SELECT * FROM (
+    WITH tmp AS (
+    	SELECT * FROM (
+    	SELECT value as PolicyID, COUNT(*) as ngames2 FROM (
+          SELECT *, Num2 AS Value FROM ReplayEvents
+          WHERE ReplayEventType = 61
+    	)
+    	where value <> -1
+    	group BY value
+    ))
+    SELECT PolicyBranch AS Branch, PolicyKey AS Policy, IFNULL(ROUND(COUNT(*)*100.0/ngames2, 2), 0)||'%' AS 'Winrate',
+    count(*) as Victories, ngames2 as Picks
+    FROM PolicyKeys
+    LEFT JOIN (SELECT value as PolicyID, gameseed, playerid FROM (
+          SELECT *, Num2 AS Value FROM ReplayEvents
+          WHERE ReplayEventType = 61
+    	)
+    	where value <> -1
+      ) using(PolicyID)
+    JOIN GameSeeds using(gameseed)
+    JOIN Games using(gameid, playerid)
+    JOIN Players ON Players.GameSeed = GameSeeds.GameSeed AND Players.PlayerID = Games.PlayerID
+    JOIN CivKeys ON CivKeys.CivID = Players.CivID
+    join PolicyBranches using(BranchID)
+    JOIN tmp USING(PolicyID)
+    WHERE Standing = 1
+    GROUP BY PolicyID
+    ORDER BY BranchID, ROUND(COUNT(*)*100.0/ngames2, 2) DESC
+);
 -- Policy Adoption: Average Turn of Policy Adoption
 CREATE TABLE _cached_PA_AToPA AS SELECT * FROM (
   SELECT "Policy Branch", "Policy", "Average Turn"
