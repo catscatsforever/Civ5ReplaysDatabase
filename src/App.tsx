@@ -258,30 +258,18 @@ function AppInner() {
 
             {/* Nav tabs */}
             <nav style={{ background: CIV.navBg, borderBottom: `2px solid ${CIV.border}` }}>
-                <div className="max-w-7xl mx-auto px-4">
+                <div className="container mx-auto px-4">
                     <div className="flex gap-1 overflow-x-auto py-2">
                         {tabs.map((tab) => (
                             <button
                                 key={tab.id}
                                 onClick={() => handleTabChange(tab.id)}
-                                className="px-4 py-2 rounded text-sm whitespace-nowrap transition-all tracking-wide"
+                                className={`civ-cat ${activeTab === tab.id ? "civ-cat-active" : ""}`}
                                 style={
                                     activeTab === tab.id
-                                        ? { background: CIV.navSel, color: CIV.text,  border: `2px solid ${CIV.border}` }
-                                        : { background: "transparent", color: CIV.muted, border: "2px solid transparent" }
+                                        ? { color: CIV.text }
+                                        : { color: CIV.muted }
                                 }
-                                onMouseEnter={(e) => {
-                                    if (activeTab !== tab.id) {
-                                        (e.currentTarget as HTMLButtonElement).style.color = CIV.text;
-                                        (e.currentTarget as HTMLButtonElement).style.borderColor = CIV.border;
-                                    }
-                                }}
-                                onMouseLeave={(e) => {
-                                    if (activeTab !== tab.id) {
-                                        (e.currentTarget as HTMLButtonElement).style.color = CIV.muted;
-                                        (e.currentTarget as HTMLButtonElement).style.borderColor = "transparent";
-                                    }
-                                }}
                             >
                                 {tab.label}
                             </button>
