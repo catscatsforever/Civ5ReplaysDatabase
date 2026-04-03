@@ -216,9 +216,9 @@ export default function GroupView({ initialHash = {} }: Props) {
                 const match = ds.find(
                     (d) => String(d.id) === initialHash.Dataset
                 );
-                setSelDs(match ? String(match.id) : String(ds[0].id));
+                setSelDs(match ? String(match.id) : (ds.length >= 86 ? '86' : '1'));
             } else if (ds.length) {
-                setSelDs(String(ds[0].id));
+                setSelDs(ds.length >= 86 ? '86' : '1');
             }
             if (initialHash.Method) {
                 const m = initialHash.Method.toLowerCase();
