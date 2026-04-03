@@ -99,13 +99,10 @@ export default function TablesView() {
 
     return (
         <div>
-            <div className="mb-6">
-                <h2 className="text-2xl tracking-wide" style={{ color: CIV.text }}>{t("TXT_KEY_TABLES_TITLE")}</h2>
-            </div>
-            <div className="flex flex-wrap gap-2 mb-6 p-3 rounded-xl" style={{ background: CIV.navBg, border: `2px solid ${CIV.border}` }}>
+            <div className="flex flex-wrap gap-2 mb-6 p-3 rounded-xl justify-center" style={{ background: CIV.navBg, border: `2px solid ${CIV.border}` }}>
                 {categories.map(({ id, labelKey }) => (
                     <button key={id} onClick={() => setCategory(id)}
-                            className={`civ-btn civ-btn-chip ${category === id ? "civ-btn-active" : ""}`}>
+                            className={`civ-cat ${category === id ? "civ-cat-active" : ""}`}>
                         {t(labelKey as any)}
                     </button>
                 ))}
