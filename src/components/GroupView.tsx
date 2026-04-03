@@ -104,18 +104,18 @@ function GroupChipSelector({ groups, catTab, setCatTab, selected, onToggle, onCl
                 ))}
             </div>
             <div className="flex items-center flex-wrap gap-2">
-        <span className="text-xs tracking-widest uppercase" style={{ color: CIV.muted }}>
-          {t("TXT_KEY_GROUP_SELECTED_GROUPS" as any)}:
-        </span>
+                <span className="text-xs tracking-widest uppercase" style={{ color: CIV.muted }}>
+                  {t("TXT_KEY_GROUP_SELECTED_GROUPS" as any)}:
+                </span>
                 {selectedGroupDefs.length === 0 ? (
                     <span className="text-xs italic" style={{ color: CIV.muted }}>{t("TXT_KEY_GROUP_NO_GROUPS" as any)}</span>
                 ) : (
                     <>
                         {selectedGroupDefs.map(g => (
                             <span key={g.id} className="civ-btn civ-btn-tag civ-btn-active" style={{ cursor: "default" }}>
-                {getLabel(g)}
+                            {getLabel(g)}
                                 <button onClick={() => onToggle(g.id)} className="ml-1 hover:opacity-70 text-sm leading-none" style={{ color: CIV.red }}>×</button>
-              </span>
+                            </span>
                         ))}
                         <button onClick={onClear} className="civ-btn civ-btn-chip civ-btn-danger">{t("TXT_KEY_GROUP_CLEAR_ALL" as any)}</button>
                     </>
@@ -287,11 +287,13 @@ export default function GroupView({ initialHash = {} }: Props) {
         setMatchGroups(prev => prev.map(mg => mg.id === mgId ? { ...mg, catTab } : mg));
     };
     const toggleMatchGroupSelection = (mgId: number, groupId: string) => {
-        setMatchGroups(prev => prev.map(mg => {
+        setMatchGroups(prev => prev.map((mg, i) => {
             if (mg.id !== mgId) return mg;
             const n = new Set(mg.selected);
             n.has(groupId) ? n.delete(groupId) : n.add(groupId);
-            return { ...mg, selected: n };
+            const gFirst = groups.find(g => g.id === n.values().next().value);
+            const gName = t(gFirst?.labelKey || gFirst?.fallbackLabel || '');
+            return { ...mg, selected: n, name: n.size > 0 ? `${gName}${n.size > 1 ? ' + ' + String(n.size - 1) : ''}` : `${t("TXT_KEY_GROUP_GROUP_LABEL" as any)} ${i}` };
         }));
     };
     const clearMatchGroupSelection = (mgId: number) => {
