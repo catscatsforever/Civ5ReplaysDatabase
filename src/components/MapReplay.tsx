@@ -1092,15 +1092,25 @@ export default function MapReplay({ initialHash = {} }: Props) {
             const prevMidX = (prev.x0 + prev.x1) / 2;
             const prevMidY = (prev.y0 + prev.y1) / 2;
 
+            const rect   = canvasRef.current!.getBoundingClientRect();
+            const mouseX = midX - rect.left;
+            const mouseY = midY - rect.top;
+
             const cam = cameraRef.current;
             const _factor = (cam.scale * factor < MIN_SCALE || cam.scale * factor > MAX_SCALE) ? 1 : factor;
+            const newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, cam.scale * _factor));
+            const baseR = hexSizeRef.current;
+            const tR = terrainRRef.current;
+            const oldDS = (baseR * cam.scale) / tR;
+            const newDS = (baseR * newScale) / tR;
+            const worldX = (mouseX - cam.x) / oldDS;
+            const worldY = (mouseY - cam.y) / oldDS;
+            cam.x = mouseX - worldX * newDS
+            cam.y = mouseY - worldY * newDS
 
-            cam.scale *= _factor;
             cam.x += midX - prevMidX;
             cam.y += midY - prevMidY;
-
-            cam.x = midX - (midX - cam.x) * _factor;
-            cam.y = midY - (midY - cam.y) * _factor;
+            cam.scale *= _factor;
 
             touchRef.current = {
                 id0: cur0.identifier, id1: cur1.identifier,
