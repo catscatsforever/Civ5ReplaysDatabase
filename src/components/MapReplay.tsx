@@ -1281,11 +1281,11 @@ export default function MapReplay({ initialHash = {} }: Props) {
             )}
 
             {!loading && !noData && (
-                <div className="flex gap-4">
+                <div className="flex gap-4 flex-col lg:flex-row">
                     {/* Canvas container */}
                     <div
                         ref={containerRef}
-                        className="flex-1 rounded-lg overflow-hidden relative"
+                        className="flex-1 rounded-lg overflow-visible relative"
                         style={{
                             border: `2px solid ${CIV.border}`,
                             background: "#0a1a2a",

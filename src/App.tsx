@@ -258,8 +258,8 @@ function AppInner() {
 
             {/* Nav tabs */}
             <nav style={{ background: CIV.navBg, borderBottom: `2px solid ${CIV.border}` }}>
-                <div className="container mx-auto px-4">
-                    <div className="flex gap-1 overflow-x-auto py-2 justify-center">
+                <div className="container flex mx-auto px-4">
+                    <div className="flex gap-1 overflow-x-auto py-2 m-auto">
                         {tabs.map((tab) => (
                             <button
                                 key={tab.id}
