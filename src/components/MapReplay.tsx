@@ -476,6 +476,8 @@ export default function MapReplay({ initialHash = {} }: Props) {
             ctx.arc(cx, cy, Math.max(3, tR * 0.45), 0, Math.PI * 2);
             ctx.fillStyle = playerCivsRef.current[city.owner]?.PrimaryColor ?? col;
             ctx.fill();
+            ctx.shadowBlur = 1;
+            ctx.shadowColor = "black";
             ctx.strokeStyle = playerCivsRef.current[city.owner]?.TextColor ?? "#FFFFC8";
             ctx.lineWidth   = Math.max(1, tR * 0.08);
             ctx.stroke();
