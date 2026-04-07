@@ -700,7 +700,8 @@ export default function MapReplay({ initialHash = {} }: Props) {
             hTurn = Math.max(0, Math.min(MAX_TURN, Number(initialHash.Turn)));
         }
         getSqlWorker().exec(`
-            SELECT DISTINCT GameID, REPLACE(GROUP_CONCAT(Player ORDER BY PlayerID),',',', ') FROM Games
+            SELECT DISTINCT GameID, REPLACE(GROUP_CONCAT(Player ORDER BY PlayerID),',',', ')
+            FROM Games
             LEFT JOIN GameSeeds USING(GameID)
             WHERE GameSeed NOT NULL
             GROUP BY GameID
@@ -743,41 +744,28 @@ export default function MapReplay({ initialHash = {} }: Props) {
                 if (!seedRes[0]?.values.length) { setNoData(true); setLoading(false); return; }
                 const gameSeed = seedRes[0].values[0][0] as number;
                 setEndTurn(seedRes[0].values[0][1]);
+                console.time('load map data')
                 Promise.all([
                     w.exec(`
-                        SELECT Num1, Num2, Num3, Num4
+                        SELECT ReplayEventType, Turn, Num1, Num2, Num3, Num4
                         FROM ReplayEvents
-                        WHERE GameSeed=${gameSeed} AND ReplayEventType=105 AND Turn=0
+                        WHERE GameSeed=${gameSeed} AND ReplayEventType IN (105,107,109,110)
                     `),
                     w.exec(`
-                        SELECT Turn, Num1, Num2, Num3
-                        FROM ReplayEvents
-                        WHERE GameSeed=${gameSeed} AND ReplayEventType=107
-                    `),
-                    w.exec(`
-                        SELECT Turn, Num1, Num2, Num3, Num4
-                        FROM ReplayEvents
-                        WHERE GameSeed=${gameSeed} AND ReplayEventType=109
-                    `),
-                    w.exec(`
-                        SELECT Turn, Num1, Num2, Num3
-                        FROM ReplayEvents
-                        WHERE GameSeed=${gameSeed} AND ReplayEventType=110
-                    `),
-                    w.exec(`
-                        select Turn, PlotIndex, PlayerID, CityName FROM (
-                          select GameID, PlayerID, Turn, TimeStamp, num1 as PlotIndex, IFNULL(Text, str) as CityName,
-                          iif(str = 'NO_CITY', 'raze', iif(count(*)=1, 'founded', 'conquest')) as remark, row_number() over() as rn, max(ReplayEvents.rowid) from ReplayEvents
-                          left join ReplayEventKeys on ReplayEventKeys.ReplayEventID = ReplayEvents.ReplayEventType
-                          left join GameSeeds using(GameSeed)
-                          left join Games using(GameID, PlayerID)
-                          left join CityNames on str = CityName
-                          where ReplayEventID in (101) and GameSeed = ${gameSeed}
-                          group by GameID, PlayerID, PlotIndex, Turn
-                          order by GameID, PlayerID, Turn, timestamp desc
-                        ) where remark != 'raze'
-                        group by GameID, PlayerID, PlotIndex
-                        order by Turn
+                        SELECT Turn, PlotIndex, PlayerID, CityName FROM (
+                          SELECT GameID, PlayerID, Turn, TimeStamp, num1 AS PlotIndex, IFNULL(Text, str) AS CityName,
+                          IIF(str = 'NO_CITY', 'raze', IIF(COUNT(*) = 1, 'founded', 'conquest')) AS remark, ROW_NUMBER() OVER() AS rn, MAX(ReplayEvents.rowid)
+                          FROM ReplayEvents
+                          LEFT JOIN ReplayEventKeys ON ReplayEventKeys.ReplayEventID = ReplayEvents.ReplayEventType
+                          LEFT JOIN GameSeeds USING(GameSeed)
+                          LEFT JOIN Games USING(GameID, PlayerID)
+                          LEFT JOIN CityNames ON str = CityName
+                          WHERE ReplayEventID in (101) AND GameSeed = ${gameSeed}
+                          GROUP BY GameID, PlayerID, PlotIndex, Turn
+                          ORDER BY GameID, PlayerID, Turn, timestamp DESC
+                        ) WHERE remark != 'raze'
+                        GROUP BY GameID, PlayerID, PlotIndex
+                        ORDER BY Turn
                     `),
                     w.exec(`
                         SELECT PlayerID, Player
@@ -788,23 +776,39 @@ export default function MapReplay({ initialHash = {} }: Props) {
                         ORDER BY PlayerID
                     `),
                         w.exec(`
-                        SELECT PlayerID, str FROM ReplayEvents
+                        SELECT PlayerID, str
+                        FROM ReplayEvents
                         WHERE ReplayEventType IN (101) AND GameSeed=${gameSeed}
                         GROUP BY PlayerID
                     `),
-                ]).then(([terrRows, featureRows, roadRows, borderRows, cityRows, nameRows, capitalRows]) => {
-                    if (!terrRows.length || !terrRows[0].values.length) {
+                ]).then(([mapRows, cityRows, nameRows, capitalRows]) => {
+                    if (!mapRows.length || !mapRows[0].values.length) {
                         setNoData(true);
                         setLoading(false);
                         return;
                     }
                     const tmap = new Map<number, TerrainTile>();
-                    for (const [x, y, tr, pt] of terrRows[0].values) {
-                        tmap.set(Number(y * COLS + x), {
-                            plotType: Number(pt),
-                            terrain:  Number(tr),
-                        });
+                    const farr: FeatureEvent[] = [];
+                    const rarr: RoadEvent[] = [];
+                    const barr: BorderEvent[] = [];
+                    let Gibraltar: { x: number, y: number } = { x: -1, y: -1 };
+                    for (const [type, turn, num1, num2, num3, num4] of mapRows[0].values) {
+                        switch (type) {
+                            case 105:  // terrain
+                                tmap.set(num2 * COLS + num1, { terrain: num3, plotType: num4 });
+                                break;
+                            case 107:
+                                farr.push({ turn: turn, x: num1, y: num2, feature: num3 == 12 ? (Gibraltar = {x: num1, y: num2}) && num3 : num3 });
+                                break;
+                            case 109:
+                                rarr.push({ turn: turn, x: num1, y: num2, routeType: num3, bPillaged: num4 === 1 });
+                                break;
+                            case 110:
+                                barr.push({ turn: turn, tileIdx: num2 * COLS + num1, owner: num3 });
+                                break;
+                        }
                     }
+
                     // remove any mountains from coastal plots
                     for (let y = 0; y < ROWS; y++) {
                         for (let x = 0; x < COLS; x++) {
@@ -825,14 +829,10 @@ export default function MapReplay({ initialHash = {} }: Props) {
                         }
                     }
                     terrainRef.current = tmap;
+                    featureEventsRef.current = farr;
+                    bordersRef.current = barr;
+                    roadsRef.current = rarr;
 
-                    let Gibraltar: { x: number, y: number } = { x: -1, y: -1 };
-                    featureEventsRef.current = (featureRows[0]?.values ?? []).map(v => ({
-                        turn:    Number(v[0]),
-                        x: Number(v[1]),
-                        y: Number(v[2]),
-                        feature: Number(v[3]) == 12 ? (Gibraltar = {x: v[1], y: v[2]}) && Number(v[3]) : Number(v[3]),
-                    }));
                     if (Gibraltar.x !== -1 && Gibraltar.y !== -1) {
                         for (let edge = 0; edge < 6; edge++) {
                             const [nx, ny] = hexNeighbor(Gibraltar.x, Gibraltar.y, edge);
@@ -850,20 +850,6 @@ export default function MapReplay({ initialHash = {} }: Props) {
                         }
                     }
 
-                    bordersRef.current = (borderRows[0]?.values ?? []).map(v => ({
-                        turn:    Number(v[0]),
-                        tileIdx: Number(v[2] * COLS + v[1]),
-                        owner:   Number(v[3]),
-                    }));
-
-                    roadsRef.current = (roadRows[0]?.values ?? []).map(v => ({
-                        turn:      Number(v[0]),
-                        x:         Number(v[1]),
-                        y:         Number(v[2]),
-                        routeType: Number(v[3]),
-                        bPillaged: Number(v[4]) === 1,
-                    }));
-
                     const razes: number[][] = new Array(64).fill([]);
                     citiesRef.current = (cityRows[0]?.values ?? []).map(v => {
                         const cx = Number(v[1]) % COLS;
@@ -871,10 +857,12 @@ export default function MapReplay({ initialHash = {} }: Props) {
                         const rx = ((cx % COLS) + COLS) % COLS;
                         const ry = ((cy % ROWS) + ROWS) % ROWS;
                         let raze = MAX_TURN;  // check city raze
-                        for (const w of borderRows[0]?.values ?? []) {
-                            if (Number(w[1]) === cx && Number(w[2]) === cy) {
-                                if (Number(w[0]) > Number(v[0]) && Number(w[3]) === -1 && razes[Number(v[2])][cy * COLS + cx] === undefined) {
-                                    raze = Number(w[0]);
+                        for (const w of barr ?? []) {
+                            const x = w.tileIdx % COLS;
+                            const y = Math.floor(w.tileIdx / COLS);
+                            if (x === cx && y === cy) {
+                                if (w.turn > Number(v[0]) && w.owner === -1 && razes[Number(v[2])][cy * COLS + cx] === undefined) {
+                                    raze = w.turn;
                                     razes[Number(v[2])][cy * ROWS + cx] = raze;
                                 }
                             }
@@ -898,6 +886,7 @@ export default function MapReplay({ initialHash = {} }: Props) {
                     playerCivsRef.current = civs;
                     setLoading(false);
                     fullRedraw();
+                    console.timeEnd('load map data')
                 }).catch(() => { setLoading(false); setNoData(true); });
             }).catch(() => { setLoading(false); setNoData(true); });
     }, [selGame]);
