@@ -79,7 +79,8 @@ function AppInner() {
             setDbSizeGz(buf.byteLength);
             const f = Object.keys(u).find(isDbFile);
             if (!f) throw new Error(`No .db file found inside ${name}`);
-            const d = u[f]; buf = d.buffer.slice(d.byteOffset, d.byteOffset + d.byteLength) as ArrayBuffer;
+            const d = u[f];
+            buf = d.buffer.slice(d.byteOffset, d.byteOffset + d.byteLength) as ArrayBuffer;
         } else {
             setDbSizeGz(0);
         }
@@ -139,7 +140,6 @@ function AppInner() {
     useEffect(() => {
         const userLang = (new Intl.Locale(navigator.language)).language
         const current_language = localStorage.getItem("locale") ?? (['en', 'ru'].includes(userLang) ? userLang : 'en');
-        console.log(userLang, current_language)
         setLang(current_language === 'en' ? 'en' : 'ru');
 
         const onHashChange = () => {

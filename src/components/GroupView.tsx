@@ -87,7 +87,7 @@ function GroupChipSelector({ groups, catTab, setCatTab, selected, onToggle, onCl
 
     return (
         <>
-            <div className="flex gap-2 mb-3">
+            <div className="gap-2 mb-3">
                 {catTabs.map(ct => (
                     <button key={ct.id} onClick={() => setCatTab(ct.id)}
                             className={`civ-cat civ-cat-chip mb-3 ${catTab === ct.id ? "civ-cat-active" : ""}`}>
