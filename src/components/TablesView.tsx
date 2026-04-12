@@ -23,6 +23,7 @@ const beliefBlocks: TableBlock[] = [
     { titleKey: "TXT_KEY_TABLES_BELIEF_NTOBA_TITLE", sql: `SELECT * FROM _cached_BA_NToBA;` },
 ];
 const policyBlocks: TableBlock[] = [
+    { titleKey: "TXT_KEY_TABLES_POLICY_PW_TITLE", sql: `SELECT * FROM _cached_PA_PW;` },
     { titleKey: "TXT_KEY_TABLES_POLICY_ATOPA_TITLE", sql: `SELECT * FROM _cached_PA_AToPA;` },
     { titleKey: "TXT_KEY_TABLES_POLICY_MEDTOPA_TITLE", sql: `SELECT * FROM _cached_PA_MedToPA;` },
     { titleKey: "TXT_KEY_TABLES_POLICY_MINTOPA_TITLE", sql: `SELECT * FROM _cached_PA_MinToPA;` },
