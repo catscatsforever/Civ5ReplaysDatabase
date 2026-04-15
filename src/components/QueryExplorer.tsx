@@ -72,7 +72,7 @@ ORDER BY Turn`
     GROUP BY gameseed, playerid HAVING turn = MIN(turn)
 )
 SELECT Sector, ROUND(AVG(win) * 100.0, 2)||'%' as Winrate FROM (
-    SELECT gameid, player, x, y, iif(yrnk <= 3, 'bottom', 'top')||' '||iif(xrnk <= 2, 'left', iif(xrnk >= 5, 'right', 'center')) as Sector, winid > 1 as win
+    SELECT GameID, Player, x, y, IIF(ROW_NUMBER() OVER (PARTITION BY GameID, IIF(xrnk <= 2, 'left', IIF(xrnk >= 5, 'right', 'center')) ORDER BY yrnk) = 1, 'bottom', 'top')||' '||IIF(xrnk <= 2, 'left', IIF(xrnk >= 5, 'right', 'center')) AS Sector, winid > 1 as win
     from replayevents
     JOIN T1 USING(gameseed, playerid)
     JOIN (select gameseed, playerid, ROW_NUMBER() OVER (PARTITION BY gameseed ORDER BY x) AS xrnk, ROW_NUMBER() OVER (PARTITION BY gameseed ORDER BY y) AS yrnk FROM t1) USING(gameseed, playerid)
